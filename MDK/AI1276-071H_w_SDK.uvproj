@@ -849,11 +849,6 @@
               <FileType>1</FileType>
               <FilePath>..\USER\sleep.c</FilePath>
             </File>
-            <File>
-              <FileName>acsip_protocol.lib</FileName>
-              <FileType>4</FileType>
-              <FilePath>..\USER\acsip_protocol\acsip_protocol.lib</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -877,12 +872,17 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>Radio</GroupName>
+          <GroupName>AcSiP_Libraries</GroupName>
           <Files>
             <File>
-              <FileName>Radio.lib</FileName>
+              <FileName>AI1276-071H__Radio.lib</FileName>
               <FileType>4</FileType>
-              <FilePath>..\Libraries\Radio\Radio.lib</FilePath>
+              <FilePath>.\AcSiP_Libries\AI1276-071H__Radio.lib</FilePath>
+            </File>
+            <File>
+              <FileName>AI1276-071H__Protocol.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>.\AcSiP_Libries\AI1276-071H__Protocol.lib</FilePath>
             </File>
           </Files>
         </Group>
