@@ -1,0 +1,40 @@
+***********************************************************************
+*                                                                     *
+*                                                                     *
+*                           AI1276-401H SDK                           *
+*                                                                     *
+*                                                                     *
+***********************************************************************
+Introduction:
+2016 AcSiP Technology Corporation. All rights reserved.
+This package is used for AI1276-401H developing and it contains files 
+licensed under MCD-ST Liberty SW License Agreement V2. 
+
+
+
+==============================0.5.160630===============================
+Firmware Version:
+0.5.160630
+
+Release Date:
+2016/07/12
+
+Upgrades:
+1. Update CLI commands.
+2. Update AcSiP LoRa protocol.
+
+Known Issue:
+N/A
+
+==============================0.5.160427===============================
+Firmware Version:
+0.5.160427
+
+Release Date:
+2016/05/16
+
+Upgrades:
+1. First release of SDK package with LED Blink function sample.
+
+Known Issue:
+N/A
