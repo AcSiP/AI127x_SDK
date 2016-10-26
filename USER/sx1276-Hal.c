@@ -28,195 +28,75 @@
 #include "spi.h"
 #include "sx1276-Hal.h"
 
-/*!
- * SX1276 RESET I/O definitions
- */
-#if defined( STM32F4XX ) || defined( STM32F2XX )
-	#define RESET_IOPORT		GPIOG
-	#define RESET_PIN		GPIO_Pin_12
-#elif defined( STM32F401xx ) 
+
+#if defined( STM32F401xx ) || defined( STM32F072 )
 	#define RESET_IOPORT		GPIOA
 	#define RESET_PIN		GPIO_Pin_8
-#elif defined( STM32F072 ) 
-	#define RESET_IOPORT		GPIOA
-	#define RESET_PIN		GPIO_Pin_8
-#else
-	#define RESET_IOPORT		GPIOA
-	#define RESET_PIN		GPIO_Pin_1
-#endif
 
-/*!
- * SX1276 SPI NSS I/O definitions
- */
-#if defined( STM32F4XX ) || defined( STM32F2XX )
-	#define NSS_IOPORT		GPIOA
-	#define NSS_PIN			GPIO_Pin_15
-#elif defined( STM32F401xx ) 
 	#define NSS_IOPORT		GPIOB
 	#define NSS_PIN			GPIO_Pin_12
-#elif defined( STM32F072 ) 
-	#define NSS_IOPORT		GPIOB
-	#define NSS_PIN			GPIO_Pin_12
-#else
-	#define NSS_IOPORT		GPIOA
-	#define NSS_PIN			GPIO_Pin_15
-#endif
 
-/*!
- * SX1276 DIO pins  I/O definitions
- */
-#if defined( STM32F4XX ) || defined( STM32F2XX )
-	#define DIO0_IOPORT		GPIOG
-	#define DIO0_PIN		GPIO_Pin_13
-#elif defined( STM32F401xx )
 	#define DIO0_IOPORT		GPIOB
 	#define DIO0_PIN		GPIO_Pin_5
-#elif defined( STM32F072 )
-	#define DIO0_IOPORT		GPIOB
-	#define DIO0_PIN		GPIO_Pin_5
-#else
-	#define DIO0_IOPORT		GPIOA
-	#define DIO0_PIN		GPIO_Pin_0
-#endif
 
-#if defined( STM32F4XX ) || defined( STM32F2XX )
-	#define DIO1_IOPORT		GPIOB
-	#define DIO1_PIN		GPIO_Pin_8
-#elif defined( STM32F401xx )
 	#define DIO1_IOPORT		GPIOA
 	#define DIO1_PIN		GPIO_Pin_10
-#elif defined( STM32F072 ) 
-	#define DIO1_IOPORT		GPIOA
-	#define DIO1_PIN		GPIO_Pin_10
-#else
-	#define DIO1_IOPORT		GPIOB
-	#define DIO1_PIN		GPIO_Pin_0
-#endif
 
-#if defined( STM32F4XX ) || defined( STM32F2XX )
-	#define DIO2_IOPORT		GPIOA
-	#define DIO2_PIN		GPIO_Pin_2
-#elif defined( STM32F401xx ) 
 	#define DIO2_IOPORT		GPIOA
 	#define DIO2_PIN		GPIO_Pin_9
-#elif defined( STM32F072 ) 
-	#define DIO2_IOPORT		GPIOA
-	#define DIO2_PIN		GPIO_Pin_9
-#else
-	#define DIO2_IOPORT		GPIOC
-	#define DIO2_PIN		GPIO_Pin_5
-#endif
 
-#if defined( STM32F4XX ) || defined( STM32F2XX )
-	#define DIO3_IOPORT
-	#define DIO3_PIN		RF_DIO3_PIN
-#elif defined( STM32F401xx ) 
 	#define DIO3_IOPORT		GPIOB
 	#define DIO3_PIN		GPIO_Pin_10
-#elif defined( STM32F072 )
-	#define DIO3_IOPORT		GPIOB
-	#define DIO3_PIN		GPIO_Pin_10
-#else
-	#define DIO3_IOPORT
-	#define DIO3_PIN		RF_DIO3_PIN
-#endif
 
-#if defined( STM32F4XX ) || defined( STM32F2XX )
-	#define DIO4_IOPORT
-	#define DIO4_PIN		RF_DIO4_PIN
-#elif defined( STM32F401xx )
 	#define DIO4_IOPORT		GPIOB
 	#define DIO4_PIN		GPIO_Pin_1
-#elif defined( STM32F072 ) 
-	#define DIO4_IOPORT		GPIOB
-	#define DIO4_PIN		GPIO_Pin_1
-#else
-	#define DIO4_IOPORT
-	#define DIO4_PIN		RF_DIO4_PIN
-#endif
 
-#if defined( STM32F4XX ) || defined( STM32F2XX )
-	#define DIO5_IOPORT
-	#define DIO5_PIN		RF_DIO5_PIN
-#elif defined( STM32F401xx )
-	#define DIO5_IOPORT		GPIOC  
-	#define DIO5_PIN		GPIO_Pin_13
-#elif defined( STM32F072 )
 	#define DIO5_IOPORT		GPIOC  
 	#define DIO5_PIN		GPIO_Pin_13
 #else
-	#define DIO5_IOPORT
-	#define DIO5_PIN		RF_DIO5_PIN
+	#error "Missing define MCU type (STM32F072 or STM32F401xx)"
 #endif
 
-#if defined( STM32F4XX ) || defined( STM32F2XX )
-	#define RXTX_IOPORT
-	#define RXTX_PIN		FEM_CTX_PIN
-//#elif defined( STM32F401xx ) 
-//#elif defined( STM32F072 ) 
-//	#define RXTX_IOPORT		GPIOC                                 
-//	#define RXTX_PIN		GPIO_Pin_5
-//	#define RX_IOPORT		GPIOC                                 
-//	#define RX_PIN			GPIO_Pin_0
-//	#define TX_IOPORT		GPIOC                                 
-//	#define TX_PIN			GPIO_Pin_1
-#else
-	#define RXTX_IOPORT
-	#define RXTX_PIN		FEM_CTX_PIN
-#endif
+#define RXTX_IOPORT
+#define RXTX_PIN			FEM_CTX_PIN
 
 
 void		SX1276InitIo( void )
 {
 	GPIO_InitTypeDef	GPIO_InitStructure;
 
-#if defined( STM32F4XX ) || defined( STM32F2XX )
-	RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOB | RCC_AHB1Periph_GPIOG, ENABLE );
-#elif defined( STM32F401xx )
+#if defined( STM32F401xx )
 	RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOB | RCC_AHB1Periph_GPIOC, ENABLE );
 #elif defined( STM32F072 )
 	RCC_AHBPeriphClockCmd( RCC_AHBPeriph_GPIOA | RCC_AHBPeriph_GPIOB | RCC_AHBPeriph_GPIOC, ENABLE );
-#else
-	RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO, ENABLE );
 #endif
 
-#if defined( STM32F4XX ) || defined( STM32F2XX )
+	// Configure RESET as output
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
-#elif defined( STM32F401xx )
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+
+#if defined( STM32F401xx )
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 #elif defined( STM32F072 )
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_Level_3;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
-#else
-	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 #endif
+
+	GPIO_InitStructure.GPIO_Pin = RESET_PIN;
+	GPIO_Init( RESET_IOPORT, & GPIO_InitStructure );
 
 	// Configure NSS as output
-	GPIO_WriteBit( NSS_IOPORT, NSS_PIN, Bit_SET );
 	GPIO_InitStructure.GPIO_Pin = NSS_PIN;
 	GPIO_Init( NSS_IOPORT, &GPIO_InitStructure );
 
+	GPIO_WriteBit( NSS_IOPORT, NSS_PIN, Bit_SET );
+
 	// Configure radio DIO as inputs
-#if defined( STM32F4XX ) || defined( STM32F2XX )
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-#elif defined( STM32F401xx )
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+#if defined( STM32F401xx )
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 #elif defined( STM32F072 ) 
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_Level_3;
-#else
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 #endif
 
 	// Configure DIO0
@@ -232,7 +112,7 @@ void		SX1276InitIo( void )
 	GPIO_Init( DIO2_IOPORT, &GPIO_InitStructure );
 
 	// REAMARK: DIO3/4/5 configured are connected to IO expander
-#if defined( STM32F401xx )
+
 	// Configure DIO3 as input
 	GPIO_InitStructure.GPIO_Pin =  DIO3_PIN;
 	GPIO_Init( DIO3_IOPORT, &GPIO_InitStructure );
@@ -244,67 +124,17 @@ void		SX1276InitIo( void )
 	// Configure DIO5 as input
 	GPIO_InitStructure.GPIO_Pin =  DIO5_PIN;
 	GPIO_Init( DIO5_IOPORT, &GPIO_InitStructure );
-#elif defined( STM32F072 ) 
-	// Configure DIO3 as input
-	GPIO_InitStructure.GPIO_Pin =  DIO3_PIN;
-	GPIO_Init( DIO3_IOPORT, &GPIO_InitStructure );
-
-	// Configure DIO4 as input
-	GPIO_InitStructure.GPIO_Pin =  DIO4_PIN;
-	GPIO_Init( DIO4_IOPORT, &GPIO_InitStructure );
-
-	// Configure DIO5 as input
-	GPIO_InitStructure.GPIO_Pin =  DIO5_PIN;
-	GPIO_Init( DIO5_IOPORT, &GPIO_InitStructure );
-#endif
 }
 
 
 void		SX1276SetReset( uint8_t state )
 {
-	GPIO_InitTypeDef	GPIO_InitStructure;
-
 	if( state == RADIO_RESET_ON ){
 		// Set RESET pin to 1
 		GPIO_WriteBit( RESET_IOPORT, RESET_PIN, Bit_SET );
-
-		// Configure RESET as output
-#if defined( STM32F4XX ) || defined( STM32F2XX ) || defined( STM32F401xx ) || defined( STM32F072 )
-		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-#else
-		GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
-#endif     
-
-#if defined( STM32F4XX ) || defined( STM32F2XX ) || defined( STM32F401xx )
-		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-#else
-		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_Level_3;
-#endif    
-
-		GPIO_InitStructure.GPIO_Pin = RESET_PIN;
-		GPIO_Init( RESET_IOPORT, &GPIO_InitStructure );
 	}
 	else {
-#if FPGA == 0    
-		// Configure RESET as input
-#if defined( STM32F4XX ) || defined( STM32F2XX ) || defined( STM32F401xx ) || defined( STM32F072 )
-		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-#else
-		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-#endif   
-
-#if defined( STM32F4XX ) || defined( STM32F2XX )  || defined( STM32F401xx )
-		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-#else
-		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_Level_3;
-#endif    
-		GPIO_InitStructure.GPIO_Pin =  RESET_PIN;
-		GPIO_Init( RESET_IOPORT, &GPIO_InitStructure );
-#else
 		GPIO_WriteBit( RESET_IOPORT, RESET_PIN, Bit_RESET );
-#endif
-
 	}
 }
 
@@ -432,3 +262,5 @@ inline void	SX1276WriteRxTx( uint8_t txEnable )
 */
 
 #endif // USE_SX1276_RADIO
+
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

@@ -1,21 +1,19 @@
-/**
-  ******************************************************************************
-  * @file    Project/ARM-Lora/flash.h 
-  * @author  JC
-  * @version V1.0.0
-  * @date    15-Mar-2016
-  * @brief   Header for flash.c module
-  ******************************************************************************
-  * @attention
-  *
-  * 
-  *
-  ******************************************************************************
-  */
-  
+﻿
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// 版權所有：群登科技股份有限公司
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
+
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __FLASH_H
-#define __FLASH_H
+#ifndef USER_FLASH_H_
+#define USER_FLASH_H_
 
 /* Includes ------------------------------------------------------------------*/
 #ifdef STM32F072
@@ -146,13 +144,13 @@
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 #ifdef STM32F072
-	//void	FLASH_EraseAllRecordPage(void);
-  void FLASH_EraseRecordPage( uint32_t );
+	// void	FLASH_EraseAllRecordPage(void);
+	void	FLASH_EraseRecordPage( uint32_t );
 #endif
 
 #ifdef STM32F401xx
-	//void	FLASH_EraseAllRecordSector(void);
-  void FLASH_EraseRecordSector( uint32_t );
+	// void	FLASH_EraseAllRecordSector(void);
+	void	FLASH_EraseRecordSector( uint32_t );
 #endif
 
 void	FLASH_WriteByte( uint32_t, uint8_t *, uint16_t );
@@ -166,9 +164,6 @@ void	FLASH_ReadDoubleWord( uint32_t, uint64_t *, uint16_t );
 void	FLASH_WriteString( uint32_t, uint8_t *, uint16_t );
 void	FLASH_ReadString( uint32_t, uint8_t *, uint16_t );
 
-#endif /* __FLASH_H */
+#endif		// USER_FLASH_H_
 
-
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

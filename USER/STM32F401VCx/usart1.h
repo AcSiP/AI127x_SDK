@@ -1,3 +1,16 @@
+﻿
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// 版權所有：群登科技股份有限公司
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
+
 /**
   ******************************************************************************
   * @file    Project/ARM-Lora/usart1.h  
@@ -12,10 +25,13 @@
   *
   ******************************************************************************
   */
-  
+
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __USART1_H
-#define __USART1_H
+#ifndef USER_STM32F401VCX_USART1_H_
+#define USER_STM32F401VCX_USART1_H_
+
+#ifdef Board__A22_Tracker
+
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx.h"
@@ -27,21 +43,17 @@
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void USART1_PinInitialization(void);
-void USART1_UartConfig(uint32_t);
-void USART1_UartEnableOrDisable(FunctionalState);
-void USART1_UartInit(uint32_t);
-void USART1_UartWrite(uint8_t *, uint32_t);
-void USART1_IRQHandler(void);
-void USART1_EnvironmentVariableSet(void);
-void USART1_VariableSwap(void);
+void	USART1_PinInitialization(void);
+void	USART1_UartConfig(uint32_t);
+void	USART1_UartEnableOrDisable(FunctionalState);
+void	USART1_UartInit(uint32_t);
+void	USART1_UartWrite(uint8_t *, uint32_t);
+void	USART1_IRQHandler(void);
+void	USART1_EnvironmentVariableSet(void);
+void	USART1_VariableSwap(void);
 
+#endif		// Board__A22_Tracker
 
+#endif		// USER_STM32F401VCX_USART1_H_
 
-#endif /* __USART1_H */
-
-
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
-
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

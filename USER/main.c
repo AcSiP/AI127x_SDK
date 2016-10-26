@@ -1,106 +1,135 @@
-/**
-  ******************************************************************************
-  * @file    Project/main.c 
-  * @author  
-  * @version 
-  * @date    
-  * @brief   Main program body
-  ******************************************************************************
-  * @attention
-  * 
-  * 
-  * 
-  ******************************************************************************
-  */
+Ôªø
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// ÁâàÊ¨äÊâÄÊúâÔºöÁæ§ÁôªÁßëÊäÄËÇ°‰ªΩÊúâÈôêÂÖ¨Âè∏
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-/** 
-  * 
-  */
+
+#include "Base_Driver__UART1.h"
+#include "UART_Console.h"
+
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
+#ifdef STM32F072
+	#define APPLICATION_ADDRESS		(uint32_t)0x0800C000
+#endif
+
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+
+///////////////// for STM32F0 IAP //////////////////////////////
+#ifdef STM32F072
+	#if (defined ( __CC_ARM ))
+	__IO uint32_t			VectorTable[48] __attribute__((at(0x20000000)));
+	#elif (defined (__ICCARM__))
+	#pragma location = 0x20000000
+	__no_init __IO uint32_t		VectorTable[48];
+	#elif defined (  __GNUC__  )
+	__IO uint32_t			VectorTable[48] __attribute__((section(".RAMVectorTable")));
+	#elif defined ( __TASKING__ )
+	__IO uint32_t			VectorTable[48] __at(0x20000000);
+	#endif
+#endif
+
 ///////////////// for System //////////////////////////////
-__IO uint32_t SystemOperMode;
-bool LoraStartWork = 1;       // 1=start or 0=stop LORA
-bool EnableMaster;        // 1=Master or 0=Slave selection
-///////////////// for USART2 CmdUART & CLI ///////////////////////
-extern __IO uint16_t CmdUART_RX_Length;
-extern __IO uint8_t RX_Buf1[CmdUART_RX_BufLength];
-extern __IO uint8_t RX_Buf2[CmdUART_RX_BufLength];
-extern __IO bool isRX_Buf1Full;
-extern __IO bool isRX_Buf2Full;
-extern __IO bool LoRaOn;
-uint8_t CLI_Buf[CmdUART_RX_BufLength];
+__IO uint32_t			SystemOperMode;
+bool				LoraStartWork = 1;		// 1=start or 0=stop LORA
+bool				EnableMaster;			// 1=Master or 0=Slave selection
+bool				Flag__Init_RTC = false;
+
+///////////////// for CmdUART & CLI ///////////////////////
+extern __IO bool		LoRaOn;
+uint8_t				CLI_Buf[ 128 ];
+
+Byte_Queue_Struct		Console__RX_Queue;
+
+
 ///////////////// for USB Cmd & CLI ///////////////////////
 #ifdef STM32F401xx
 #ifdef	USBD_VCP_Console
-extern __IO bool UsbDegugOn;
+extern __IO bool		UsbDegugOn;
 #endif
 #endif
+
 ///////////////// for Lora Radio //////////////////////////
-extern tLoRaSettings LoRaSettings;
-__IO bool LoraNeedTxData;
-__IO size_t LoraTxPayloadSize;
-__IO size_t LoraRxPayloadSize;
-__IO uint8_t LoraTxBuffer[LoraBufferLength];
-__IO uint8_t LoraRxBuffer[LoraBufferLength];
-tRadioDriver *Radio = NULL;
-uint8_t LoraOperationMode;
+extern tLoRaSettings		LoRaSettings;
+__IO bool			LoraNeedTxData;
+__IO size_t			LoraTxPayloadSize;
+__IO size_t			LoraRxPayloadSize;
+__IO uint8_t			LoraTxBuffer[LoraBufferLength];
+__IO uint8_t			LoraRxBuffer[LoraBufferLength];
+tRadioDriver *			Radio = NULL;
+uint8_t				LoraOperationMode;
+
 ///////////////// for Acsip Protocol //////////////////////
-__IO tAcsipProtocolFrame TxFrame;
-__IO tAcsipProtocolFrame RxFrame;
-__IO tLoraRunningEvent LoraRunningEvent;
-//static uint8_t LoraPollEventCount;
-extern tLoraDeviceNode *LoraNodeDevice[MAX_LoraNodeNum];      //for MASTER
-extern tDeviceNodeSleepAndRandomHop *DeviceNodeSleepAndRandomHop[MAX_LoraNodeNum];  //for MASTER 
-extern tDeviceNodeSensor *DeviceNodeSensor[MAX_LoraNodeNum];  //for MASTER
-extern uint8_t LoraNodeCount;                                 //for MASTER
-extern tLoraDeviceNode *LoraGateWay;                          //for SLAVE
-extern tDeviceNodeSensor *MySensor;                           //for SLAVE
+__IO tAcsipProtocolFrame	TxFrame;
+__IO tAcsipProtocolFrame	RxFrame;
+__IO tLoraRunningEvent		LoraRunningEvent;
+
+extern tLoraDeviceNode *		LoraNodeDevice[MAX_LoraNodeNum];			// for MASTER
+extern tDeviceNodeSleepAndRandomHop *	DeviceNodeSleepAndRandomHop[MAX_LoraNodeNum];		// for MASTER
+extern tDeviceNodeSensor *		DeviceNodeSensor[MAX_LoraNodeNum];			// for MASTER
+extern uint8_t				LoraNodeCount;						// for MASTER
+extern tLoraDeviceNode *		LoraGateWay;						// for SLAVE
+extern tDeviceNodeSensor *		MySensor;						// for SLAVE
+
 ///////////////// for Lora Event ///////////////////////////
-extern uint8_t EventCountPriority0, EventCountPriority1, EventCountPriority2;
+extern uint8_t			EventCountPriority0, EventCountPriority1, EventCountPriority2;
+
 ///////////////// for Button ///////////////////////////
-extern __IO bool PowerButton;
-extern __IO bool FactoryResetButton;
-///////////////// for Sleep ///////////////////////////
-__IO bool Slave_PollEventAccomplish = false;                   //for SLAVE
-extern __IO bool Slave_PollEvent;                              //for SLAVE
-extern __IO bool Slave_PollEvent_UTCnotZero;                   //for SLAVE
+extern __IO bool		PowerButton;
+extern __IO bool		FactoryResetButton;
+
+///////////////// for Sleep & Random Hopping Channel //////
+__IO bool			Slave_PollEventAccomplish = false;		// for SLAVE
+extern __IO uint16_t		SLAVE_LoraPollEventInterval;			// for SLAVE
+extern __IO bool		Slave_PollEvent;				// for SLAVE
+extern __IO bool		Slave_PollEvent_UTCnotZero;			// for SLAVE
+extern __IO uint8_t		SLAVE_LoraHoppingStartChannel;			// for SLAVE
+
+///////////////// for Battery ADC ///////////////////////////
+#ifdef STM32F401xx
+extern __IO uint16_t		ADC1ConvertedValue;				// for MASTER & SLAVE
+#endif
+
 ///////////////// for Product Verification /////////////////
-__IO uint32_t LoraPV_RxCount;
-__IO bool LoraPV_RxTest;
-__IO bool LoraPV_TxTest;
-__IO bool LoraPV_DefaultTxSet;
-__IO uint32_t LoraPV_TxCount;
-__IO uint32_t LoraPV_TxTimes;
+__IO uint32_t		LoraPV_RxCount;
+__IO bool		LoraPV_RxTest;
+__IO bool		LoraPV_TxTest;
+__IO bool		LoraPV_DefaultTxSet;
+__IO uint32_t		LoraPV_TxCount;
+__IO uint32_t		LoraPV_TxTimes;
+
 ///////////////// for Ping-Pong test ///////////////////////
-static uint16_t BufferSize = 9;             // RF buffer size
-__IO static uint64_t RX_COUNT = 0;
-__IO static uint64_t RX_Done_COUNT = 0;
-__IO static uint64_t RX_HasData_COUNT = 0;
-static uint8_t Buffer[9];                   // RF buffer
-const uint8_t PingMsg[] = "PING";
-const uint8_t PongMsg[] = "PONG";
-
-
+static uint16_t		BufferSize = 9;			// RF buffer size
+__IO static uint64_t	RX_COUNT = 0;
+__IO static uint64_t	RX_Done_COUNT = 0;
+__IO static uint64_t	RX_HasData_COUNT = 0;
+static uint8_t		Buffer[9];			// RF buffer
+const uint8_t		PingMsg[] = "PING";
+const uint8_t		PongMsg[] = "PONG";
 
 
 /* Private function prototypes -----------------------------------------------*/
-static void RCC_Configuration(void);
-static void RX_DataCopy(uint8_t *, const uint8_t *, uint16_t);
-static bool MasterLoraEvent_PROCESS(void);
-static void OnMasterForNormal(void);
-static void OnSlaveForNormal(void);
-static void ForLoraProductVerification(void);
-static void ForFskProductVerification(void);
-static void OnMasterForPingPongTest(void);
-static void OnSlaveForPingPongTest(void);
-static void RxTestOutput(void);
-static void PacketOutput(uint8_t *, size_t);
+static void	RX_DataCopy(uint8_t *, const uint8_t *, uint16_t);
+static bool	MasterLoraEvent_PROCESS(void);
+static void	OnMasterForNormal(void);
+static void	OnSlaveForNormal(void);
+static void	ForLoraProductVerification(void);
+static void	ForFskProductVerification(void);
+static void	OnMasterForPingPongTest(void);
+static void	OnSlaveForPingPongTest(void);
+static void	RxTestOutput(void);
+static void	PacketOutput(uint8_t *, size_t);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -112,174 +141,219 @@ static void PacketOutput(uint8_t *, size_t);
 int	main( void )
 {
 	/* Add your application code here */
-	//static uint8_t	LoraNum = 0;
-  uint32_t delayTick, totalDelay;
+	// static uint8_t	LoraNum = 0;
+
+#ifdef Board__A22_Tracker
+	uint32_t		delayTick, totalDelay;
+#endif
+
+
+#ifdef STM32F072
+	uint32_t		i;
+
+	/* Relocate by software the vector table to the internal SRAM at 0x20000000 ***/
+	/* Copy the vector table from the Flash (mapped at the base of the application load address 0x0800C000) to the base address of the SRAM at 0x20000000. */
+	for ( i = 0; i < 48; i++ ) {
+		VectorTable[i] = *(__IO uint32_t*)( APPLICATION_ADDRESS + ( i << 2 ) );
+	}
+
+	/* Enable the SYSCFG peripheral clock*/
+	RCC_APB2PeriphClockCmd( RCC_APB2Periph_SYSCFG, ENABLE );
+
+	/* Remap SRAM at 0x00000000 */
+	SYSCFG_MemoryRemapConfig( SYSCFG_MemoryRemap_SRAM );
+#endif
+
+
+	if( RCC_GetFlagStatus( RCC_FLAG_PINRST ) != RESET ) Flag__Init_RTC = true;		// Pin reset
+	if( RCC_GetFlagStatus( RCC_FLAG_PORRST ) != RESET ) Flag__Init_RTC = true;		// POR/PDR reset
+// 	if( RCC_GetFlagStatus( RCC_FLAG_SFTRST ) != RESET ) Flag__Init_RTC = true;		// Software reset
+	if( RCC_GetFlagStatus( RCC_FLAG_IWDGRST ) != RESET ) Flag__Init_RTC = true;		// Independent Watchdog reset
+	if( RCC_GetFlagStatus( RCC_FLAG_WWDGRST ) != RESET ) Flag__Init_RTC = true;		// Window Watchdog reset
+	if( RCC_GetFlagStatus( RCC_FLAG_LPWRRST ) != RESET ) Flag__Init_RTC = true;		// Low Power reset
+
+#ifdef STM32F072
+	if( RCC_GetFlagStatus( RCC_FLAG_OBLRST ) != RESET ) Flag__Init_RTC = true;		// Option Byte Loader (OBL) reset
+// 	if( RCC_GetFlagStatus( RCC_FLAG_V18PWRRSTF ) != RESET ) Flag__Init_RTC = true;		// V1.8 power domain reset
+#endif
 
 	SystemOperMode = SystemInNormal;
-	//SystemOperMode = SystemInPingPognTest;
-	//SystemOperMode = SystemInProductVerification;
+	// SystemOperMode = SystemInPingPognTest;
+	// SystemOperMode = SystemInProductVerification;
 	LoraNeedTxData = false;
 	LoraTxPayloadSize = 0;
 	memset((void *)LoraTxBuffer, 0, LoraBufferLength);
 	LoraRxPayloadSize = 0;
 	memset((void *)LoraRxBuffer, 0, LoraBufferLength);
-  
-#ifdef STM32F401xx
-  NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0xC000);
-#endif
 
-	RCC_Configuration();
-  RTC_TimerConfig();
-  
+// 	if( Flag__Init_RTC ){
+		RTC_TimerConfig();
+// 	} else {
+// 		RTC_AlarmStop();
+// 	}
+
 #ifdef STM32F401xx
 #ifdef	USBD_VCP_Console
-  if(UsbDegugOn == true) {
-	  USBD_Init( &USB_OTG_dev, USB_OTG_FS_CORE_ID, &USR_desc,  &USBD_CDC_cb,  &USR_cb );
-    TIM9_TimerConfig();
-  }
+	if(UsbDegugOn == true) {
+		USBD_Init( &USB_OTG_dev, USB_OTG_FS_CORE_ID, &USR_desc,  &USBD_CDC_cb,  &USR_cb );
+		TIM9_TimerConfig();
+	}
 #endif
 #endif
-  
-  LoraPara_LoadAndConfiguration();
+
+	LoraPara_LoadAndConfiguration();
 	BoardInit();
+	CmdUART__Init();
 	Radio = RadioDriverInit();
 	Radio->Init();
-  SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
+	SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
 	Radio->StartRx();
 
 	AcsipProtocol_SetMyAddress();
 	memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
 	memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
 	LoraLinkListEvent_Initialization();
-  
-  SaveRecord_ReadOutLoraGateWayPara();
-  SaveRecord_ReadOutLoraNodePara();
-  SaveRecord_TraceDataSpaceInitialization();
-  
-  Button_ButtonInitialization();
-  Led_PinInitialization();
+
+	SaveRecord_ReadOutLoraGateWayPara();
+	SaveRecord_ReadOutLoraNodePara();
+	SaveRecord_TraceDataSpaceInitialization();
+
+#ifdef Board__A22_Tracker
+	Button_ButtonInitialization();
+	Led_PinInitialization();
+#endif
+
 
 	enableGlobalInterrupts();
-  
-  Led_BootFlashLed();
-  
-  BlueTooth_DA14580Run(ComPortBaudRate);
-  if(EnableMaster == false) {                //¢{
-    CmdUART_UartInit(ComPortBaudRate);       //¢uº»Æ…µπ SLAVE ¥˙∏’•Œ,≠Y§£∞ı¶Ê¶π,´h CMD UART øÈ•X∑|§@™Ωµ•´›ßπ¶®¶”®œ±oµL≠≠µ•´›
-	  CmdTIMER_TimerConfig();                  //¢}
-  }
-  
-  if(EnableMaster == false) {
-    GPS_MT3333Run();
-  }
-  
-  RTC_AlarmConfig();
-  RTC_AlarmRun();
-  
-  CmdUART_UartWrite((uint8_t *)"FirmwareVersion=", strlen("FirmwareVersion="));
-	CmdUART_UartWrite((uint8_t *)FirmwareVersion, strlen(FirmwareVersion));
-	CmdUART_UartWrite((uint8_t *)"\r\n", strlen("\r\n"));
-	CmdUART_UartWrite((uint8_t *)"LORA module start RUNNING...\r\n", strlen("LORA module start RUNNING...\r\n"));
-  
-  SLEEP_SlaveSleepVariableSet();
-  
-  //SLEEP_SlaveSleepProcedure(60);       //for sleep test
-  //CmdUART_UartWrite((uint8_t *)"wake up...\r\n", strlen("wake up...\r\n"));       //for sleep test
-  
-	while( 1 ){
-		//Program_Sample
-		LEDBlink(1000,1000,10000);
-		//Program_Sample end
-		if(isRX_Buf1Full == true) {
-			memset((void *)CLI_Buf, 0, CmdUART_RX_BufLength);
-			RX_DataCopy(CLI_Buf, (const uint8_t *)RX_Buf1, CmdUART_RX_Length);
-			memset((void *)RX_Buf1, 0, CmdUART_RX_BufLength);
-			isRX_Buf1Full = false;
-			goto CLI_PROCESS;	//CLI_Buf≥B≤z
 
+
+
+#ifdef Board__A22_Tracker
+	Led_BootFlashLed();
+
+	BlueTooth_DA14580Run(ComPortBaudRate);
+	if(EnableMaster == false) {				// ‚îê
+		CmdUART__Open(ComPortBaudRate);		// ‚îúÊö´ÊôÇÁµ¶ SLAVE Ê∏¨Ë©¶Áî®,Ëã•‰∏çÂü∑Ë°åÊ≠§,Ââá CMD UART Ëº∏Âá∫ÊúÉ‰∏ÄÁõ¥Á≠âÂæÖÂÆåÊàêËÄå‰ΩøÂæóÁÑ°ÈôêÁ≠âÂæÖ
+		CmdTIMER_TimerConfig();				// ‚îò
+	}
+
+	if(EnableMaster == false) GPS_MT3333Run();
+#else
+	CmdUART__Open( ComPortBaudRate );
+	CmdTIMER_TimerConfig();
+#endif
+	Console_Output_String( "\r\n" );
+
+
+	// Dump power ON status register
+#ifdef STM32F072
+	if( RCC_GetFlagStatus( RCC_FLAG_OBLRST ) != RESET ) Console_Output_String( "RCC_FLAG_OBLRST\r\n" );			// Option Byte Loader (OBL) reset
+	if( RCC_GetFlagStatus( RCC_FLAG_V18PWRRSTF ) != RESET ) Console_Output_String( "RCC_FLAG_V18PWRRSTF\r\n" );		// V1.8 power domain reset
+#endif
+	if( RCC_GetFlagStatus( RCC_FLAG_PINRST ) != RESET ) Console_Output_String( "RCC_FLAG_PINRST\r\n" );			// Pin reset
+	if( RCC_GetFlagStatus( RCC_FLAG_PORRST ) != RESET ) Console_Output_String( "RCC_FLAG_PORRST\r\n" );			// POR/PDR reset
+	if( RCC_GetFlagStatus( RCC_FLAG_SFTRST ) != RESET ) Console_Output_String( "RCC_FLAG_SFTRST\r\n" );			// Software reset
+	if( RCC_GetFlagStatus( RCC_FLAG_IWDGRST ) != RESET ) Console_Output_String( "RCC_FLAG_IWDGRST\r\n" );			// Independent Watchdog reset
+	if( RCC_GetFlagStatus( RCC_FLAG_WWDGRST ) != RESET ) Console_Output_String( "RCC_FLAG_WWDGRST\r\n" );			// Window Watchdog reset
+	if( RCC_GetFlagStatus( RCC_FLAG_LPWRRST ) != RESET ) Console_Output_String( "RCC_FLAG_LPWRRST\r\n" );			// Low Power reset
+	RCC_ClearFlag();
+
+	RTC_AlarmConfig();
+	RTC_AlarmRun();
+
+	Console_Output_String( "FirmwareVersion=" );
+	Console_Output_String( FirmwareVersion );
+	Console_Output_String( " for " );
+	Console_Output_String( Target_Lora_Device );
+	Console_Output_String( "\r\n" );
+	Console_Output_String( "LORA module start RUNNING...\r\n" );
+
+	SLEEP_SlaveSleepVariableSet();
+	RandomHopStartChannel_SlaveDefaultHoppingChannel();
+
+	// SLEEP_SlaveSleepAandRandomHopChannelProcedure(60);		// for sleep test
+	// Console_Output_String( "wake up...\r\n" );			// for sleep test
+
+	while(1) {
+		//CmdUART__UartGet_String( uint8_t *buffer, uint16_t buf_sz, uint16_t *ret_length );
+		if( CmdUART__UartGet_String( CLI_Buf, sizeof( CLI_Buf ), NULL ) ) {
+			goto CLI_PROCESS;		// CLI_BufËôïÁêÜ
 		}
-		else{
-			if(isRX_Buf2Full == true) {
-				memset((void *)CLI_Buf, 0, CmdUART_RX_BufLength);
-				RX_DataCopy(CLI_Buf, (const uint8_t *)RX_Buf2, CmdUART_RX_Length);
-				memset((void *)RX_Buf2, 0, CmdUART_RX_BufLength);
-				isRX_Buf2Full = false;
-				goto CLI_PROCESS;	//CLI_Buf≥B≤z
-			}
-		}
-    
+
 #ifdef STM32F401xx
 #ifdef	USBD_VCP_Console
-    if(UsbDegugOn == true) {
-      if( isVCP_RX_Buf1Full == true ){
-        memset( (void *) CLI_Buf, 0, VCP_RX_BufLength );
-        RX_DataCopy( CLI_Buf, (const uint8_t *) VCP_RX_Buf1, VCP_RX_Length );
-        memset( (void *) VCP_RX_Buf1, 0, VCP_RX_BufLength );
-        isVCP_RX_Buf1Full = false;
-        goto CLI_PROCESS;	//CLI_Buf≥B≤z
-      }
-      else {
-        if( isVCP_RX_Buf2Full == true ) {
-          memset( (void *) CLI_Buf, 0, VCP_RX_BufLength );
-          RX_DataCopy( CLI_Buf, (const uint8_t *) VCP_RX_Buf2, VCP_RX_Length );
-          memset( (void *) VCP_RX_Buf2, 0, VCP_RX_Length );
-          isVCP_RX_Buf2Full = false;
-          goto CLI_PROCESS;	//CLI_Buf≥B≤z
-        }
-      }
-    }
+		if(UsbDegugOn == true) {
+			if( isVCP_RX_Buf1Full == true ) {
+				memset( (void *) CLI_Buf, 0, VCP_RX_BufLength );
+				RX_DataCopy( CLI_Buf, (const uint8_t *) VCP_RX_Buf1, VCP_RX_Length );
+				memset( (void *) VCP_RX_Buf1, 0, VCP_RX_BufLength );
+				isVCP_RX_Buf1Full = false;
+				goto CLI_PROCESS;		// CLI_BufËôïÁêÜ
+			} else {
+				if( isVCP_RX_Buf2Full == true ) {
+					memset( (void *) CLI_Buf, 0, VCP_RX_BufLength );
+					RX_DataCopy( CLI_Buf, (const uint8_t *) VCP_RX_Buf2, VCP_RX_Length );
+					memset( (void *) VCP_RX_Buf2, 0, VCP_RX_Length );
+					isVCP_RX_Buf2Full = false;
+					goto CLI_PROCESS;		// CLI_BufËôïÁêÜ
+				}
+			}
+		}
 #endif
 #endif
-    
-    if(PowerButton == true) {
-      Button_PowerButtonAction();
-      PowerButton = false;
-    }
-    
-    if(FactoryResetButton == true) {
-      totalDelay = 0;
-      while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_4) == 0) {            // PB4=0, to mean keep press button
-        delayTick = GET_TICK_COUNT( );                                      // every 20ms, scan button
-        while( ( GET_TICK_COUNT( ) - delayTick ) < TICK_RATE_MS( 20 ) );    // if button still pressed, then total++
-        totalDelay++;                                                        // button release, then go out while loop
-      }
-      if(totalDelay >= 250) {                                                // if keep press button > 5s (250 * 20ms = 5000ms)
-        CLI_FactoryReset();                                             // then Factory Reset
-        CmdUART_UartWrite((uint8_t *)"Factory Reset OK!\r\n", strlen("Factory Reset OK!\r\n"));
-      }
-      FactoryResetButton = false;
-    }
-    
+
+
+#ifdef Board__A22_Tracker
+		if(PowerButton == true) {
+			Button_PowerButtonAction();
+			PowerButton = false;
+		}
+
+		if(FactoryResetButton == true) {
+			totalDelay = 0;
+			while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_4) == 0) {					// PB4=0, to mean keep press button
+				delayTick = GET_TICK_COUNT();							// every 20ms, scan button
+				while( ( GET_TICK_COUNT( ) - delayTick ) < TICK_RATE_MS( 20 ) ) {		// if button still pressed, then total++
+				}
+				totalDelay++;									// button release, then go out while loop
+			}
+
+			if(totalDelay >= 250) {				// if keep press button > 5s (250 * 20ms = 5000ms)
+				CLI_FactoryReset();			// then Factory Reset
+				Console_Output_String( "Factory Reset OK!\r\n" );
+			}
+			FactoryResetButton = false;
+		}
+#endif
+
+
 		switch(SystemOperMode) {
 			case SystemInNormal:
 				if( (LoraStartWork == true) && (EnableMaster == true) ) {
 					OnMasterForNormal();
-          SLEEP_MasterSleepProcedure();
-					/*if( EventCountPriority2 < 2){
-						if( LoraNodeDevice[LoraNum] != NULL ){
-							LoraLinkListEvent_BuildLoraEvent(LoraEventPriority2, LoraNum, Master_AcsipProtocol_Poll, LoraNodeDevice[LoraNum]->NodeAddress, NULL, NULL);
-						}
-						LoraNum++;
-						if( LoraNum >= MAX_LoraNodeNum ) LoraNum = 0;
-					}*/
-				}
-				else{
+					SLEEP_MasterSleepProcedure();
+				} else {
 					if( (LoraStartWork == true) &&  (EnableMaster == false) ) {
-            GPS_ReadIn(MySensor);
-            OnSlaveForNormal();
-            if(LoraGateWay != NULL) {
-              SLEEP_SlaveSleepProcedure(&LoraGateWay->Interval);
-            }
-          }
+#ifdef STM32F401xx
+						if(MySensor != NULL)  MySensor->Battery = ADC1ConvertedValue;
+#endif
+
+
+#ifdef Board__A22_Tracker
+						GPS_ReadIn(MySensor);
+#endif
+
+						OnSlaveForNormal();
+						if(LoraGateWay != NULL) SLEEP_SlaveSleepAandRandomHopChannelProcedure(&LoraGateWay->Interval);
+					}
 				}
 				break;
 
 			case SystemInProductVerification:
-				if( LoraStartWork == true ){
-					if(LoRaOn == true){
+				if( LoraStartWork == true ) {
+					if(LoRaOn == true) {
 						ForLoraProductVerification();
-					}
-					else{
+					} else {
 						ForFskProductVerification();
 					}
 				}
@@ -288,11 +362,8 @@ int	main( void )
 			case SystemInPingPognTest:
 				if( (EnableMaster == true) && (LoraStartWork == true) ) {
 					OnMasterForPingPongTest();
-				}
-				else {
-					if( LoraStartWork == true ) {
-						OnSlaveForPingPongTest();
-					}
+				} else {
+					if( LoraStartWork == true ) OnSlaveForPingPongTest();
 				}
 				break;
 
@@ -303,17 +374,16 @@ int	main( void )
 				break;
 		}
 
-		while( 0 ){
-CLI_PROCESS:		//(•i¶“º{ß‚¶π≥°§¿ºg¶®§@≠”®Á¶°)
+		while(0) {
+CLI_PROCESS:		// (ÂèØËÄÉÊÖÆÊääÊ≠§ÈÉ®ÂàÜÂØ´Êàê‰∏ÄÂÄãÂáΩÂºè)
+
 			CLI_process( (char *)CLI_Buf );
-			//¬«•—ßP¬_ret®”§F∏—±µ¶¨®Ï™∫∏ÍÆ∆™¨∫A,´D´¸•O(¶pret¶^∂«™¨∫A=SHELL_PROCESS_ERR_CMD_UNKN)´h∑Ìß@∏ÍÆ∆∂«øÈ•X•h(§]≠nßP¬_lora¨Oß_¶≥≥s§WΩu)
-			//•ÿ´e∫c´‰®C§@≠”cli´¸•O∞ı¶Ê´·≥£∑|¶^∂«§@≠”™¨∫A(ok°Berr)©Œµ≤™G
-			memset((void *)CLI_Buf, 0, CmdUART_RX_BufLength);
-			CmdUART_RX_Length = 0;
+			// ËóâÁî±Âà§Êñ∑ret‰æÜ‰∫ÜËß£Êé•Êî∂Âà∞ÁöÑË≥áÊñôÁãÄÊÖã,ÈùûÊåá‰ª§(Â¶ÇretÂõûÂÇ≥ÁãÄÊÖã=SHELL_PROCESS_ERR_CMD_UNKN)ÂâáÁï∂‰ΩúË≥áÊñôÂÇ≥Ëº∏Âá∫Âéª(‰πüË¶ÅÂà§Êñ∑loraÊòØÂê¶ÊúâÈÄ£‰∏äÁ∑ö)
+			// ÁõÆÂâçÊßãÊÄùÊØè‰∏ÄÂÄãcliÊåá‰ª§Âü∑Ë°åÂæåÈÉΩÊúÉÂõûÂÇ≥‰∏ÄÂÄãÁãÄÊÖã(ok„ÄÅerr)ÊàñÁµêÊûú
+			memset((void *)CLI_Buf, 0, sizeof( CLI_Buf ) );
 		}
 	}
 }
-
 
 
 /***************************************************************************************************
@@ -325,102 +395,32 @@ CLI_PROCESS:		//(•i¶“º{ß‚¶π≥°§¿ºg¶®§@≠”®Á¶°)
  *  Return:
  *  Example :
  **************************************************************************************************/
-void LoraPara_LoadAndConfiguration(void) {
-  
-  EnableMaster = 1;        // 1=Master or 0=Slave selection
-  
-  
-	LoRaSettings.Power = 20;
-	LoRaSettings.SignalBw = 7;		// LORA [0: 7.8 kHz, 1: 10.4 kHz, 2: 15.6 kHz, 3: 20.8 kHz, 4: 31.2 kHz,
-						// 5: 41.6 kHz, 6: 62.5 kHz, 7: 125 kHz, 8: 250 kHz, 9: 500 kHz, other: Reserved]  
-	LoRaSettings.SpreadingFactor = 10;	// LORA [6: 64, 7: 128, 8: 256, 9: 512, 10: 1024, 11: 2048, 12: 4096  chips]
-	LoRaSettings.FreqHopOn = 0;		// [0: OFF, 1: ON]
-	LoRaSettings.PayloadLength = MaxPacketSize;
-	LoRaSettings.PreambleLength = 12;
-  
-  SaveRecord_ReadOutMyselfPara();
-  
-  LoRaSettings.RFFrequency = Lora_RFFrequency;
-  LoRaSettings.HopPeriod = Lora_RFHoppingPeriod;		// Hops every frequency hopping period symbols
-  LoRaSettings.ErrorCoding = 1;		// LORA [1: 4/5, 2: 4/6, 3: 4/7, 4: 4/8]
-  LoRaSettings.CrcOn = true;		// [0: OFF, 1: ON]
-	LoRaSettings.ImplicitHeaderOn = 0;	// [0: OFF, 1: ON]
-  LoRaSettings.RxSingleOn = 1;		// [0: Continuous, 1 Single]
-  LoRaSettings.LowDataRateOptimize = 1;	// [0: OFF, 1: ON]
-  LoRaSettings.TxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
-	LoRaSettings.RxPacketTimeout = LoRaSettings.TxPacketTimeout;
-  //LoRaSettings.Oscillator = OscillatorTCXO;
-	LoRaSettings.Oscillator = OscillatorCrystal;
-  
-}
-
-
-
-/***************************************************************************************************
- *  Function Name: RCC_Configuration
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
-void	RCC_Configuration( void )
+void	LoraPara_LoadAndConfiguration(void)
 {
-	uint16_t	i;
+	EnableMaster = 0;				// 1=Master or 0=Slave selection
+	LoRaSettings.Power = 20;
+	LoRaSettings.SignalBw = 7;			// LORA [0: 7.8 kHz, 1: 10.4 kHz, 2: 15.6 kHz, 3: 20.8 kHz, 4: 31.2 kHz,
+							// 5: 41.6 kHz, 6: 62.5 kHz, 7: 125 kHz, 8: 250 kHz, 9: 500 kHz, other: Reserved]
+	LoRaSettings.SpreadingFactor = 10;		// LORA [6: 64, 7: 128, 8: 256, 9: 512, 10: 1024, 11: 2048, 12: 4096 chips]
+	LoRaSettings.FreqHopOn = 0;			// [0: OFF, 1: ON]
+	LoRaSettings.PayloadLength = MaxPacketSize;
+	LoRaSettings.MaxPayloadLength = MaxPacketSize;
+	LoRaSettings.PreambleLength = 12;
 
-	/* Enable HSE */
-	RCC_HSEConfig(RCC_HSE_ON);
-	for(i = 0 ; i < 50000 ; i++) ;
+	SaveRecord_ReadOutMyselfPara();
 
-	while(RCC_WaitForHSEStartUp() != SUCCESS);
-	/*!< Wait till HSE is ready */
-	while(RCC_GetFlagStatus(RCC_FLAG_HSERDY) == RESET);
-  
-	RCC_PLLCmd(ENABLE);
-#ifdef STM32F072
-	RCC_PLLConfig(RCC_PLLSource_HSE, RCC_PLLMul_2);
-#endif
-
-#ifdef STM32F401xx
-	/* PLL_VCO = (HSE_VALUE or HSI_VALUE / PLL_M) * PLL_N */
-	/* SYSCLK = PLL_VCO / PLL_P */
-	RCC_PLLConfig(RCC_PLLSource_HSE, 13, 168, 4, 7);
-#endif
-
-	for(i = 0 ; i < 50000 ; i++);
-	/*!< Wait till PLL is ready */
-	while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET);
-	/* Check if the PLL is still locked */
-	if (RCC_GetFlagStatus(RCC_FLAG_PLLRDY) != RESET) { 
-		/* Select PLL as system clock source */
-		RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
-	}
-
-#ifdef STM32F401xx
-	RCC_HCLKConfig(RCC_SYSCLK_Div1);
-	for(i = 0 ; i < 50000 ; i++);
-	RCC_PCLK1Config(RCC_HCLK_Div2);
-	for(i = 0 ; i < 50000 ; i++);
-	RCC_PCLK2Config(RCC_HCLK_Div2);
-	for(i = 0 ; i < 50000 ; i++);
-#endif
-  
-  
-  //Below, for LSE(32768Hz) test
-#ifdef STM32F072
-  //RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR, ENABLE);  /* Enable the PWR clock */
-  //RCC_LSEConfig(RCC_LSE_ON);    /* Enable the LSE OSC */
-  //while(RCC_GetFlagStatus(RCC_FLAG_LSERDY) == RESET);  /* Wait till LSE is ready */
-#endif
-#ifdef STM32F401xx
-  //RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR, ENABLE);  /* Enable the PWR clock */
-  //RCC_LSEConfig(RCC_LSE_ON);    /* Enable the LSE OSC */
-  //while(RCC_GetFlagStatus(RCC_FLAG_LSERDY) == RESET);  /* Wait till LSE is ready */
-#endif
-  
+	LoRaSettings.RFFrequency = Lora_RFFrequency;
+	LoRaSettings.HopPeriod = Lora_RFHoppingPeriod;		// Hops every frequency hopping period symbols
+	LoRaSettings.ErrorCoding = 1;				// LORA [1: 4/5, 2: 4/6, 3: 4/7, 4: 4/8]
+	LoRaSettings.CrcOn = true;				// [0: OFF, 1: ON]
+	LoRaSettings.ImplicitHeaderOn = 0;			// [0: OFF, 1: ON]
+	LoRaSettings.RxSingleOn = 1;				// [0: Continuous, 1 Single]
+	LoRaSettings.LowDataRateOptimize = 1;			// [0: OFF, 1: ON]
+	LoRaSettings.TxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
+	LoRaSettings.RxPacketTimeout = LoRaSettings.TxPacketTimeout;
+	// LoRaSettings.Oscillator = OscillatorTCXO;
+	LoRaSettings.Oscillator = OscillatorCrystal;
 }
-
 
 
 /***************************************************************************************************
@@ -436,12 +436,8 @@ void	RX_DataCopy( uint8_t *dst, const uint8_t *sou, uint16_t length)
 {
 	uint16_t	count;
 
-	for( count = 0 ; count < length ; count++ ){
-		dst[count] = sou[count];
-	}
-	
+	for( count = 0 ; count < length ; count++ ) dst[count] = sou[count];
 }
-
 
 
 /***************************************************************************************************
@@ -455,25 +451,25 @@ void	RX_DataCopy( uint8_t *dst, const uint8_t *sou, uint16_t length)
  **************************************************************************************************/
 static	bool	MasterLoraEvent_PROCESS( void )
 {
-	//int8_t	str[5];		//test output
+	// int8_t	str[5];		//test output
 	static bool	temp;
-	static uint8_t	tx_size, i;
-  
-	/* •ÿ´eºg®Ï≥Ã´·™∫∑Q™k¨O±N NodeCount ∑h®Ï§W§@ºh•h∞µ++ªPrangeßP¬_
-	¶]¨∞≠Y¨O¶b≥o∏Ã∞µ≥o•Û®∆,¶b´·≠±∂i®ÏNormalMaster®Á¶°∏Ã´·,±a§J™∫≠»
-	∑|¶A®¸ join°Bdata°Bleaveµ•ºv≈T¶π≠»,•Œ¶π•~≠±•[≠»§Ë¶°,•iØ‡•i•Hß‚LoraEventÆ≥±º*/
+	static uint8_t	tx_size;
 
-	/* ∂i®Ïswitch( Radio->Process( ) )´·,∂∑™`∑N§@•Û®∆,¥N¨O∑|¶≥®‰•L™¨∫A,¶pbusy,¶p¶π´‹¶b¶πNodeCount§U•iØ‡¥N∏ıπL
-	•≤∂∑µ•´›rx_timeout©Œrx_doneµ•™∫™¨™p,©“•H∂∑¶pπÍµ•´›,§]ª›®æ§ÓµL≠≠™∫busyµ•∑Ìæ˜™¨∫A,(™`∑Nslave¨Oß_§]∂∑™`∑N¶π±°ßŒ)  */
+	/* ÁõÆÂâçÂØ´Âà∞ÊúÄÂæåÁöÑÊÉ≥Ê≥ïÊòØÂ∞á NodeCount Êê¨Âà∞‰∏ä‰∏ÄÂ±§ÂéªÂÅö++ËàárangeÂà§Êñ∑
+	Âõ†ÁÇ∫Ëã•ÊòØÂú®ÈÄôË£°ÂÅöÈÄô‰ª∂‰∫ã,Âú®ÂæåÈù¢ÈÄ≤Âà∞NormalMasterÂáΩÂºèË£°Âæå,Â∏∂ÂÖ•ÁöÑÂÄº
+	ÊúÉÂÜçÂèó join„ÄÅdata„ÄÅleaveÁ≠âÂΩ±ÈüøÊ≠§ÂÄº,Áî®Ê≠§Â§ñÈù¢Âä†ÂÄºÊñπÂºè,ÂèØËÉΩÂèØ‰ª•ÊääLoraEventÊãøÊéâ*/
+
+	/* ÈÄ≤Âà∞switch( Radio->Process( ) )Âæå,È†àÊ≥®ÊÑè‰∏Ä‰ª∂‰∫ã,Â∞±ÊòØÊúÉÊúâÂÖ∂‰ªñÁãÄÊÖã,Â¶Çbusy,Â¶ÇÊ≠§ÂæàÂú®Ê≠§NodeCount‰∏ãÂèØËÉΩÂ∞±Ë∑≥ÈÅé
+	ÂøÖÈ†àÁ≠âÂæÖrx_timeoutÊàñrx_doneÁ≠âÁöÑÁãÄÊ≥Å,ÊâÄ‰ª•È†àÂ¶ÇÂØ¶Á≠âÂæÖ,‰πüÈúÄÈò≤Ê≠¢ÁÑ°ÈôêÁöÑbusyÁ≠âÁï∂Ê©üÁãÄÊÖã,(Ê≥®ÊÑèslaveÊòØÂê¶‰πüÈ†àÊ≥®ÊÑèÊ≠§ÊÉÖÂΩ¢)  */
 
 	temp = false;
 	if(LoraLinkListEvent_DispatcherLoraEvent() == true) {
-		//CmdUART_UartWrite((uint8_t *)"DispatcherLoraEvent=true\r\n", strlen("DispatcherLoraEvent=true\r\n"));    //test output
+		// Console_Output_String( "DispatcherLoraEvent=true\r\n" );		// test output
 		switch(LoraRunningEvent.RunNodeEvent) {
 		case Master_AcsipProtocol_Broadcast:
-			//ºW•[ºsºΩΩ–®D®Á¶°
-			//LoraTxPayloadSize = tx_size;
-			//temp = true;
+			// Â¢ûÂä†Âª£Êí≠Ë´ãÊ±ÇÂáΩÂºè
+			// LoraTxPayloadSize = tx_size;
+			// temp = true;
 			break;
 
 		case Master_AcsipProtocol_Join:
@@ -485,7 +481,7 @@ static	bool	MasterLoraEvent_PROCESS( void )
 		case Master_AcsipProtocol_Poll:
 			AcsipProtocol_LoraPollRequest(LoraNodeDevice[LoraRunningEvent.RunNodeNumber], &TxFrame, LoraTxBuffer, &tx_size);
 			LoraTxPayloadSize = tx_size;
-			//LoraPollEventCount--;
+			// LoraPollEventCount--;
 			temp = true;
 			break;
 
@@ -500,42 +496,61 @@ static	bool	MasterLoraEvent_PROCESS( void )
 			LoraTxPayloadSize = tx_size;
 			temp = true;
 			break;
-    
-    case Master_AcsipProtocol_Interval:
+
+		case Master_AcsipProtocol_Interval:
 			AcsipProtocol_LoraIntervalRequest(LoraNodeDevice[LoraRunningEvent.RunNodeNumber], &TxFrame, LoraTxBuffer, &tx_size);
-      LoraTxPayloadSize = tx_size;
+			LoraTxPayloadSize = tx_size;
 			temp = true;
-      //CmdUART_UartWrite((uint8_t *)"LoraEvent_PROCESS_Interval\r\n", strlen("LoraEvent_PROCESS_Interval\r\n"));    //test output
-      break;
+			// Console_Output_String( "LoraEvent_PROCESS_Interval\r\n" );		// test output
+			break;
 
 		default:
+			LoraTxPayloadSize = 0;
 			break;
 		}
-    
-    if(LoraTxPayloadSize != 0) {
-      for(i = LoraTxPayloadSize ; i < MaxPacketSize ; i++) LoraTxBuffer[i] = i;
-      LoraTxPayloadSize = MaxPacketSize;
-      Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
-    }
-    
+
+		if( LoraTxPayloadSize ) {
+			switch(LoraRunningEvent.RunNodeEvent) {
+			case Master_AcsipProtocol_Broadcast:
+			case Master_AcsipProtocol_Join:
+				RandomHopStartChannel_SetHoppingStartChannelFreq(0);		// Ëã•ÊúâË∑≥È†ª,Âª£Êí≠Êàñ LoraJoinEvent ÂæûË∑≥È†ªÈö®Ê©üËµ∑ÂßãÈÄöÈÅì 0 ÈñãÂßã
+				break;
+
+			case Master_AcsipProtocol_Poll:
+			case Master_AcsipProtocol_Data:
+			case Master_AcsipProtocol_Leave:
+			case Master_AcsipProtocol_Interval:
+				if(DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber] != NULL) {
+					RandomHopStartChannel_SetHoppingStartChannelFreq( DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraHoppingStartChannel );
+				}
+				break;
+
+			default:
+				break;
+			}
+
+// 			for(i = LoraTxPayloadSize ; i < MaxPacketSize ; i++) LoraTxBuffer[i] = i;
+// 			LoraTxPayloadSize = MaxPacketSize;
+			Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
+		}
 	} else {
-		//CmdUART_UartWrite((uint8_t *)"DispatcherLoraEvent=false\r\n", strlen("DispatcherLoraEvent=false\r\n"));    //test output
-		//sprintf((char *)str, "%02u", LoraEvent.NodeEvent);    //test output
-		//CmdUART_UartWrite((uint8_t *)"LoraEvent=", strlen("LoraEvent="));    //test output
-		//CmdUART_UartWrite((uint8_t *)str, strlen((const char *)str));    //test output
-		//CmdUART_UartWrite((uint8_t *)"\r\n", strlen("\r\n"));    //test output
-		//sprintf((char *)str, "%02d", EventCountPriority2);    //test output
-		//CmdUART_UartWrite((uint8_t *)"EventCountPriority2=", strlen("EventCountPriority2="));    //test output
-		//CmdUART_UartWrite((uint8_t *)str, strlen((const char *)str));    //test output
-		//CmdUART_UartWrite((uint8_t *)"\r\n", strlen("\r\n"));    //test output
+		// Console_Output_String( "DispatcherLoraEvent=false\r\n" );			// test output
+		// snprintf( (char *)str, sizeof(str), "%02u", LoraEvent.NodeEvent );		// test output
+		// Console_Output_String( "LoraEvent=" );					// test output
+		// Console_Output_String( (const char *)str );					// test output
+		// Console_Output_String( "\r\n" );						// test output
+		// snprintf( (char *)str, sizeof(str), "%02d", EventCountPriority2 );		// test output
+		// Console_Output_String( "EventCountPriority2=" );				// test output
+		// Console_Output_String( (const char *)str );					// test output
+		// Console_Output_String( "\r\n" );						// test output
+
 		if(LoraRunningEvent.RunNodeEvent == Master_AcsipProtocol_Poll) {
-			//CmdUART_UartWrite((uint8_t *)"LoraEvent=Poll\r\n", strlen("LoraEvent=Poll\r\n"));    //test output
+			// Console_Output_String( "LoraEvent=Poll\r\n" );		// test output
 			if(EventCountPriority2 > 0) EventCountPriority2--;
 		}
-    //CmdUART_UartWrite((uint8_t *)"MemsetLoraEvent\r\n", strlen("MemsetLoraEvent\r\n"));    //test output
-	  memset((void *)&LoraRunningEvent, 0, sizeof(tLoraRunningEvent));
+		// Console_Output_String( "MemsetLoraEvent\r\n" );			// test output
+		memset((void *)&LoraRunningEvent, 0, sizeof(tLoraRunningEvent));
 	}
-
 	return temp;
 }
 
@@ -552,76 +567,68 @@ static	bool	MasterLoraEvent_PROCESS( void )
  **************************************************************************************************/
 static void	OnMasterForNormal( void )
 {
-  int8_t count, str[10];
-  
+	int8_t		count, str[10];
+
 	switch( Radio->Process() ) {
 	case RF_RX_TIMEOUT:
-		//CmdUART_UartWrite((uint8_t *)"RX_TIMEOUT\r\n", strlen("RX_TIMEOUT\r\n"));    //test output
-    /*
-		if(MasterLoraEvent_PROCESS() == true) {   //¨›¨›¨Oß_¶≥∑s™∫  LoraEvent ª›≠n∞ı¶Ê
-			for(i = LoraTxPayloadSize ; i < MaxPacketSize ; i++) LoraTxBuffer[i] = i;
+		// Console_Output_String( "RX_TIMEOUT\r\n" );		//test output
 
-			LoraTxPayloadSize = MaxPacketSize;
-			//PacketOutput(LoraTxBuffer, LoraTxPayloadSize);    //test output
-			Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
-		} else {
-			Radio->StartRx( );
-		}
-    */
-    
-    if((LoraRunningEvent.RunNodeEvent == Master_AcsipProtocol_Poll) && (LoraNodeDevice[LoraRunningEvent.RunNodeNumber] != NULL)) {
-      CmdUART_UartWrite((uint8_t *)"Node=", strlen("Node="));
-      for(count = 2 ; count >= 0 ; count--) {
-        sprintf((char *)str, "%02x", LoraRunningEvent.RunNodeAddr[count]);
-        CmdUART_UartWrite((uint8_t *)str, strlen((const char *)str));
-      }
-      CmdUART_UartWrite((uint8_t *)" EVT=GPS ", strlen(" EVT=GPS "));
-      CmdUART_UartWrite((uint8_t *)"0 0 0 0 0\r\n", strlen("0 0 0 0 0\r\n"));
-    }       // •Œ®”≥q™æ§Wºh(¶p¬≈™ﬁ°BAPP),SLAVE Node ®S¶≥¶^¿≥, ¶πÆ… SLAVE Node •iØ‡∫Œƒ±©Œ§w¬˜Ωu
-    
-    if((LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Broadcast) && (LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Join) && (LoraRunningEvent.RunNodeEvent != 0)) {
-      if(DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber] != NULL) {
-        DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraRxFailureTimes += 1;
-        if(DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->isLoraDisconnecting == false) {
-          if(DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraRxFailureTimes > (LoraReceptionFailureTimes + DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->DefineLoraRxFailureTimes)) {
-            CmdUART_UartWrite((uint8_t *)"Node=", strlen("Node="));
-            for(count = 2 ; count >= 0 ; count--) {
-              sprintf((char *)str, "%02x", LoraRunningEvent.RunNodeAddr[count]);
-              CmdUART_UartWrite((uint8_t *)str, strlen((const char *)str));
-            }
-            CmdUART_UartWrite((uint8_t *)" EVT=Disconnecting\r\n", strlen(" EVT=Disconnecting\r\n"));
-            DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->isLoraDisconnecting = true;
-          }
-        }
-      }    // •Œ®”≥q™æ§Wºh(¶p¬≈™ﬁ°BAPP),SLAVE ™∫ Lora ¨O¬_Ωu™¨∫A
-    }      //∑Ì®S¶≥±µ¶¨®Ï SLAVE Node ∂«πL®”™∫∞TÆßÆ…,≥sƒÚ≤÷øn®Ï§@©w¶∏º∆´·,•uøÈ•X§@¶∏∏À∏m¨∞¬_Ωu™¨∫A,®√ß‚™¨∫Aº–µ˘∞_®”
-    
-    if((LoraRunningEvent.RunNodeEvent == Master_AcsipProtocol_Interval) && (LoraNodeDevice[LoraRunningEvent.RunNodeNumber] != NULL)) {
-      LoraNodeDevice[LoraRunningEvent.RunNodeNumber]->Interval = 0;
-    }
-    
-    if(MasterLoraEvent_PROCESS() == false) {
-      Radio->StartRx( );
-    }
+		if((LoraRunningEvent.RunNodeEvent == Master_AcsipProtocol_Poll) && (LoraNodeDevice[LoraRunningEvent.RunNodeNumber] != NULL)) {
+			Console_Output_String( "Node=" );
+			for(count = 2 ; count >= 0 ; count--) {
+				snprintf( (char *)str, sizeof(str), "%02x", LoraRunningEvent.RunNodeAddr[count]);
+				Console_Output_String( (const char *)str );
+			}
+
+#ifdef Board__A22_Tracker
+			Console_Output_String( " EVT=GPS 0 0 0 0 0.0\r\n" );
+#else
+			Console_Output_String( " EVT=Poll 0.0\r\n" );
+#endif
+		}		// Áî®‰æÜÈÄöÁü•‰∏äÂ±§(Â¶ÇËóçËäΩ„ÄÅAPP),SLAVE Node Ê≤íÊúâÂõûÊáâ, Ê≠§ÊôÇ SLAVE Node ÂèØËÉΩÁù°Ë¶∫ÊàñÂ∑≤Èõ¢Á∑ö
+
+		if((LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Broadcast) && (LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Join) && (LoraRunningEvent.RunNodeEvent != 0)) {
+			if(DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber] != NULL) {
+				DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraRxFailureTimes += 1;
+				if(DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->isLoraDisconnecting == false) {
+					if(DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraRxFailureTimes > (LoraReceptionFailureTimes + DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->DefineLoraRxFailureTimes)) {
+						Console_Output_String( "Node=" );
+						for(count = 2 ; count >= 0 ; count--) {
+							snprintf( (char *)str, sizeof(str), "%02x", LoraRunningEvent.RunNodeAddr[count] );
+							Console_Output_String( (const char *)str );
+						}
+						Console_Output_String( " EVT=Disconnecting\r\n" );
+						DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->isLoraDisconnecting = true;
+						DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraHoppingStartChannel = 0;
+					}
+				}		// Áî®‰æÜÈÄöÁü•‰∏äÂ±§(Â¶ÇËóçËäΩ„ÄÅAPP),SLAVE ÁöÑ Lora ÊòØÊñ∑Á∑öÁãÄÊÖã
+			}		// Áï∂Ê≤íÊúâÊé•Êî∂Âà∞ SLAVE Node ÂÇ≥ÈÅé‰æÜÁöÑË®äÊÅØÊôÇ,ÈÄ£Á∫åÁ¥ØÁ©çÂà∞‰∏ÄÂÆöÊ¨°Êï∏Âæå,Âè™Ëº∏Âá∫‰∏ÄÊ¨°Ë£ùÁΩÆÁÇ∫Êñ∑Á∑öÁãÄÊÖã,‰∏¶ÊääÁãÄÊÖãÊ®ôË®ªËµ∑‰æÜ
+		}		// ,Êõ¥Â∞áÈáùÂ∞çÊ≠§ Node ÁöÑË∑≥È†ªÈö®Ê©üËµ∑ÂßãÈÄöÈÅìË®≠ÂÆöÁÇ∫ 0„ÄÇ
+
+		if((LoraRunningEvent.RunNodeEvent == Master_AcsipProtocol_Interval) && (LoraNodeDevice[LoraRunningEvent.RunNodeNumber] != NULL)) LoraNodeDevice[LoraRunningEvent.RunNodeNumber]->Interval = 0;
+		// Áï∂ LoraEvent ÁÇ∫ Master_AcsipProtocol_Interval ÊôÇ,Ë°®ÈáùÂ∞çÊ≠§ SLAVE Node È†àË®≠ÂÆöÂÖ∂ Interval,
+		// ÊâÄ‰ª•Áï∂ SLAVE Node Âú®Ê≠§ LoraEvent ÁÑ°ÂõûÊáâÊôÇ,Â∞±ÈáùÂ∞çÊ≠§ SLAVE Node ÁöÑ Interval Ê∏ÖÈô§ÁÇ∫ 0„ÄÇ
+
+		if(MasterLoraEvent_PROCESS() == false) Radio->StartRx( );
 		break;
 
 	case RF_RX_DONE:
-		//CmdUART_UartWrite((uint8_t *)"RX_Done\r\n", strlen("RX_Done\r\n"));    //test output
+		// Console_Output_String( "RX_Done\r\n" );		// test output
 		Radio->GetRxPacket( (void *)LoraRxBuffer, ( uint16_t* )&LoraRxPayloadSize );
-		//PacketOutput(LoraRxBuffer, LoraRxPayloadSize);    //test output
-		LoraRxPayloadSize = LoraRxBuffer[0] + 8;
+		// PacketOutput(LoraRxBuffer, LoraRxPayloadSize);    //test output
+		// LoraRxPayloadSize = LoraRxBuffer[0] + 8;
+		LoraRxPayloadSize = LoraRxBuffer[0] + 9;
 		if(AcsipProtocol_PacketToFrameProcess(LoraRxBuffer, (uint8_t)LoraRxPayloadSize, &RxFrame) == true) {
 			if((LoraRunningEvent.RunNodeEvent != 0)) {
-				//
 				NormalMaster(&LoraRunningEvent);
-				//§W≠±™∫©Œ§U≠±¶≥√B•~™¨™pª›≥B≤z
+				// ‰∏äÈù¢ÁöÑÊàñ‰∏ãÈù¢ÊúâÈ°çÂ§ñÁãÄÊ≥ÅÈúÄËôïÁêÜ
 				/*
 				if(NormalMaster(&LoraEvent) == AcsipProtocol_OK) {
-				} //else { }  //ÆÊ¶°ø˘ª~¨Oß_≠´µo©Œµ•´›
+				} //else { }  //Ê†ºÂºèÈåØË™§ÊòØÂê¶ÈáçÁôºÊàñÁ≠âÂæÖ
 				*/
 			}
 		}
-		//else { }   //§£¨OπÔ§Ë∂«πL®”™∫,¨Oß_≠´∑sµ•´›
+		// else { }		// ‰∏çÊòØÂ∞çÊñπÂÇ≥ÈÅé‰æÜÁöÑ,ÊòØÂê¶ÈáçÊñ∞Á≠âÂæÖ
 
 		memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
 		memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
@@ -629,33 +636,19 @@ static void	OnMasterForNormal( void )
 		memset((void *)LoraRxBuffer, 0, LoraBufferLength);
 		LoraTxPayloadSize = 0;
 		LoraRxPayloadSize = 0;
-    
-    /*
-		if(MasterLoraEvent_PROCESS() == true) {
-			for(i = LoraTxPayloadSize ; i < MaxPacketSize ; i++) LoraTxBuffer[i] = i;
 
-			LoraTxPayloadSize = MaxPacketSize;
-			//PacketOutput(LoraTxBuffer, LoraTxPayloadSize);    //test output
-			Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
-		}
-		else {
-			Radio->StartRx( );
-		}
-    */
-    if((LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Broadcast) && (LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Join) && (LoraRunningEvent.RunNodeEvent != 0)) {
-      if(DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber] != NULL) {
-        DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->isLoraDisconnecting = false;
-        DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraRxFailureTimes = 0;
-      }
-    }       //∑Ì¶≥¶®•\±µ¶¨®Ï¨€√ˆ∞TÆß,´h´˘ƒÚ±N SLAVE Node ßP©w¨∞≥sΩu™¨∫A
-    
-    if(MasterLoraEvent_PROCESS() == false) {
-      Radio->StartRx( );
-    }
+		if((LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Broadcast) && (LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Join) && (LoraRunningEvent.RunNodeEvent != 0)) {
+			if(DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber] != NULL) {
+				DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->isLoraDisconnecting = false;
+				DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraRxFailureTimes = 0;
+			}
+		}		// Áï∂ÊúâÊàêÂäüÊé•Êî∂Âà∞Áõ∏ÈóúË®äÊÅØ,ÂâáÊåÅÁ∫åÂ∞á SLAVE Node Âà§ÂÆöÁÇ∫ÈÄ£Á∑öÁãÄÊÖã
+
+		if(MasterLoraEvent_PROCESS() == false) Radio->StartRx( );
 		break;
 
 	case RF_TX_DONE:
-		//CmdUART_UartWrite((uint8_t *)"TX_Done\r\n", strlen("TX_Done\r\n"));    //test output
+		// Console_Output_String( "TX_Done\r\n" );		// test output
 		if(TxFrame.FrameFlag == FrameFlag_Broadcast) {
 			memset((void *)LoraTxBuffer, 0, LoraBufferLength);
 			LoraTxPayloadSize = 0;
@@ -664,34 +657,19 @@ static void	OnMasterForNormal( void )
 		break;
 
 	case RF_TX_TIMEOUT:
-		//CmdUART_UartWrite((uint8_t *)"TX_TIMEOUT\r\n", strlen("TX_TIMEOUT\r\n"));    //test output
+		// Console_Output_String( "TX_TIMEOUT\r\n" );		// test output
 		memset((void *)LoraTxBuffer, 0, LoraBufferLength);
 		LoraTxPayloadSize = 0;
 		memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
-    /*
-		if(MasterLoraEvent_PROCESS() == true) {
-			for(i = LoraTxPayloadSize ; i < MaxPacketSize ; i++) LoraTxBuffer[i] = i;
 
-			LoraTxPayloadSize = MaxPacketSize;
-			//PacketOutput(LoraTxBuffer, LoraTxPayloadSize);    //test output
-			Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
-		}
-		else {
-			Radio->StartRx( );
-		}
-    */
-    if(MasterLoraEvent_PROCESS() == false) {
-      Radio->StartRx( );
-    }
+		if(MasterLoraEvent_PROCESS() == false) Radio->StartRx( );
 		break;
 
 	default:
-    //CmdUART_UartWrite((uint8_t *)"default\r\n", strlen("default\r\n"));    //test output
+		// Console_Output_String( "default\r\n" );		// test output
 		break;
 	}
-  
 }
-
 
 
 /***************************************************************************************************
@@ -705,100 +683,113 @@ static void	OnMasterForNormal( void )
  **************************************************************************************************/
 static void	OnSlaveForNormal( void )
 {
-  static uint8_t base64_data[((MaxMsgDataSize/3)*4)];
-  size_t dsize;
-	uint8_t		i;
+	static uint8_t	base64_data[((MaxMsgDataSize/3)*4)];
+	size_t		dsize;
 	int8_t		count;
 	int8_t		str[10];
 
-	switch( Radio->Process( ) ){
+	switch( Radio->Process( ) ) {
 	case RF_RX_TIMEOUT:
-		//CmdUART_UartWrite((uint8_t *)"RX_TIMEOUT\r\n", strlen("RX_TIMEOUT\r\n"));    //test output
+		// Console_Output_String( "RX_TIMEOUT\r\n" );		// test output
 		Radio->StartRx( );
 		break;
 
 	case RF_RX_DONE:
-		//CmdUART_UartWrite((uint8_t *)"RX_Done\r\n", strlen("RX_Done\r\n"));    //test output
+		// Console_Output_String( "RX_Done\r\n" );		// test output
 		Radio->GetRxPacket( (void *)LoraRxBuffer, ( uint16_t* )&LoraRxPayloadSize );
-		//PacketOutput(LoraRxBuffer, LoraRxPayloadSize);    //test output
-		LoraRxPayloadSize = LoraRxBuffer[0] + 8;
+		// PacketOutput(LoraRxBuffer, LoraRxPayloadSize);		// test output
+		// LoraRxPayloadSize = LoraRxBuffer[0] + 8;
+		LoraRxPayloadSize = LoraRxBuffer[0] + 9;
 		if(AcsipProtocol_PacketToFrameProcess(LoraRxBuffer, (uint8_t)LoraRxPayloadSize, &RxFrame) == true) {
-			//CmdUART_UartWrite((uint8_t *)"error5\r\n", strlen("error5\r\n"));    //test output
+			// Console_Output_String( "error5\r\n" );		// test output
 			if(NormalSlave() == AcsipProtocol_OK) {
-				//CmdUART_UartWrite((uint8_t *)"error7\r\n", strlen("error7\r\n"));    //test output
-				for(i = LoraTxPayloadSize ; i < MaxPacketSize ; i++) LoraTxBuffer[i] = i;
-
-				LoraTxPayloadSize = MaxPacketSize;
-				//PacketOutput(LoraTxBuffer, LoraTxPayloadSize);    //test output
+				// Console_Output_String( "error7\r\n" );		// test output
+// 				for(i = LoraTxPayloadSize ; i < MaxPacketSize ; i++) LoraTxBuffer[i] = i;
+// 				LoraTxPayloadSize = MaxPacketSize;
+				// PacketOutput(LoraTxBuffer, LoraTxPayloadSize);		// test output
 				Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
-        
+
 				if((RxFrame.FrameFlag == FrameFlag_Data) && (RxFrame.MsgLength > 0)) {
-          memset((void *)base64_data, 0, ((MaxMsgDataSize/3)*4));
-          if(Base64_encode( base64_data, ((MaxMsgDataSize/3)*4), &dsize, (const uint8_t	*)RxFrame.MsgData, RxFrame.MsgLength ) == 0) {
-					  CmdUART_UartWrite((uint8_t *)"LoraGateWayAddr=", strlen("LoraGateWayAddr="));
-					  for( count = 2 ; count >= 0 ; count-- ){
-						  sprintf((char *)str, "%02x", LoraGateWay->NodeAddress[count]);
-						  CmdUART_UartWrite((uint8_t *)str, strlen((const char *)str));
-					  }
-            CmdUART_UartWrite((uint8_t *)"  DataLength=", strlen("  DataLength="));
-            sprintf((char *)str, "%u", dsize);
-            CmdUART_UartWrite((uint8_t *)str, strlen((const char *)str));
-            CmdUART_UartWrite((uint8_t *)"  Data=", strlen("  Data="));
-            CmdUART_UartWrite(base64_data, dsize);
-            CmdUART_UartWrite((uint8_t *)"\r\n", strlen("\r\n"));
-					  //CmdUART_UartWrite((uint8_t *)"  ", 2);
-					  //CmdUART_UartWrite((uint8_t *)"DataLength=", strlen("DataLength="));
-					  //sprintf((char *)str, "%u", RxFrame.MsgLength);
-					  //CmdUART_UartWrite((uint8_t *)str, strlen((const char *)str));
-					  //CmdUART_UartWrite((uint8_t *)"  ", 2);
-					  //CmdUART_UartWrite((uint8_t *)"Data=", strlen("Data="));
-					  //CmdUART_UartWrite((uint8_t *)RxFrame.MsgData, RxFrame.MsgLength);
-					  //CmdUART_UartWrite((uint8_t *)"\r\n", strlen("\r\n"));
-					  //©Œ¨O¶s§U®”©Œ¨O≥zπL¬≈™ﬁ∂«•X•h
-				  }
-        }
-        
-        if((RxFrame.FrameFlag == FrameFlag_Join) || (RxFrame.FrameFlag == FrameFlag_Leave) || (RxFrame.FrameFlag == FrameFlag_Interval)) {
+					memset((void *)base64_data, 0, ((MaxMsgDataSize/3)*4));
+					if(Base64_encode( base64_data, ((MaxMsgDataSize/3)*4), &dsize, (const uint8_t	*)RxFrame.MsgData, RxFrame.MsgLength ) == 0) {
+						Console_Output_String( "LoraGateWayAddr=" );
+						for( count = 2 ; count >= 0 ; count-- ) {
+							snprintf( (char *)str, sizeof(str), "%02x", LoraGateWay->NodeAddress[count] );
+							Console_Output_String( (const char *)str );
+						}
+
+						Console_Output_String( "  DataLength=" );
+						snprintf( (char *)str, sizeof(str), "%u", dsize );
+						Console_Output_String( (const char *)str );
+						Console_Output_String( "  Data=" );
+						Console_Write( base64_data, dsize );
+						Console_Output_String( "\r\n" );
+
+						// Console_Output_String( "  " );
+						// Console_Output_String( "DataLength=" );
+						// snprintf( (char *)str, sizeof(str), "%u", RxFrame.MsgLength );
+						// Console_Output_String( (const char *)str );
+						// Console_Output_String( "  " );
+						// Console_Output_String( "Data=" );
+						// Console_Write( (uint8_t *)RxFrame.MsgData, RxFrame.MsgLength );
+						// Console_Output_String( "\r\n" );
+						// ÊàñÊòØÂ≠ò‰∏ã‰æÜÊàñÊòØÈÄèÈÅéËóçËäΩÂÇ≥Âá∫Âéª
+					}
+				}
+
+				if((RxFrame.FrameFlag == FrameFlag_Join) || (RxFrame.FrameFlag == FrameFlag_Leave) || (RxFrame.FrameFlag == FrameFlag_Interval)) {
 #ifdef STM32F401xx
-          SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
+					SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
 #endif
+
 #ifdef STM32F072
-          SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
+					SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
 #endif
-          SaveRecord_WriteInLoraMode();
-        }
-        
+					SaveRecord_WriteInLoraMode();
+				}
 			}
 		}
-
-		memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
-		memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
-		memset((void *)LoraRxBuffer, 0, LoraBufferLength);
-		LoraRxPayloadSize = 0;
+		// memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
+		// memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
+		// memset((void *)LoraRxBuffer, 0, LoraBufferLength);
+		// LoraRxPayloadSize = 0;
 		break;
 
 	case RF_TX_DONE:
-		//CmdUART_UartWrite((uint8_t *)"TX_Done\r\n", strlen("TX_Done\r\n"));    //test output
-    if(Slave_PollEvent == true) {
-      Slave_PollEvent = false;
-      if(Slave_PollEvent_UTCnotZero == true) {
-        Slave_PollEvent_UTCnotZero = false;
-        Slave_PollEventAccomplish = true;
-      } else {
-        Slave_PollEventAccomplish = false;
-      }
-    }
-		memset((void *)LoraTxBuffer, 0, LoraBufferLength);
-		LoraTxPayloadSize = 0;
+		// Console_Output_String( "TX_Done\r\n" );		// test output
+		if(Slave_PollEvent == true) {
+			Slave_PollEvent = false;
+			SLAVE_LoraPollEventInterval = 0;
+			// Console_Output_String( "TX_Clear\r\n" );		// test output
+			if(Slave_PollEvent_UTCnotZero == true) {
+				// Slave_PollEvent = false;
+				Slave_PollEvent_UTCnotZero = false;
+				Slave_PollEventAccomplish = true;
+			} else {
+				Slave_PollEventAccomplish = false;
+			}
+		}		// Âª£Êí≠‰∏çË®≠ÂÆö,Ë®äÊ°ÜÁÇ∫Á©∫‰∏çË®≠ÂÆö
+
+		if((RxFrame.FrameFlag != FrameFlag_Broadcast) && (RxFrame.FrameCRC != 0) && (TxFrame.FrameCRC != 0)) {
+			if((RxFrame.FrameFlag == FrameFlag_Leave) && (TxFrame.FrameFlag == FrameFlag_LeaveResponse)) {
+				RandomHopStartChannel_SlaveDefaultHoppingChannel();		// SLAVE Node Èõ¢ÈñãÁ∂≤ÂüüÂæåÂ∞±Ë®≠ÂÆöÂõûÈ†êË®≠ÁöÑËµ∑ÂßãÈÄöÈÅì 0,Á≠âÂæÖÈÄ£Á∑ö
+			} else {
+				SLAVE_LoraHoppingStartChannel = RxFrame.LoraRF_NextChannel;
+				RandomHopStartChannel_SetHoppingStartChannelFreq(SLAVE_LoraHoppingStartChannel);
+			}
+		}
 		memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
+		memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
+		memset((void *)LoraTxBuffer, 0, LoraBufferLength);
+		memset((void *)LoraRxBuffer, 0, LoraBufferLength);
+		LoraTxPayloadSize = 0;
+		LoraRxPayloadSize = 0;
 		Radio->StartRx( );
 		break;
 
 	case RF_TX_TIMEOUT:
-		//CmdUART_UartWrite((uint8_t *)"TX_TIMEOUT\r\n", strlen("TX_TIMEOUT\r\n"));    //test output
-    if(Slave_PollEvent == true) {
-      Slave_PollEvent = false;
-    }
+		// Console_Output_String( "TX_TIMEOUT\r\n" );		// test output
+		if(Slave_PollEvent == true) Slave_PollEvent = false;
 		memset((void *)LoraTxBuffer, 0, LoraBufferLength);
 		LoraTxPayloadSize = 0;
 		Radio->StartRx( );
@@ -808,7 +799,6 @@ static void	OnSlaveForNormal( void )
 		break;
 	}
 }
-
 
 
 /***************************************************************************************************
@@ -822,35 +812,31 @@ static void	OnSlaveForNormal( void )
  **************************************************************************************************/
 void	ForLoraProductVerification( void )
 {
-	switch( Radio->Process( ) ){
+	switch( Radio->Process( ) ) {
 	case RF_RX_DONE:
 		if( LoraPV_RxTest == true ) {
-			Radio->GetRxPacket( (void *)LoraRxBuffer, ( uint16_t* )&LoraRxPayloadSize );	//®˙≠»
+			Radio->GetRxPacket( (void *)LoraRxBuffer, ( uint16_t* )&LoraRxPayloadSize );		// ÂèñÂÄº
 			LoraPV_RxCount++;
 			Radio->StartRx( );
-		}
-		else{
+		} else {
 			if( LoraPV_TxTest == true ) {
-				Radio->GetRxPacket( (void *)LoraRxBuffer, ( uint16_t* )&LoraRxPayloadSize );	//®˙≠»
-				memset((void *)LoraRxBuffer, 0, LoraBufferLength);		//≤M™≈buf
-				//≠Y¶≥ACKª›®D¥Nª›§ÒπÔACK,•ÿ´eº»©w¶b•Õ≤£≈Á√“§W§£∂∑¶^∂«ACK
-				if( LoraPV_DefaultTxSet == true ){
-					Radio->SetTxPacket( (const void *)LoraTxBuffer, (uint16_t)LoraTxPayloadSize );	//Lora∂«≠»•X•h
+				Radio->GetRxPacket( (void *)LoraRxBuffer, ( uint16_t* )&LoraRxPayloadSize );		// ÂèñÂÄº
+				memset((void *)LoraRxBuffer, 0, LoraBufferLength);		// Ê∏ÖÁ©∫buf
+				// Ëã•ÊúâACKÈúÄÊ±ÇÂ∞±ÈúÄÊØîÂ∞çACK,ÁõÆÂâçÊö´ÂÆöÂú®ÁîüÁî¢È©óË≠â‰∏ä‰∏çÈ†àÂõûÂÇ≥ACK
+				if( LoraPV_DefaultTxSet == true ) {
+					Radio->SetTxPacket( (const void *)LoraTxBuffer, (uint16_t)LoraTxPayloadSize );		// LoraÂÇ≥ÂÄºÂá∫Âéª
 					LoraPV_TxCount++;
-				}
-				else{
-					if( LoraPV_TxCount < LoraPV_TxTimes ){
-						Radio->SetTxPacket( (const void *)LoraTxBuffer, (uint16_t)LoraTxPayloadSize );	//Lora∂«≠»•X•h
+				} else {
+					if( LoraPV_TxCount < LoraPV_TxTimes ) {
+						Radio->SetTxPacket( (const void *)LoraTxBuffer, (uint16_t)LoraTxPayloadSize );		// LoraÂÇ≥ÂÄºÂá∫Âéª
 						LoraPV_TxCount++;
-					}
-					else{
+					} else {
 						CLI_LoraPV_TXresult();
 					}
 				}
-			}
-			else{
-				Radio->GetRxPacket( (void *)LoraRxBuffer, ( uint16_t* )&LoraRxPayloadSize );	//®˙≠»
-				memset((void *)LoraRxBuffer, 0, LoraBufferLength);		//≤M™≈buf
+			} else {
+				Radio->GetRxPacket( (void *)LoraRxBuffer, ( uint16_t* )&LoraRxPayloadSize );		// ÂèñÂÄº
+				memset((void *)LoraRxBuffer, 0, LoraBufferLength);		// Ê∏ÖÁ©∫buf
 				Radio->StartRx( );
 			}
 		}
@@ -862,24 +848,20 @@ void	ForLoraProductVerification( void )
 	case RF_TX_TIMEOUT:
 		if( LoraPV_RxTest == true ) {
 			Radio->StartRx();
-		}
-		else{
-			if( LoraPV_TxTest == true ){
-				if( LoraPV_DefaultTxSet == true ){
-					Radio->SetTxPacket( (const void *)LoraTxBuffer, (uint16_t)LoraTxPayloadSize );		//Lora∂«≠»•X•h
+		} else {
+			if( LoraPV_TxTest == true ) {
+				if( LoraPV_DefaultTxSet == true ) {
+					Radio->SetTxPacket( (const void *)LoraTxBuffer, (uint16_t)LoraTxPayloadSize );		// LoraÂÇ≥ÂÄºÂá∫Âéª
 					LoraPV_TxCount++;
-				}
-				else{
+				} else {
 					if(LoraPV_TxCount < LoraPV_TxTimes) {
-						Radio->SetTxPacket( (const void *)LoraTxBuffer, (uint16_t)LoraTxPayloadSize );	//Lora∂«≠»•X•h
+						Radio->SetTxPacket( (const void *)LoraTxBuffer, (uint16_t)LoraTxPayloadSize );		// LoraÂÇ≥ÂÄºÂá∫Âéª
 						LoraPV_TxCount++;
-					}
-					else {
+					} else {
 						CLI_LoraPV_TXresult();
 					}
 				}
-			}
-			else{
+			} else {
 				Radio->StartRx( );
 			}
 		}
@@ -903,11 +885,11 @@ void	ForLoraProductVerification( void )
  **************************************************************************************************/
 void	ForFskProductVerification( void )
 {
-	switch( Radio->Process() ){
+	switch( Radio->Process() ) {
 	case RF_RX_DONE:
-		Radio->GetRxPacket( (void *)LoraRxBuffer, ( uint16_t* )&LoraRxPayloadSize );	//®˙≠»
-		memset((void *)LoraRxBuffer, 0, LoraBufferLength);		//≤M™≈buf
-		Radio->SetTxPacket( (const void *)LoraTxBuffer, (uint16_t)LoraTxPayloadSize );	//Lora∂«≠»•X•h
+		Radio->GetRxPacket( (void *)LoraRxBuffer, ( uint16_t* )&LoraRxPayloadSize );		// ÂèñÂÄº
+		memset((void *)LoraRxBuffer, 0, LoraBufferLength);		// Ê∏ÖÁ©∫buf
+		Radio->SetTxPacket( (const void *)LoraTxBuffer, (uint16_t)LoraTxPayloadSize );		// LoraÂÇ≥ÂÄºÂá∫Âéª
 		break;
 
 	case RF_IDLE:
@@ -918,14 +900,13 @@ void	ForFskProductVerification( void )
 	case RF_CHANNEL_EMPTY:
 	case RF_CHANNEL_ACTIVITY_DETECTED:
 	case RF_BUSY:
-		Radio->SetTxPacket( (const void *)LoraTxBuffer, (uint16_t)LoraTxPayloadSize );      //Lora∂«≠»•X•h
+		Radio->SetTxPacket( (const void *)LoraTxBuffer, (uint16_t)LoraTxPayloadSize );		// LoraÂÇ≥ÂÄºÂá∫Âéª
 		break;
 
 	default:
 		break;
 	}
 }
-
 
 
 /***************************************************************************************************
@@ -941,17 +922,15 @@ void	OnMasterForPingPongTest( void )
 {
 	uint8_t		i;
 
-	switch( Radio->Process() ){
+	switch( Radio->Process() ) {
 	case RF_RX_TIMEOUT:
-		CmdUART_UartWrite( (uint8_t *)"RF_RX_TIMEOUT\r\n", strlen("RF_RX_TIMEOUT\r\n") );
+		Console_Output_String( "RF_RX_TIMEOUT\r\n" );
 		// Send the next PING frame
 		Buffer[0] = 'P';
 		Buffer[1] = 'I';
 		Buffer[2] = 'N';
 		Buffer[3] = 'G';
-		for( i = 4; i < BufferSize; i++ ){
-			Buffer[i] = i - 4;
-		}
+		for( i = 4; i < BufferSize; i++ ) Buffer[i] = i - 4;
 		Radio->SetTxPacket( Buffer, BufferSize );
 		break;
 
@@ -963,18 +942,15 @@ void	OnMasterForPingPongTest( void )
 			if( strncmp( ( const char* )Buffer, ( const char* )PongMsg, 4 ) == 0 ) {
 				RX_COUNT++;
 				RxTestOutput();
-				// Send the next PING frame            
+				// Send the next PING frame
 				Buffer[0] = 'P';
 				Buffer[1] = 'I';
 				Buffer[2] = 'N';
 				Buffer[3] = 'G';
-				// We fill the buffer with numbers for the payload 
-				for( i = 4; i < BufferSize; i++ ) {
-					Buffer[i] = i - 4;
-				}
+				// We fill the buffer with numbers for the payload
+				for( i = 4; i < BufferSize; i++ ) Buffer[i] = i - 4;
 				Radio->SetTxPacket( Buffer, BufferSize );
-			}
-			else{
+			} else {
 				if( strncmp( ( const char* )Buffer, ( const char* )PingMsg, 4 ) == 0 ) {
 					// A master already exists then become a slave
 					EnableMaster = false;
@@ -988,7 +964,7 @@ void	OnMasterForPingPongTest( void )
 		break;
 
 	case RF_TX_TIMEOUT:
-		CmdUART_UartWrite( (uint8_t *)"RF_TX_TIMEOUT\r\n", strlen("RF_TX_TIMEOUT\r\n") );
+		Console_Output_String( "RF_TX_TIMEOUT\r\n" );
 		Radio->StartRx( );
 		break;
 
@@ -996,7 +972,6 @@ void	OnMasterForPingPongTest( void )
 		break;
 	}
 }
-
 
 
 /***************************************************************************************************
@@ -1012,7 +987,7 @@ void	OnSlaveForPingPongTest( void )
 {
 	uint8_t		i;
 
-	switch( Radio->Process() ){
+	switch( Radio->Process() ) {
 	case RF_RX_DONE:
 		Radio->GetRxPacket( Buffer, ( uint16_t* )&BufferSize );
 		RX_Done_COUNT++;
@@ -1026,7 +1001,7 @@ void	OnSlaveForPingPongTest( void )
 				Buffer[1] = 'O';
 				Buffer[2] = 'N';
 				Buffer[3] = 'G';
-				// We fill the buffer with numbers for the payload 
+				// We fill the buffer with numbers for the payload
 				for( i = 4; i < BufferSize; i++ ) {
 					Buffer[i] = i - 4;
 				}
@@ -1040,12 +1015,12 @@ void	OnSlaveForPingPongTest( void )
 		break;
 
 	case RF_TX_TIMEOUT:
-		CmdUART_UartWrite((uint8_t *)"RF_TX_TIMEOUT\r\n", strlen("RF_TX_TIMEOUT\r\n"));
+		Console_Output_String( "RF_TX_TIMEOUT\r\n" );
 		Radio->StartRx( );
 		break;
 
 	case RF_RX_TIMEOUT:
-		CmdUART_UartWrite((uint8_t *)"RF_RX_TIMEOUT\r\n", strlen("RF_RX_TIMEOUT\r\n"));
+		Console_Output_String( "RF_RX_TIMEOUT\r\n" );
 		Radio->StartRx( );
 		break;
 
@@ -1053,7 +1028,6 @@ void	OnSlaveForPingPongTest( void )
 		break;
 	}
 }
-
 
 
 /***************************************************************************************************
@@ -1071,34 +1045,32 @@ void	RxTestOutput( void )
 	int8_t		snr;
 	int8_t		str[8];
 
-	CmdUART_UartWrite((uint8_t *)"Rx=", strlen("Rx="));
-	CmdUART_UartWrite((uint8_t *)Buffer, 4);
-	CmdUART_UartWrite((uint8_t *)"    ", 4);
+	Console_Output_String( "Rx=" );
+	Console_Write( (uint8_t *)Buffer, 4 );
+	Console_Output_String( "    " );
 
-	sprintf((char *)str, "%d", (int)RX_HasData_COUNT);
-	CmdUART_UartWrite((uint8_t *)"RxCount=", strlen("RxCount="));
-	CmdUART_UartWrite((uint8_t *)str, strlen((const char *)str));
-	CmdUART_UartWrite((uint8_t *)"    ", 4);
+	snprintf( (char *)str, sizeof(str), "%d", (int)RX_HasData_COUNT );
+	Console_Output_String( "RxCount=" );
+	Console_Output_String( (const char *)str );
+	Console_Output_String( "    " );
 
-	sprintf((char *)str, "%d", (int)RX_COUNT);
-	CmdUART_UartWrite((uint8_t *)"RxCompleteCount=", strlen("RxCompleteCount="));
-	CmdUART_UartWrite((uint8_t *)str, strlen((const char *)str));
-	CmdUART_UartWrite((uint8_t *)"    ", 4);
+	snprintf( (char *)str, sizeof(str), "%d", (int)RX_COUNT );
+	Console_Output_String( "RxCompleteCount=" );
+	Console_Output_String( (const char *)str );
+	Console_Output_String( "    " );
 
 	rssi = SX1276LoRaGetPacketRssi();
-	sprintf((char *)str, "%3.2f", rssi);
-	CmdUART_UartWrite((uint8_t *)"RSSI=", strlen("RSSI="));
-	CmdUART_UartWrite((uint8_t *)str, strlen((const char *)str));
-	CmdUART_UartWrite((uint8_t *)"    ", 4);
+	snprintf( (char *)str, sizeof(str), "%3.2f", rssi );
+	Console_Output_String( "RSSI=" );
+	Console_Output_String( (const char *)str );
+	Console_Output_String( "    " );
 
 	snr = SX1276LoRaGetPacketSnr();
-	sprintf((char *)str, "%d", snr);
-	CmdUART_UartWrite((uint8_t *)"SNR=", strlen("SNR="));
-	CmdUART_UartWrite((uint8_t *)str, strlen((const char *)str));
-	CmdUART_UartWrite((uint8_t *)"\r\n", strlen("\r\n"));
-	
+	snprintf( (char *)str, sizeof(str), "%d", snr );
+	Console_Output_String( "SNR=" );
+	Console_Output_String( (const char *)str );
+	Console_Output_String( "\r\n" );
 }
-
 
 
 /***************************************************************************************************
@@ -1112,25 +1084,23 @@ void	RxTestOutput( void )
  **************************************************************************************************/
 static void	PacketOutput( uint8_t *array, size_t size )
 {
-	int8_t		str[10];    //test output
+	int8_t		str[10];		// test output
 	uint16_t	count;
-  
-	CmdUART_UartWrite((uint8_t *)"PacketSize=", strlen("PacketSize="));
-	sprintf((char *)str, "%u", size);
-	CmdUART_UartWrite((uint8_t *)str, strlen((const char *)str));
-	CmdUART_UartWrite((uint8_t *)"  ", 2);
 
-	CmdUART_UartWrite((uint8_t *)"Packet=", strlen("Packet="));
+	Console_Output_String( "PacketSize=" );
+	snprintf( (char *)str, sizeof(str), "%u", size );
+	Console_Output_String( (const char *)str );
+	Console_Output_String( "  " );
+	Console_Output_String( "Packet=" );
 
 	for(count = 0 ; count < size ; count++) {
-		sprintf((char *)str, "%02x", array[count]);    //test output
-		CmdUART_UartWrite((uint8_t *)str, strlen((const char *)str));
-		CmdUART_UartWrite((uint8_t *)"  ", 2);
+		snprintf( (char *)str, sizeof(str), "%02x", array[count]);		// test output
+		Console_Output_String( (const char *)str );
+		Console_Output_String( "  " );
 	}
 
-	CmdUART_UartWrite((uint8_t *)"\r\n", strlen("\r\n"));
+	Console_Output_String( "\r\n" );
 }
-
 
 
 #ifdef  USE_FULL_ASSERT
@@ -1143,19 +1113,14 @@ static void	PacketOutput( uint8_t *array, size_t size )
   * @retval None
   */
 void	assert_failed( uint8_t* file, uint32_t line )
-{ 
+{
 	/* User can add his own implementation to report the file name and line number,
 	ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
 
 	/* Infinite loop */
-	while (1){
+	while (1) {
 	}
 }
 #endif
 
-/**
-  * 
-  */
-
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

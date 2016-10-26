@@ -1,90 +1,80 @@
-/**
-  ******************************************************************************
-  * @file    Project/ARM-Lora/LinkListEvent.h 
-  * @author  JC
-  * @version 
-  * @date    
-  * @brief   Header for LinkListEvent.c module
-  ******************************************************************************
-  * @attention
-  *
-  * 
-  *
-  ******************************************************************************
-  */
-  
+ï»¿
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// ç‰ˆæ¬Šæ‰€æœ‰ï¼šç¾¤ç™»ç§‘æŠ€è‚¡ä»½æœ‰é™å…¬å¸
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
+
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __LINK_LIST_EVENT_H
-#define __LINK_LIST_EVENT_H
+#ifndef USER_LINKLISTEVENT_H_
+#define USER_LINKLISTEVENT_H_
 
 /* Includes ------------------------------------------------------------------*/
 #include <stdbool.h>
 #ifdef STM32F072
-  #include "stm32f0xx.h"
+	#include "stm32f0xx.h"
 #endif
 #ifdef STM32F401xx
-  #include "stm32f4xx.h"
+	#include "stm32f4xx.h"
 #endif
 #include "acsip_protocol.h"
 
 /* Exported types ------------------------------------------------------------*/
-#define MAX_LoraEventCount             (5)      //5 * 3 = 15, 15 * 8 = 120, ¨C¤@Àu¥ıÅv³Ì¦h5­Ó¨Æ¥ó,¤@­Ó SLAVE Node ¦³¤TºØÀu¥ıÅv
-                                                //¤TºØÀu¥ıÅv¦@³Ì¦h15­Ó¨Æ¥ó,³Ì¦h¦³ 7 ­Ó SLAVE Node,¥[¤W¦@¦P±Æµ{,©T¦³ 8 ­Ó
-//Event Priority
-#define LoraEventPriority0             (0)       //Àu¥ıÅv0¯Å§O(³Ì°ªÀu¥ıÅv¯Å§O)(³W¹º¥u¦³¤TºØÀu¥ıÅv¯Å§O,0~2,³Ì°ªÀu¥ıÅv¬°0,³Ì§C¬°2)
-#define LoraEventPriority1             (1)       //Àu¥ıÅv1¯Å§O(¤¤µ¥Àu¥ıÅv¯Å§O)
-#define LoraEventPriority2             (2)       //Àu¥ıÅv2¯Å§O(³Ì§CÀu¥ıÅv¯Å§O)
+#define MAX_LoraEventCount	(5)		// 5 * 3 = 15, 15 * 8 = 120, æ¯ä¸€å„ªå…ˆæ¬Šæœ€å¤š5å€‹äº‹ä»¶,ä¸€å€‹ SLAVE Node æœ‰ä¸‰ç¨®å„ªå…ˆæ¬Š
+						// ä¸‰ç¨®å„ªå…ˆæ¬Šå…±æœ€å¤š15å€‹äº‹ä»¶,æœ€å¤šæœ‰ 7 å€‹ SLAVE Node,åŠ ä¸Šå…±åŒæ’ç¨‹,å›ºæœ‰ 8 å€‹
+// Event Priority
+#define LoraEventPriority0	(0)		// å„ªå…ˆæ¬Š0ç´šåˆ¥(æœ€é«˜å„ªå…ˆæ¬Šç´šåˆ¥)(è¦åŠƒåªæœ‰ä¸‰ç¨®å„ªå…ˆæ¬Šç´šåˆ¥,0~2,æœ€é«˜å„ªå…ˆæ¬Šç‚º0,æœ€ä½ç‚º2)
+#define LoraEventPriority1	(1)		// å„ªå…ˆæ¬Š1ç´šåˆ¥(ä¸­ç­‰å„ªå…ˆæ¬Šç´šåˆ¥)
+#define LoraEventPriority2	(2)		// å„ªå…ˆæ¬Š2ç´šåˆ¥(æœ€ä½å„ªå…ˆæ¬Šç´šåˆ¥)
 
 typedef struct linklist {
-  uint8_t NodeNumber;
-  uint8_t NodeEvent;
-  uint8_t NodeAddr[3];
-  uint8_t *NodeData;
-  uint8_t NodeDataSize;
-  struct linklist *Next;
-  struct linklist *Previous;
-}tLoraNodeEvent;
+	uint8_t			NodeNumber;
+	uint8_t			NodeEvent;
+	uint8_t			NodeAddr[3];
+	uint8_t *		NodeData;
+	uint8_t			NodeDataSize;
+	struct linklist *	Next;
+	struct linklist *	Previous;
+} tLoraNodeEvent;
 
 typedef struct LoraRunEvent {
-  uint8_t RunNodeNumber;
-  uint8_t RunNodeEvent;
-  uint8_t RunNodeAddr[3];
-  uint8_t RunNodeData[MaxMsgDataSize];
-  uint8_t RunNodeDataSize;
-}tLoraRunningEvent;
+	uint8_t		RunNodeNumber;
+	uint8_t		RunNodeEvent;
+	uint8_t		RunNodeAddr[3];
+	uint8_t		RunNodeData[MaxMsgDataSize];
+	uint8_t		RunNodeDataSize;
+} tLoraRunningEvent;
 
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void LoraLinkListEvent_Initialization(void);
-//bool LoraLinkListEvent_CreateEvent(tLoraNodeEvent *EventHead, tLoraNodeEvent *EventTail, uint8_t *EventCount, uint8_t Num, uint8_t Event, uint8_t *Addr, uint8_t *Data, uint8_t *DataSize);
-bool LoraLinkListEvent_CreateEvent(uint8_t Priority, uint8_t Num, uint8_t Event, uint8_t *Addr, uint8_t *Data, uint8_t *DataSize);
-//void LoraLinkListEvent_DestroyHeadEvent(tLoraNodeEvent *EventHead, tLoraNodeEvent *EventTail, uint8_t *EventCount);
-void LoraLinkListEvent_DestroyHeadEvent(uint8_t);
-//void LoraLinkListEvent_DestroyTailEvent(tLoraNodeEvent *EventHead, tLoraNodeEvent *EventTail, uint8_t *EventCount);
-void LoraLinkListEvent_DestroyTailEvent(uint8_t);
-uint8_t LoraLinkListEvent_ComputeEvent(tLoraNodeEvent *EventHead, uint8_t *EventCount);
-bool LoraLinkListEvent_isEventPriority0BufferFull(void);
-bool LoraLinkListEvent_isEventPriority1BufferFull(void);
-bool LoraLinkListEvent_isEventPriority2BufferFull(void);
-bool LoraLinkListEvent_BuildLoraEvent(uint8_t Priority, uint8_t Num, uint8_t Event, uint8_t *Addr, uint8_t *Data, uint8_t *DataSize);
-bool LoraLinkListEvent_DispatcherLoraEvent(void);
-void LoraLinkListEvent_LoraEventDelete(uint8_t Priority, uint8_t *Addr);
-void LoraLinkListEvent_LoraEventReconfirm(uint8_t *Addr);
-bool LoraLinkListEvent_CreateNodeEvent(uint8_t, uint8_t, uint8_t, uint8_t *, uint8_t *);
-void LoraLinkListEvent_DestroyNodeHeadEvent(uint8_t, uint8_t);
-void LoraLinkListEvent_DestroyNodeTailEvent(uint8_t, uint8_t);
-bool LoraLinkListEvent_isNodeEventPriority0BufferFull(uint8_t);
-bool LoraLinkListEvent_isNodeEventPriority1BufferFull(uint8_t);
-bool LoraLinkListEvent_isNodeEventPriority2BufferFull(uint8_t);
-void LoraLinkListEvent_LoraNodeEventDelete(uint8_t);
+void	LoraLinkListEvent_Initialization(void);
+bool	LoraLinkListEvent_CreateEvent(uint8_t Priority, uint8_t Num, uint8_t Event, uint8_t *Addr, uint8_t *Data, uint8_t *DataSize);
+void	LoraLinkListEvent_DestroyHeadEvent(uint8_t);
+void	LoraLinkListEvent_DestroyTailEvent(uint8_t);
+uint8_t	LoraLinkListEvent_ComputeEvent(tLoraNodeEvent *EventHead, uint8_t *EventCount);
+bool	LoraLinkListEvent_isEventPriority0BufferFull(void);
+bool	LoraLinkListEvent_isEventPriority1BufferFull(void);
+bool	LoraLinkListEvent_isEventPriority2BufferFull(void);
+bool	LoraLinkListEvent_BuildLoraEvent(uint8_t Priority, uint8_t Num, uint8_t Event, uint8_t *Addr, uint8_t *Data, uint8_t *DataSize);
+bool	LoraLinkListEvent_DispatcherLoraEvent(void);
+void	LoraLinkListEvent_LoraEventDelete(uint8_t Priority, uint8_t *Addr);
+void	LoraLinkListEvent_LoraEventReconfirm(uint8_t *Addr);
+void	LoraLinkListEvent_LoraEventClearAll(void);
+bool	LoraLinkListEvent_CreateNodeEvent(uint8_t, uint8_t, uint8_t, uint8_t *, uint8_t *);
+void	LoraLinkListEvent_DestroyNodeHeadEvent(uint8_t, uint8_t);
+void	LoraLinkListEvent_DestroyNodeTailEvent(uint8_t, uint8_t);
+bool	LoraLinkListEvent_isNodeEventPriority0BufferFull(uint8_t);
+bool	LoraLinkListEvent_isNodeEventPriority1BufferFull(uint8_t);
+bool	LoraLinkListEvent_isNodeEventPriority2BufferFull(uint8_t);
+void	LoraLinkListEvent_LoraNodeEventDelete(uint8_t);
 
+#endif		// USER_LINKLISTEVENT_H_
 
-
-#endif /* __LINK_LIST_EVENT_H */
-
-
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
-
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

@@ -1,3 +1,15 @@
+﻿
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : Fox<shenfa@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// 版權所有：群登科技股份有限公司
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
 /**
   ******************************************************************************
   * @file    usbd_cdc_vcp.h
@@ -25,28 +37,17 @@
   ******************************************************************************
   */
 
-//---------------------------------------------------------------------------
-/*
-//==========================================
-// Author : Fox<shenfa@acsip.com.tw>
-// Copyright 2016(C) AcSiP Technology Inc.
-// 版權所有：群登科技股份有限公司
-// http://www.acsip.com.tw
-//==========================================
-*/
-//---------------------------------------------------------------------------
-
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __USBD_CDC_VCP_H
-#define __USBD_CDC_VCP_H
+#ifndef USER_USBD_CDC_VCP_H_
+#define USER_USBD_CDC_VCP_H_
 
 /* Includes ------------------------------------------------------------------*/
 #include <stdbool.h>
 
 #include "usbd_cdc_core.h"
 #include "usbd_conf.h"
-#include "usart2.h"
+//#include "UART_Console.h"
 
 
 /* Exported typef ------------------------------------------------------------*/
@@ -59,19 +60,18 @@ typedef struct
 	uint8_t		format;
 	uint8_t		paritytype;
 	uint8_t		datatype;
-}LINE_CODING;
+} LINE_CODING;
 
 /* Exported constants --------------------------------------------------------*/
 
 #define DEFAULT_CONFIG			0
 #define OTHER_CONFIG			1
 
-#define	VCP_RX_BufLength		(USART2_RX_BufLength)
+#define	VCP_RX_BufLength		256
 
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void		EVAL_COM_IRQHandler(void);
 void		VCP_EnvironmentVariableSet( void );
 uint16_t	VCP_DataTx ( uint8_t* Buf, uint32_t Len );
 
@@ -89,9 +89,7 @@ extern	bool			*isVCP_RX_BOOL;
 extern	bool			USBD_VCP_EchoOn;
 
 
-
-#endif /* __USBD_CDC_VCP_H */
+#endif		// USER_USBD_CDC_VCP_H_
 
 /************************ (C) COPYRIGHT STMicroelectronics *********/
 /************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/
-

@@ -1,3 +1,16 @@
+﻿
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// 版權所有：群登科技股份有限公司
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
+
 /**
   ******************************************************************************
   * @file    Project/STM32F4xx_StdPeriph_Templates/stm32f4xx_it.c 
@@ -70,10 +83,10 @@ void NMI_Handler(void)
   */
 void HardFault_Handler(void)
 {
-  /* Go to infinite loop when Hard Fault exception occurs */
-  while (1) {
-    CmdUART_UartWrite((uint8_t *)"HardFault\r\n", 11);   //for test
-  }
+	/* Go to infinite loop when Hard Fault exception occurs */
+	while (1) {
+		Console_Output_String( "HardFault\r\n" );
+	}
 }
 
 /**
@@ -83,10 +96,10 @@ void HardFault_Handler(void)
   */
 void MemManage_Handler(void)
 {
-  /* Go to infinite loop when Memory Manage exception occurs */
-  while (1) {
-    CmdUART_UartWrite((uint8_t *)"MemManage\r\n", 11);   //for test
-  }
+	/* Go to infinite loop when Memory Manage exception occurs */
+	while (1) {
+		Console_Output_String( "MemManage\r\n" );
+	}
 }
 
 /**
@@ -96,10 +109,10 @@ void MemManage_Handler(void)
   */
 void BusFault_Handler(void)
 {
-  /* Go to infinite loop when Bus Fault exception occurs */
-  while (1) {
-    CmdUART_UartWrite((uint8_t *)"BusFault\r\n", 10);   //for test
-  }
+	/* Go to infinite loop when Bus Fault exception occurs */
+	while (1) {
+		Console_Output_String( "BusFault\r\n" );
+	}
 }
 
 /**
@@ -109,10 +122,10 @@ void BusFault_Handler(void)
   */
 void UsageFault_Handler(void)
 {
-  /* Go to infinite loop when Usage Fault exception occurs */
-  while (1) {
-    CmdUART_UartWrite((uint8_t *)"UsageFault\r\n", 12);   //for test
-  }
+	/* Go to infinite loop when Usage Fault exception occurs */
+	while (1) {
+		Console_Output_String( "UsageFault\r\n" );
+	}
 }
 
 /**
@@ -147,20 +160,19 @@ void PendSV_Handler(void)
   * @param  None
   * @retval None
   */
-void SysTick_Handler(void) {
-  
-  //int8_t str[11];   //test
-	
-  TickCounter++;
-  
-  //sprintf((char *)str, "%d", TickCounter);   //test
-  //CmdUART_UartWrite((uint8_t *)"Tick=", strlen("Tick="));   //test
-  //CmdUART_UartWrite((uint8_t *)str, strlen((const char *)str));   //test
-  //CmdUART_UartWrite((uint8_t *)"\r\n", strlen("\r\n"));   //test
-	
-	//test, PB2 for SysTick in pin output
-	//GPIO_WriteBit(GPIOB, GPIO_Pin_2, (BitAction)(1 - GPIO_ReadOutputDataBit(GPIOB, GPIO_Pin_2)));
-	//test end
+void SysTick_Handler(void)
+{
+	// char		str[11];
+
+	TickCounter++;
+	// snprintf( str, sizeof(str), "%d", TickCounter );
+	// Console_Output_String( "Tick=" );
+	// Console_Output_String( str );
+	// Console_Output_String( "\r\n" );
+
+	// test, PB2 for SysTick in pin output
+	// GPIO_WriteBit(GPIOB, GPIO_Pin_2, (BitAction)(1 - GPIO_ReadOutputDataBit(GPIOB, GPIO_Pin_2)));
+	// test end
 }
 
 /******************************************************************************/
@@ -184,14 +196,14 @@ void SysTick_Handler(void) {
 /**
   * @}
   */ 
-//void EXTI0_IRQHandler(void) {
-//	
+// void EXTI0_IRQHandler(void) {
+//
 //  if(EXTI_GetITStatus(EXTI_Line0) != RESET) {
 //    /* Clear the EXTI line 0 pending bit */
 //    EXTI_ClearITPendingBit(EXTI_Line0);
 //  }
-//	
-//}
+//
+// }
 
 
 
@@ -204,7 +216,7 @@ void SysTick_Handler(void) {
   */
 void	OTG_FS_WKUP_IRQHandler( void )
 {
-	if( USB_OTG_dev.cfg.low_power ){
+	if( USB_OTG_dev.cfg.low_power ) {
 		/* Reset SLEEPDEEP and SLEEPONEXIT bits */
 		SCB->SCR &= (uint32_t)~((uint32_t)(SCB_SCR_SLEEPDEEP_Msk | SCB_SCR_SLEEPONEXIT_Msk));
 
@@ -229,8 +241,4 @@ void	OTG_FS_IRQHandler( void )
 #endif
 #endif
 
-
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
-
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

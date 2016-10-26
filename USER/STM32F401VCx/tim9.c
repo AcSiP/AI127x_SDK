@@ -1,3 +1,15 @@
+ï»¿
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// å”³î©Žåž€è¡„ã„©ï „è…Žè¤ªæ’®å˜–çˆºè¡„ç™¹é¼ ä¾—
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
 /**
   ******************************************************************************
   * @file    Project/ARM-Lora/tim9.c 
@@ -22,15 +34,14 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-//const uint16_t TIM9_CCR1_Val = 3200;
-const uint16_t TIM9_CCR1_Val = 2000;
-__IO uint16_t TIM9_capture = 0;
-__IO uint16_t USB_CLI_DelayCounter;
-__IO FunctionalState Timer9_Status;
+// const uint16_t	TIM9_CCR1_Val = 3200;
+const uint16_t		TIM9_CCR1_Val = 2000;
+__IO uint16_t		TIM9_capture = 0;
+__IO uint16_t		USB_CLI_DelayCounter;
+__IO FunctionalState	Timer9_Status;
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
-
 
 
 /***************************************************************************************************
@@ -42,28 +53,27 @@ __IO FunctionalState Timer9_Status;
  *  Return:
  *  Example :
  **************************************************************************************************/
-void TIM9_TimerConfig(void) {
-	
-	__IO uint16_t PrescalerValue = 0;
-	
-	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
-	TIM_OCInitTypeDef  TIM_OCInitStructure;
-	NVIC_InitTypeDef NVIC_InitStructure;
-	
+void	TIM9_TimerConfig(void)
+{
+	__IO uint16_t			PrescalerValue = 0;
+	TIM_TimeBaseInitTypeDef		TIM_TimeBaseStructure;
+	TIM_OCInitTypeDef		TIM_OCInitStructure;
+	NVIC_InitTypeDef		NVIC_InitStructure;
+
 	/* TIM9 clock enable */
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM9, ENABLE);
-	
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM9, ENABLE);
+
 	/* --------------------------NVIC Configuration -------------------------------*/
-  /* Enable the TIM9 gloabal Interrupt */
-  NVIC_InitStructure.NVIC_IRQChannel = TIM1_BRK_TIM9_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 5;
+	/* Enable the TIM9 gloabal Interrupt */
+	NVIC_InitStructure.NVIC_IRQChannel = TIM1_BRK_TIM9_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 5;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 5;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
-	
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+
 	/* ------------------- TIM9 Configuration:Output Compare Timing Mode ---------*/
-    /* TIM9 Configuration: 
-       The objective is to set TIM9 counter clock at 1KHz(TIM9 counter clock = 1KHz):
+	/* TIM9 Configuration: 
+		The objective is to set TIM9 counter clock at 1KHz(TIM9 counter clock = 1KHz):
 			  - TIM9CLK = 2 * PCLK1 = 2 * (HCLK / 4) = HCLK / 2 = SystemCoreClock /2
 			  - PrescalerValue = (TIM9CLK / TIM9 counter clock) - 1
 				- CC1 update rate = TIM9 counter clock / TIM9_CCR1_Val
@@ -72,33 +82,31 @@ void TIM9_TimerConfig(void) {
 			 PrescalerValue = (TIM9CLK / TIM9 counter clock) - 1 = (42MHz / 1KHz) - 1 = 41999
 			 TIM9_CH1 update rate = TIM9 counter clock / TIM9_CCR1_Val = 1000Hz / 1000 = 1s
 		*/
-		/* ¥H¤W¤½¦¡³¡¤À¥X¦Û­ì¼t F401 ½d¨Ò,¦ý¹ê´ú¤£·Ç,¬G¶È¨Ñ°Ñ¦Ò */
-	
-	//PrescalerValue = (uint16_t) ((SystemCoreClock / 2) / 32000) - 1;
+		/* ä»¥ä¸Šå…¬å¼éƒ¨åˆ†å‡ºè‡ªåŽŸå»  F401 ç¯„ä¾‹,ä½†å¯¦æ¸¬ä¸æº–,æ•…åƒ…ä¾›åƒè€ƒ */
+
+	// PrescalerValue = (uint16_t) ((SystemCoreClock / 2) / 32000) - 1;
 	PrescalerValue = (uint16_t) ((SystemCoreClock / 2) / 1000) - 1;
 
-  /* Time base configuration */
-  TIM_TimeBaseStructure.TIM_Period = 0xFFFF;
-  TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;
-  TIM_TimeBaseStructure.TIM_ClockDivision = 0;
-  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-  TIM_TimeBaseInit(TIM9, &TIM_TimeBaseStructure);
-	
+	/* Time base configuration */
+	TIM_TimeBaseStructure.TIM_Period = 0xFFFF;
+	TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM9, &TIM_TimeBaseStructure);
+
 	/* Prescaler configuration */
-  //TIM_PrescalerConfig(TIM9, PrescalerValue, TIM_PSCReloadMode_Immediate);
-	
+	// TIM_PrescalerConfig(TIM9, PrescalerValue, TIM_PSCReloadMode_Immediate);
+
 	/* Output Compare Timing Mode configuration: Channel1 */
-  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Disable;
-  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_Timing;
-  TIM_OCInitStructure.TIM_Pulse = TIM9_CCR1_Val;
+	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Disable;
+	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_Timing;
+	TIM_OCInitStructure.TIM_Pulse = TIM9_CCR1_Val;
 	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
 	TIM_OC1Init(TIM9, &TIM_OCInitStructure);
 	TIM_OC1PreloadConfig(TIM9, TIM_OCPreload_Disable);
-	
-	Timer9_Status = DISABLE;
-	
-}
 
+	Timer9_Status = DISABLE;
+}
 
 
 /***************************************************************************************************
@@ -110,21 +118,18 @@ void TIM9_TimerConfig(void) {
  *  Return:
  *  Example :
  **************************************************************************************************/
-void TIM9_TimerRunOrStop(FunctionalState NewState) {
-	
+void	TIM9_TimerRunOrStop(FunctionalState NewState)
+{
 	TIM_ITConfig(TIM9, TIM_IT_CC1, NewState);
 	TIM_Cmd(TIM9, NewState);
 	Timer9_Status = NewState;
 	USB_CLI_DelayCounter = 0;
-	
 	if(NewState == DISABLE) {
 		TIM_ClearITPendingBit(TIM9, TIM_IT_CC1);
 		TIM9_capture = TIM_GetCapture1(TIM9);
 		TIM_SetCompare1(TIM9, TIM9_capture + TIM9_CCR1_Val);
 	}
-	
 }
-
 
 
 /***************************************************************************************************
@@ -136,12 +141,10 @@ void TIM9_TimerRunOrStop(FunctionalState NewState) {
  *  Return:
  *  Example :
  **************************************************************************************************/
-void TIM9_ClearDelayCounter(void) {
-	
+void	TIM9_ClearDelayCounter(void)
+{
 	USB_CLI_DelayCounter = 0;
-	
 }
-
 
 
 /***************************************************************************************************
@@ -153,38 +156,33 @@ void TIM9_ClearDelayCounter(void) {
  *  Return:
  *  Example :
  **************************************************************************************************/
-void TIM1_BRK_TIM9_IRQHandler (void) {
-	
+void	TIM1_BRK_TIM9_IRQHandler (void)
+{
 #if 1
 	if (TIM_GetITStatus(TIM9, TIM_IT_CC1) != RESET) {
-		
-    /* Clear TIM9 update interrupt pending bit*/
-    TIM_ClearITPendingBit(TIM9, TIM_IT_CC1);
-		
+		/* Clear TIM9 update interrupt pending bit*/
+		TIM_ClearITPendingBit(TIM9, TIM_IT_CC1);
+
 		TIM9_capture = TIM_GetCapture1(TIM9);
 		TIM_SetCompare1(TIM9, TIM9_capture + TIM9_CCR1_Val);
-		
+
 		USB_CLI_DelayCounter++;
-		if(USB_CLI_DelayCounter >= TIM9CCR1_DelayForCMD) {
+		if( USB_CLI_DelayCounter >= CONSOLE_TIMER__CCR1_DelayForCMD ) {
 			TIM9_TimerRunOrStop(DISABLE);
 			VCP_EnvironmentVariableSet();
 			VCP_DataTx((uint8_t *)unkownCMD, strlen(unkownCMD));
 		}
-		//GPIO_WriteBit(GPIOB, GPIO_Pin_3, (BitAction)(1 - GPIO_ReadOutputDataBit(GPIOB, GPIO_Pin_3)));  //test
-  }
-#else   //for test
+		// GPIO_WriteBit(GPIOB, GPIO_Pin_3, (BitAction)(1 - GPIO_ReadOutputDataBit(GPIOB, GPIO_Pin_3)));  //test
+	}
+
+#else		// for test
 	if (TIM_GetITStatus(TIM9, TIM_IT_CC1) != RESET) {
 		/* Clear TIM9 update interrupt pending bit*/
-    TIM_ClearITPendingBit(TIM9, TIM_IT_CC1);
-		//PB3 for TIM9 rate in pin output
+		TIM_ClearITPendingBit(TIM9, TIM_IT_CC1);
+		// PB3 for TIM9 rate in pin output
 		GPIO_WriteBit(GPIOB, GPIO_Pin_3, (BitAction)(1 - GPIO_ReadOutputDataBit(GPIOB, GPIO_Pin_3)));
 	}
 #endif
-	
 }
 
-
-
-/************************ (C) COPYRIGHT Acsip ******************END OF FILE****/
-
-
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

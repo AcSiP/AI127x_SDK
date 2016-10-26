@@ -7,7 +7,7 @@
 
   <Targets>
     <Target>
-      <TargetName>STM32F072</TargetName>
+      <TargetName>AI1276-071H</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
       <pCCUsed>5060061::V5.06 update 1 (build 61)::ARMCC</pCCUsed>
@@ -45,8 +45,8 @@
             <NotGenerated>0</NotGenerated>
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
-          <OutputDirectory>.\Obj\</OutputDirectory>
-          <OutputName>STM32F072RB_Lora</OutputName>
+          <OutputDirectory>.\Obj_1276-071\</OutputDirectory>
+          <OutputName>AI1276-071H</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -67,9 +67,9 @@
             <nStopU2X>0</nStopU2X>
           </BeforeCompile>
           <BeforeMake>
-            <RunUserProg1>0</RunUserProg1>
+            <RunUserProg1>1</RunUserProg1>
             <RunUserProg2>0</RunUserProg2>
-            <UserProg1Name></UserProg1Name>
+            <UserProg1Name>cmd /C    del /F    AI1276-071H.hex</UserProg1Name>
             <UserProg2Name></UserProg2Name>
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
             <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
@@ -77,9 +77,9 @@
             <nStopB2X>0</nStopB2X>
           </BeforeMake>
           <AfterMake>
-            <RunUserProg1>0</RunUserProg1>
+            <RunUserProg1>1</RunUserProg1>
             <RunUserProg2>0</RunUserProg2>
-            <UserProg1Name></UserProg1Name>
+            <UserProg1Name>cmd /C    copy /Y   Obj_1276-071\AI1276-071H.hex   .</UserProg1Name>
             <UserProg2Name></UserProg2Name>
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
             <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
@@ -311,8 +311,8 @@
               </OCR_RVCT3>
               <OCR_RVCT4>
                 <Type>1</Type>
-                <StartAddress>0x8000000</StartAddress>
-                <Size>0x20000</Size>
+                <StartAddress>0x800c000</StartAddress>
+                <Size>0x14000</Size>
               </OCR_RVCT4>
               <OCR_RVCT5>
                 <Type>1</Type>
@@ -336,8 +336,8 @@
               </OCR_RVCT8>
               <OCR_RVCT9>
                 <Type>0</Type>
-                <StartAddress>0x20000000</StartAddress>
-                <Size>0x4000</Size>
+                <StartAddress>0x200000c0</StartAddress>
+                <Size>0x3f40</Size>
               </OCR_RVCT9>
               <OCR_RVCT10>
                 <Type>0</Type>
@@ -371,7 +371,7 @@
               <MiscControls>--gnu</MiscControls>
               <Define>USE_STDPERIPH_DRIVER STM32F072 USE_LORA_SX1276 PLATFORM=Bleeper</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Libraries\STM32F0xx_CMSIS\Device\ST\STM32F0xx\Include;..\Libraries\STM32F0xx_CMSIS\Include;..\Libraries\STM32F0xx_CMSIS\RTOS;..\Libraries\STM32F0xx_StdPeriph_Driver\inc;..\USER;..\Libraries\libshell;..\Libraries\Radio;..\USER\STM32F072RBx</IncludePath>
+              <IncludePath>..\Libraries\STM32F0xx_CMSIS\Device\ST\STM32F0xx\Include;..\Libraries\STM32F0xx_CMSIS\Include;..\Libraries\STM32F0xx_CMSIS\RTOS;..\Libraries\STM32F0xx_StdPeriph_Driver\inc;..\USER;..\Libraries\libshell;..\Libraries\Radio;..\USER\STM32F072RBx;..\Libraries</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -411,80 +411,6 @@
         </TargetArmAds>
       </TargetOption>
       <Groups>
-        <Group>
-          <GroupName>CMSIS</GroupName>
-          <GroupOption>
-            <CommonProperty>
-              <UseCPPCompiler>0</UseCPPCompiler>
-              <RVCTCodeConst>0</RVCTCodeConst>
-              <RVCTZI>0</RVCTZI>
-              <RVCTOtherData>0</RVCTOtherData>
-              <ModuleSelection>0</ModuleSelection>
-              <IncludeInBuild>2</IncludeInBuild>
-              <AlwaysBuild>2</AlwaysBuild>
-              <GenerateAssemblyFile>2</GenerateAssemblyFile>
-              <AssembleAssemblyFile>2</AssembleAssemblyFile>
-              <PublicsOnly>2</PublicsOnly>
-              <StopOnExitCode>11</StopOnExitCode>
-              <CustomArgument></CustomArgument>
-              <IncludeLibraryModules></IncludeLibraryModules>
-              <ComprImg>0</ComprImg>
-            </CommonProperty>
-            <GroupArmAds>
-              <Cads>
-                <interw>2</interw>
-                <Optim>0</Optim>
-                <oTime>2</oTime>
-                <SplitLS>2</SplitLS>
-                <OneElfS>2</OneElfS>
-                <Strict>2</Strict>
-                <EnumInt>2</EnumInt>
-                <PlainCh>2</PlainCh>
-                <Ropi>2</Ropi>
-                <Rwpi>2</Rwpi>
-                <wLevel>0</wLevel>
-                <uThumb>2</uThumb>
-                <uSurpInc>2</uSurpInc>
-                <uC99>2</uC99>
-                <useXO>2</useXO>
-                <v6Lang>0</v6Lang>
-                <v6LangP>0</v6LangP>
-                <vShortEn>0</vShortEn>
-                <vShortWch>0</vShortWch>
-                <VariousControls>
-                  <MiscControls></MiscControls>
-                  <Define></Define>
-                  <Undefine></Undefine>
-                  <IncludePath>..\Libraries\CMSIS\Device\ST\STM32L1xx\Include;..\Libraries\CMSIS\Include;..\Libraries\CMSIS\RTOS;..\Libraries\STM32L1xx_StdPeriph_Driver\inc;..\USER</IncludePath>
-                </VariousControls>
-              </Cads>
-              <Aads>
-                <interw>2</interw>
-                <Ropi>2</Ropi>
-                <Rwpi>2</Rwpi>
-                <thumb>2</thumb>
-                <SplitLS>2</SplitLS>
-                <SwStkChk>2</SwStkChk>
-                <NoWarn>2</NoWarn>
-                <uSurpInc>2</uSurpInc>
-                <useXO>2</useXO>
-                <VariousControls>
-                  <MiscControls></MiscControls>
-                  <Define></Define>
-                  <Undefine></Undefine>
-                  <IncludePath></IncludePath>
-                </VariousControls>
-              </Aads>
-            </GroupArmAds>
-          </GroupOption>
-          <Files>
-            <File>
-              <FileName>system_stm32f0xx.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\USER\STM32F072RBx\system_stm32f0xx.c</FilePath>
-            </File>
-          </Files>
-        </Group>
         <Group>
           <GroupName>STM32F0xx_StdPeriph_Driver</GroupName>
           <GroupOption>
@@ -718,11 +644,6 @@
               <FilePath>..\USER\STM32F072RBx\stm32f0xx_it.c</FilePath>
             </File>
             <File>
-              <FileName>tim14.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\USER\STM32F072RBx\tim14.c</FilePath>
-            </File>
-            <File>
               <FileName>flash.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\flash.c</FilePath>
@@ -805,16 +726,6 @@
               <FilePath>..\USER\LinkListEvent.c</FilePath>
             </File>
             <File>
-              <FileName>usart2.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\USER\STM32F072RBx\usart2.c</FilePath>
-            </File>
-            <File>
-              <FileName>usart1.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\USER\STM32F072RBx\usart1.c</FilePath>
-            </File>
-            <File>
               <FileName>gps.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\gps.c</FilePath>
@@ -849,15 +760,40 @@
               <FileType>1</FileType>
               <FilePath>..\USER\sleep.c</FilePath>
             </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>Readme</GroupName>
-          <Files>
             <File>
-              <FileName>readme.txt</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Readme\readme.txt</FilePath>
+              <FileName>system_stm32f0xx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\STM32F072RBx\system_stm32f0xx.c</FilePath>
+            </File>
+            <File>
+              <FileName>console_function.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\console_function.c</FilePath>
+            </File>
+            <File>
+              <FileName>RandomHopStartChannel.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\RandomHopStartChannel.c</FilePath>
+            </File>
+            <File>
+              <FileName>UART_Console.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\UART_Console.c</FilePath>
+            </File>
+            <File>
+              <FileName>Console_Timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\Console_Timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>Base_Driver__UART1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\STM32F072RBx\Base_Driver__UART1.c</FilePath>
+            </File>
+            <File>
+              <FileName>Base_Driver__UART2.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\STM32F072RBx\Base_Driver__UART2.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -875,14 +811,29 @@
           <GroupName>AcSiP_Libraries</GroupName>
           <Files>
             <File>
+              <FileName>AI1276-071H__Protocol.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>.\AcSiP_Libries\AI1276-071H__Protocol.lib</FilePath>
+            </File>
+            <File>
               <FileName>AI1276-071H__Radio.lib</FileName>
               <FileType>4</FileType>
               <FilePath>.\AcSiP_Libries\AI1276-071H__Radio.lib</FilePath>
             </File>
             <File>
-              <FileName>AI1276-071H__Protocol.lib</FileName>
-              <FileType>4</FileType>
-              <FilePath>.\AcSiP_Libries\AI1276-071H__Protocol.lib</FilePath>
+              <FileName>Message_Queue.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\Message_Queue.c</FilePath>
+            </File>
+            <File>
+              <FileName>Word_Queue.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\Word_Queue.c</FilePath>
+            </File>
+            <File>
+              <FileName>Byte_Queue.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Libraries\Byte_Queue.c</FilePath>
             </File>
           </Files>
         </Group>

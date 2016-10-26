@@ -1,3 +1,15 @@
+﻿
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// 版權所有：群登科技股份有限公司
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
 /**
   ******************************************************************************
   * @file    Project/ARM-Lora/usart1.h 
@@ -13,11 +25,9 @@
   ******************************************************************************
   */
 
-
-
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __USART1_H
-#define __USART1_H
+#ifndef USER_STM32F072RBX_USART1_H_
+#define USER_STM32F072RBX_USART1_H_
 
 /* Includes ------------------------------------------------------------------*/
 #ifdef STM32F072
@@ -39,14 +49,8 @@ void	USART1_UartInit(uint32_t);
 void	USART1_UartWrite(uint8_t *, uint32_t);
 void	USART1_IRQHandler(void);
 void	USART1_EnvironmentVariableSet(void);
-void USART1_VariableSwap(void);
+void	USART1_VariableSwap(void);
 
-
-
-#endif /* __USART1_H */
-
-
+#endif		// USER_STM32F072RBX_USART1_H_
 
 /************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/
-
-

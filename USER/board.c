@@ -1,3 +1,15 @@
+
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// 版權所有：群登科技股份有限公司
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
 /*
  * THE FOLLOWING FIRMWARE IS PROVIDED: (1) "AS IS" WITH NO WARRANTY; AND 
  * (2)TO ENABLE ACCESS TO CODING INFORMATION TO GUIDE AND FACILITATE CUSTOMER.
@@ -16,48 +28,122 @@
  * \date       Nov 21 2012
  * \author     Miguel Luis
  */
-#include <stdint.h> 
+#include <stdint.h>
 #include "spi.h"
 #include "board.h"
-//Program_Sample
-#include "config.h"
-//Program_Sample end
 
 // System tick (1ms)
 volatile uint32_t	TickCounter = 0;
 
-//Program_Sample
-uint32_t	LEDBlinkStartTime = 0;
-uint32_t	LEDLoop = 1;
-uint32_t	gOnTime = 0;
-uint32_t	gOffTime = 0;
-uint32_t	gDuration = 0;
-bool		isLEDOn = false;
-//Program_Sample end
 
-//void InitUnusedGPIO( void ) ;
+#ifdef STM32F401xx
+#define ADC1_DR_ADDRESS		((uint32_t)0x4001204C)
+
+__IO uint16_t		ADC1ConvertedValue = 0;
+
+static void		ADC1_CH8_DMA_Config(void);
+#endif
+
 
 void	BoardInit( void )
 {
 	/* Setup SysTick Timer for 1 ms interrupts ( not too often to save power ) */
-	if( SysTick_Config( SystemCoreClock / 1000 ) ){    // SystemCoreClock / 1000 = 1ms
-
-		/* Capture error */ 
-		while (1);
+	if( SysTick_Config( SystemCoreClock / 1000 ) ) {		// SystemCoreClock / 1000 = 1ms
+		/* Capture error */
+		while (1) {
+		}
 	}
 
 	// Initialize unused GPIO to optimize power consumption
-	//InitUnusedGPIO( );
+	// InitUnusedGPIO( );
 
 	// Initialize SPI
 	SpiInit( );
+
+#ifdef STM32F401xx
+	// Init. ADC1
+	ADC1_CH8_DMA_Config();
+
+	// Start ADC1 Software Conversion
+	ADC_SoftwareStartConv(ADC1);
+#endif
 }
+
+#ifdef STM32F401xx
+static void	ADC1_CH8_DMA_Config(void)
+{
+	ADC_InitTypeDef		ADC_InitStructure;
+	ADC_CommonInitTypeDef	ADC_CommonInitStructure;
+	DMA_InitTypeDef		DMA_InitStructure;
+	GPIO_InitTypeDef	GPIO_InitStructure;
+
+	/* Enable ADC3, DMA2 and GPIO clocks ****************************************/
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2 | RCC_AHB1Periph_GPIOB, ENABLE);		// 0x00400000 | 0x00000004, AHB1 up to 84MHz
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);		// 0x00000100, APB2 up to 84Mhz
+
+	/* DMA2 Stream0 channel0 configuration **************************************/
+	DMA_InitStructure.DMA_Channel = DMA_Channel_0;
+	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)ADC1_DR_ADDRESS;
+	DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)&ADC1ConvertedValue;
+	DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
+	DMA_InitStructure.DMA_BufferSize = 1;
+	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Disable;
+	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
+	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
+	DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+	DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable;
+	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_HalfFull;
+	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+	DMA_Init(DMA2_Stream0, &DMA_InitStructure);
+	DMA_Cmd(DMA2_Stream0, ENABLE);
+
+	/* Configure ADC1 Channel12 pin as analog input ******************************/
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+	/* ADC Common Init **********************************************************/
+	ADC_CommonInitStructure.ADC_Mode = ADC_Mode_Independent;
+	ADC_CommonInitStructure.ADC_Prescaler = ADC_Prescaler_Div2;
+	ADC_CommonInitStructure.ADC_DMAAccessMode = ADC_DMAAccessMode_Disabled;
+	ADC_CommonInitStructure.ADC_TwoSamplingDelay = ADC_TwoSamplingDelay_5Cycles;
+	ADC_CommonInit(&ADC_CommonInitStructure);
+
+	/* ADC1 Init ****************************************************************/
+	ADC_InitStructure.ADC_Resolution = ADC_Resolution_8b;		// ADC_Resolution_12b;
+	ADC_InitStructure.ADC_ScanConvMode = DISABLE;
+	ADC_InitStructure.ADC_ContinuousConvMode = ENABLE;
+	ADC_InitStructure.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None;
+	ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T1_CC1;
+	ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
+	ADC_InitStructure.ADC_NbrOfConversion = 1;
+	ADC_Init(ADC1, &ADC_InitStructure);
+
+	/* ADC1 regular channel12 configuration *************************************/
+	ADC_RegularChannelConfig(ADC1, ADC_Channel_8, 1, ADC_SampleTime_144Cycles);
+
+	/* Enable DMA request after last transfer (Single-ADC mode) */
+	ADC_DMARequestAfterLastTransferCmd(ADC1, ENABLE);
+
+	/* Enable ADC1 DMA */
+	ADC_DMACmd(ADC1, ENABLE);
+
+	/* Enable ADC1 */
+	ADC_Cmd(ADC1, ENABLE);
+}
+#endif
+
 
 void	Delay( uint32_t delay )
 {
 	// Wait delay ms
 	uint32_t startTick = TickCounter;
-	while( ( TickCounter - startTick ) < delay );   
+	while( ( TickCounter - startTick ) < delay ) {
+	}
 }
 
 void	LongDelay( uint8_t delay )
@@ -69,57 +155,9 @@ void	LongDelay( uint8_t delay )
 
 	// Wait delay s
 	startTick = TickCounter;
-	while( ( TickCounter - startTick ) < longDelay );   
+	while( ( TickCounter - startTick ) < longDelay ) {
+	}
 }
-
-//Program_Sample
-void	LEDBlink( uint32_t onTime, uint32_t offTime, uint32_t duration )
-{
-	if((LEDBlinkStartTime == 0) || (TickCounter > LEDBlinkStartTime + gDuration)) {
-		LEDBlinkStartTime = TickCounter;
-		gOnTime = onTime;
-		gOffTime = offTime;
-		gDuration = duration;
-		CmdUART_UartWrite((uint8_t *)"New LED action start", strlen("New LED action start"));
-		CmdUART_UartWrite((uint8_t *)"\r\n", strlen("\r\n"));
-		}
-	else {
-		if(TickCounter < LEDBlinkStartTime + gDuration) {
-			if(TickCounter < (LEDBlinkStartTime + ((gOffTime+gOnTime)*LEDLoop))) {
-				if(TickCounter < (LEDBlinkStartTime + ((gOnTime*LEDLoop)+(gOffTime*(LEDLoop-1))))) {
-					//LED GPIO on
-					if(!isLEDOn) {
-						CmdUART_UartWrite((uint8_t *)"LED GPIO on", strlen("LED GPIO on"));
-						CmdUART_UartWrite((uint8_t *)"\r\n", strlen("\r\n"));
-						//Add LED GPIO control here
-						isLEDOn = true;
-						}
-					}
-				else {
-					//LED GPIO off
-					if(isLEDOn) {
-						CmdUART_UartWrite((uint8_t *)"LED GPIO off", strlen("LED GPIO off"));
-						CmdUART_UartWrite((uint8_t *)"\r\n", strlen("\r\n"));
-						//Add LED GPIO control here
-						isLEDOn = false;
-						}
-					}
-				}
-			else {
-				LEDLoop++;
-				}
-			}
-		else {
-			LEDBlinkStartTime = 0;
-			LEDLoop = 1;
-			gOnTime = 0;
-			gOffTime = 0;
-			gDuration = 0;
-			isLEDOn = false;
-			}
-		}
-}
-//Program_Sample end
 
 /*
 void	InitUnusedGPIO( void ) 
@@ -167,4 +205,4 @@ void	InitUnusedGPIO( void )
 }
 */
 
-
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

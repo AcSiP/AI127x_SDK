@@ -1,0 +1,43 @@
+#
+# NOTE! Don't add files that are generated in specific
+# subdirectories here. Add them in the ".gitignore" file
+# in that subdirectory instead.
+#
+# Normal rules
+#
+.*
+*.o
+*.d
+*.crf
+
+# folder
+MDK/Obj_*
+
+# backup file
+*.bak
+
+!.gitignore
+
+*.orig
+
+# JLink file
+JLink*.txt
+JLink*.ini
+
+# Keil user file
+*.uvgui.*
+*.uvgui
+
+# Source insight
+*.IAB
+*.IAD
+*.IMB
+*.IMD
+*.PFI
+*.PO
+*.PR
+*.PRI
+*.PS
+*.WK3
+
+

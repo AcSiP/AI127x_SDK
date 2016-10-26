@@ -1,21 +1,18 @@
-/**
-  ******************************************************************************
-  * @file    Project/ARM-Lora/gpio.h 
-  * @author  JC
-  * @version V1.0.0
-  * @date    20-Jan-2016
-  * @brief   Header for GPIO.c module
-  ******************************************************************************
-  * @attention
-  *
-  * 
-  *
-  ******************************************************************************
-  */
-  
+﻿
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// 版權所有：群登科技股份有限公司
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __GPIO_H
-#define __GPIO_H
+#ifndef USER_GPIO_H_
+#define USER_GPIO_H_
 
 /* Includes ------------------------------------------------------------------*/
 #ifdef STM32F072
@@ -37,12 +34,6 @@ void	GPIO_UM402toLowPowerMode(void);
 void	GPIO_UM402toConfigMode(void);
 void	EXTI4_15_IRQHandler(void);
 
+#endif		// USER_GPIO_H_
 
-
-#endif /* __GPIO_H */
-
-
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
-
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

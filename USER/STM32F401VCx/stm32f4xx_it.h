@@ -1,3 +1,16 @@
+﻿
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// 版權所有：群登科技股份有限公司
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
+
 /**
   ******************************************************************************
   * @file    Project/STM32F4xx_StdPeriph_Templates/stm32f4xx_it.h 
@@ -26,12 +39,12 @@
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __STM32F4xx_IT_H
-#define __STM32F4xx_IT_H
+#ifndef USER_STM32F401VCX_STM32F4XX_IT_H_
+#define USER_STM32F401VCX_STM32F4XX_IT_H_
 
 #ifdef __cplusplus
- extern "C" {
-#endif 
+extern "C" {
+#endif
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx.h"
@@ -41,20 +54,20 @@
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 
-void NMI_Handler(void);
-void HardFault_Handler(void);
-void MemManage_Handler(void);
-void BusFault_Handler(void);
-void UsageFault_Handler(void);
-void SVC_Handler(void);
-void DebugMon_Handler(void);
-void PendSV_Handler(void);
-void SysTick_Handler(void);
-   
+void	NMI_Handler(void);
+void	HardFault_Handler(void);
+void	MemManage_Handler(void);
+void	BusFault_Handler(void);
+void	UsageFault_Handler(void);
+void	SVC_Handler(void);
+void	DebugMon_Handler(void);
+void	PendSV_Handler(void);
+void	SysTick_Handler(void);
+
 #ifdef STM32F401xx
-#ifdef	USBD_VCP_Console
-void OTG_FS_WKUP_IRQHandler( void );
-void OTG_FS_IRQHandler( void );
+#ifdef USBD_VCP_Console
+void	OTG_FS_WKUP_IRQHandler( void );
+void	OTG_FS_IRQHandler( void );
 #endif
 #endif
 
@@ -62,6 +75,6 @@ void OTG_FS_IRQHandler( void );
 }
 #endif
 
-#endif /* __STM32F4xx_IT_H */
+#endif		// USER_STM32F401VCX_STM32F4XX_IT_H_
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

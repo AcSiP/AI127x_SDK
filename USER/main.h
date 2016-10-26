@@ -1,21 +1,18 @@
-/**
-  ******************************************************************************
-  * @file    Project/main.h 
-  * @author  
-  * @version 
-  * @date    
-  * @brief   Header for main.c module
-  ******************************************************************************
-  * @attention
-  *
-  * 
-  *
-  ******************************************************************************
-  */
-  
+﻿
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// 版權所有：群登科技股份有限公司
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H
-#define __MAIN_H
+#ifndef USER_MAIN_H_
+#define USER_MAIN_H_
 
 /* Includes ------------------------------------------------------------------*/
 #include <stdbool.h>
@@ -42,30 +39,28 @@
 #include "led.h"
 #include "button.h"
 #include "rtc.h"
+#include "RandomHopStartChannel.h"
 #include "sleep.h"
+
+//#include "usart1.h"
+#include "UART_Console.h"
+#include "Console_Timer.h"
 
 #ifdef STM32F072
 	#include "stm32f0xx.h"
-  #include "usart1.h"
-	#include "usart2.h"
-	#include "tim14.h"
 #endif
 
 #ifdef STM32F401xx
 	#include "stm32f4xx.h"
-  #include "usart1.h"
-	#include "usart2.h"
-	#include "tim4.h"
-  
-  #include "usb_bsp.h"
-  #include "usbd_cdc_core.h"
-  #include "usbd_cdc_vcp.h"
-  #include "usbd_usr.h"
-  #include "usbd_desc.h"
-  #include "console_function.h"
-  #include "tim9.h"
-#endif
 
+	#include "usb_bsp.h"
+	#include "usbd_cdc_core.h"
+	#include "usbd_cdc_vcp.h"
+	#include "usbd_usr.h"
+	#include "usbd_desc.h"
+	#include "console_function.h"
+	#include "tim9.h"
+#endif
 
 
 /* Exported types ------------------------------------------------------------*/
@@ -78,12 +73,12 @@ typedef enum {
 
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
-#define enableGlobalInterrupts()   __set_PRIMASK(0);
-#define disableGlobalInterrupts()  __set_PRIMASK(1);
+#define enableGlobalInterrupts()	__set_PRIMASK(0);
+#define disableGlobalInterrupts()	__set_PRIMASK(1);
 
 /* Exported functions ------------------------------------------------------- */
-void LoraPara_LoadAndConfiguration(void);
+void		LoraPara_LoadAndConfiguration(void);
 
-#endif /* __MAIN_H */
+#endif		// USER_MAIN_H_
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

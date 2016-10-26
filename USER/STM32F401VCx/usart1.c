@@ -1,3 +1,15 @@
+Ôªø
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// ÁâàÊ¨äÊâÄÊúâÔºöÁæ§ÁôªÁßëÊäÄËÇ°‰ªΩÊúâÈôêÂÖ¨Âè∏
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
 /**
   ******************************************************************************
   * @file    Project/ARM-Lora/usart1.c
@@ -18,22 +30,23 @@
 #include "usart1.h"
 #include "stm32f4xx.h"
 
+#ifdef Board__A22_Tracker
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-__IO uint16_t GPS_USART_count;
-__IO uint8_t GPS_USART_RX_Buf1[USART1_RX_BufLength];
-__IO uint8_t GPS_USART_RX_Buf2[USART1_RX_BufLength];
-__IO uint8_t *GPS_USART_RX_BufPointer;
-__IO bool isGPS_USART_RX_Buf1Full;
-__IO bool isGPS_USART_RX_Buf2Full;
-__IO bool *isGPS_USART_RX_BOOL;
-static __IO uint8_t TailNum0, TailNum1;
+__IO uint16_t		GPS_USART_count;
+__IO uint8_t		GPS_USART_RX_Buf1[USART1_RX_BufLength];
+__IO uint8_t		GPS_USART_RX_Buf2[USART1_RX_BufLength];
+__IO uint8_t *		GPS_USART_RX_BufPointer;
+__IO bool		isGPS_USART_RX_Buf1Full;
+__IO bool		isGPS_USART_RX_Buf2Full;
+__IO bool *		isGPS_USART_RX_BOOL;
+static __IO uint8_t	TailNum0, TailNum1;
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
-
 
 
 /***************************************************************************************************
@@ -45,30 +58,28 @@ static __IO uint8_t TailNum0, TailNum1;
  *  Return:
  *  Example :
  **************************************************************************************************/
-void USART1_PinInitialization(void) {
-	
-	GPIO_InitTypeDef GPIO_InitStructure;
-	
-	USART_DeInit(USART1);
-	
-  /* Pin configuration */
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStructure.GPIO_Speed = GPIO_High_Speed;
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-  GPIO_Init(GPIOB, &GPIO_InitStructure);
-	
-	/* Alternate function conf */
-  GPIO_PinAFConfig(GPIOB, GPIO_PinSource6, GPIO_AF_USART1);
-  GPIO_PinAFConfig(GPIOB, GPIO_PinSource7, GPIO_AF_USART1);
-	
-	/* Enable the USART1 clock */
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
-	
-}
+void	USART1_PinInitialization(void)
+{
+	GPIO_InitTypeDef	GPIO_InitStructure;
 
+	USART_DeInit(USART1);
+
+	/* Pin configuration */
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_Speed = GPIO_High_Speed;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+	/* Alternate function conf */
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource6, GPIO_AF_USART1);
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource7, GPIO_AF_USART1);
+
+	/* Enable the USART1 clock */
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+}
 
 
 /***************************************************************************************************
@@ -80,34 +91,31 @@ void USART1_PinInitialization(void) {
  *  Return:
  *  Example :
  **************************************************************************************************/
-void USART1_UartConfig(uint32_t BaudRate) {
-	
-	USART_InitTypeDef USART_InitStructure;
-	NVIC_InitTypeDef NVIC_InitStructure;
+void	USART1_UartConfig(uint32_t BaudRate)
+{
+	USART_InitTypeDef	USART_InitStructure;
+	NVIC_InitTypeDef	NVIC_InitStructure;
 
-  /* USART conf */
-  USART_InitStructure.USART_BaudRate = BaudRate;
-  USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-  USART_InitStructure.USART_StopBits = USART_StopBits_1;
-  USART_InitStructure.USART_Parity = USART_Parity_No;
-  USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-  USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-  USART_Init(USART1, &USART_InitStructure);
-	
+	/* USART conf */
+	USART_InitStructure.USART_BaudRate = BaudRate;
+	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+	USART_InitStructure.USART_StopBits = USART_StopBits_1;
+	USART_InitStructure.USART_Parity = USART_Parity_No;
+	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+	USART_Init(USART1, &USART_InitStructure);
+
 	/* Enable the USARTx Interrupt */
-  NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
-	
-	/* Enable USART */
-  USART_Cmd(USART1, ENABLE);
-	
-	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
-	
-}
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
 
+	/* Enable USART */
+	USART_Cmd(USART1, ENABLE);
+	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+}
 
 
 /***************************************************************************************************
@@ -119,15 +127,12 @@ void USART1_UartConfig(uint32_t BaudRate) {
  *  Return:
  *  Example :
  **************************************************************************************************/
-void USART1_UartEnableOrDisable(FunctionalState NewState) {
-	
-  /* Enable/disable the USART */
-  USART_Cmd(USART1, NewState);
-	
-  USART1_EnvironmentVariableSet();
-  
+void	USART1_UartEnableOrDisable(FunctionalState NewState)
+{
+	/* Enable/disable the USART */
+	USART_Cmd(USART1, NewState);
+	USART1_EnvironmentVariableSet();
 }
-
 
 
 /***************************************************************************************************
@@ -139,15 +144,12 @@ void USART1_UartEnableOrDisable(FunctionalState NewState) {
  *  Return:
  *  Example :
  **************************************************************************************************/
-void USART1_UartInit(uint32_t BaudRate) {
-	
+void	USART1_UartInit(uint32_t BaudRate)
+{
 	USART1_PinInitialization();
 	USART1_UartConfig(BaudRate);
-	
 	USART1_EnvironmentVariableSet();
-	
 }
-
 
 
 /***************************************************************************************************
@@ -159,17 +161,16 @@ void USART1_UartInit(uint32_t BaudRate) {
  *  Return:
  *  Example :
  **************************************************************************************************/
-void USART1_UartWrite(uint8_t *Str, uint32_t Length) {
-	
-	uint32_t count;
-	
-	for(count = 0 ; count < Length ; count++) {
-		while(USART_GetFlagStatus(USART1,USART_FLAG_TXE) == RESET);
-		USART_SendData(USART1, Str[count]); 
-	}
-	
-}
+void	USART1_UartWrite(uint8_t *Str, uint32_t Length)
+{
+	uint32_t	count;
 
+	for(count = 0 ; count < Length ; count++) {
+		while ( USART_GetFlagStatus( USART1, USART_FLAG_TXE ) == RESET ) {
+		}
+		USART_SendData( USART1, Str[count] );
+	}
+}
 
 
 /***************************************************************************************************
@@ -181,34 +182,31 @@ void USART1_UartWrite(uint8_t *Str, uint32_t Length) {
  *  Return:
  *  Example :
  **************************************************************************************************/
-void USART1_IRQHandler(void) {
-	
+void	USART1_IRQHandler(void)
+{
 	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET) {
-		
 		/* Read one byte from the receive data register */
 		GPS_USART_RX_BufPointer[GPS_USART_count] = USART_ReceiveData(USART1);
 		/* Clear the USART1 Receive interrupt */
 		USART_ClearITPendingBit(USART1, USART_IT_RXNE);
-	  
+
 		TailNum0 = TailNum1;
-    TailNum1 = GPS_USART_RX_BufPointer[GPS_USART_count];
+		TailNum1 = GPS_USART_RX_BufPointer[GPS_USART_count];
 		GPS_USART_count++;
-		//ßP¬_±µ¶¨ªP™¯´◊
+
+		// Âà§Êñ∑Êé•Êî∂ËàáÈï∑Â∫¶
 		if( (TailNum0 == 0x0D) && (TailNum1 == 0x0A) ) {
 			*isGPS_USART_RX_BOOL = true;
 			GPS_USART_RX_BufPointer[GPS_USART_count - 2] = 0x00;
-      GPS_USART_RX_BufPointer[GPS_USART_count - 1] = 0x00;
+			GPS_USART_RX_BufPointer[GPS_USART_count - 1] = 0x00;
 			USART1_VariableSwap();
 			GPS_USART_count = 0;
-			//∂«•X§wßπæ„±µ¶¨,§¡¥´,∂«•X™¯´◊(∂«•X™∫™¯´◊¨∞¶≥Æƒ™¯´◊,ª›¶©±ºøÎ√—ΩX™¯´◊),±µ¶¨™∫∏ÍÆ∆•h∞£´·≠±§@ΩXøÎ√—ΩX,™¯´◊≤M¨∞0
-		} else if(GPS_USART_count >= USART1_RX_BufLength) {
-			USART1_EnvironmentVariableSet();
+			// ÂÇ≥Âá∫Â∑≤ÂÆåÊï¥Êé•Êî∂,ÂàáÊèõ,ÂÇ≥Âá∫Èï∑Â∫¶(ÂÇ≥Âá∫ÁöÑÈï∑Â∫¶ÁÇ∫ÊúâÊïàÈï∑Â∫¶,ÈúÄÊâ£ÊéâËæ®Ë≠òÁ¢ºÈï∑Â∫¶),Êé•Êî∂ÁöÑË≥áÊñôÂéªÈô§ÂæåÈù¢‰∏ÄÁ¢ºËæ®Ë≠òÁ¢º,Èï∑Â∫¶Ê∏ÖÁÇ∫0
+		} else {
+			if(GPS_USART_count >= USART1_RX_BufLength) USART1_EnvironmentVariableSet();
 		}
-		
-  }
-	
+	}
 }
-
 
 
 /***************************************************************************************************
@@ -220,21 +218,17 @@ void USART1_IRQHandler(void) {
  *  Return:
  *  Example :
  **************************************************************************************************/
-void USART1_EnvironmentVariableSet(void) {
-	
+void	USART1_EnvironmentVariableSet(void)
+{
 	memset((void *)GPS_USART_RX_Buf1, 0, USART1_RX_BufLength);
 	memset((void *)GPS_USART_RX_Buf2, 0, USART1_RX_BufLength);
-	
-	GPS_USART_RX_BufPointer = GPS_USART_RX_Buf1;
-	
-	isGPS_USART_RX_Buf1Full = false;
-  isGPS_USART_RX_Buf2Full = false;
-  isGPS_USART_RX_BOOL = &isGPS_USART_RX_Buf1Full;
-	
-	GPS_USART_count = 0;
-	
-}
 
+	GPS_USART_RX_BufPointer = GPS_USART_RX_Buf1;
+	isGPS_USART_RX_Buf1Full = false;
+	isGPS_USART_RX_Buf2Full = false;
+	isGPS_USART_RX_BOOL = &isGPS_USART_RX_Buf1Full;
+	GPS_USART_count = 0;
+}
 
 
 /***************************************************************************************************
@@ -246,22 +240,21 @@ void USART1_EnvironmentVariableSet(void) {
  *  Return:
  *  Example :
  **************************************************************************************************/
-void USART1_VariableSwap(void) {
-	
+void	USART1_VariableSwap(void)
+{
 	if((isGPS_USART_RX_Buf1Full == true) && (isGPS_USART_RX_Buf2Full == false)) {
 		GPS_USART_RX_BufPointer = GPS_USART_RX_Buf2;
 		isGPS_USART_RX_BOOL = &isGPS_USART_RX_Buf2Full;
-	} else if((isGPS_USART_RX_Buf1Full == false) && (isGPS_USART_RX_Buf2Full == true)){
-		GPS_USART_RX_BufPointer = GPS_USART_RX_Buf1;
-		isGPS_USART_RX_BOOL = &isGPS_USART_RX_Buf1Full;
 	} else {
-		USART1_EnvironmentVariableSet();
+		if((isGPS_USART_RX_Buf1Full == false) && (isGPS_USART_RX_Buf2Full == true)) {
+			GPS_USART_RX_BufPointer = GPS_USART_RX_Buf1;
+			isGPS_USART_RX_BOOL = &isGPS_USART_RX_Buf1Full;
+		} else {
+			USART1_EnvironmentVariableSet();
+		}
 	}
-	
 }
 
+#endif
 
-
-/************************ (C) COPYRIGHT Acsip ******************END OF FILE****/
-
-
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

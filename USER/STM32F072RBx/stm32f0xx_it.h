@@ -1,3 +1,15 @@
+﻿
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// 版權所有：群登科技股份有限公司
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
 /**
   ******************************************************************************
   * @file    Project/STM32F0xx_StdPeriph_Templates/stm32f0xx_it.h 
@@ -26,12 +38,12 @@
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __STM32F0XX_IT_H
-#define __STM32F0XX_IT_H
+#ifndef USER_STM32F072RBX_STM32F0XX_IT_H_
+#define USER_STM32F072RBX_STM32F0XX_IT_H_
 
 #ifdef __cplusplus
- extern "C" {
-#endif 
+extern "C" {
+#endif
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -40,12 +52,11 @@
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-
-void NMI_Handler(void);
-void HardFault_Handler(void);
-void SVC_Handler(void);
-void PendSV_Handler(void);
-void SysTick_Handler(void);
+void	NMI_Handler(void);
+void	HardFault_Handler(void);
+void	SVC_Handler(void);
+void	PendSV_Handler(void);
+void	SysTick_Handler(void);
 
 /*void PPP_IRQHandler(void);*/
 
@@ -53,6 +64,6 @@ void SysTick_Handler(void);
 }
 #endif
 
-#endif /* __STM32F0XX_IT_H */
+#endif		// USER_STM32F072RBX_STM32F0XX_IT_H_
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

@@ -1,3 +1,15 @@
+Ôªø
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// ÁâàÊ¨äÊâÄÊúâÔºöÁæ§ÁôªÁßëÊäÄËÇ°‰ªΩÊúâÈôêÂÖ¨Âè∏
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
 /**
   ******************************************************************************
   * @file    Project/ARM-Lora/sleep.c 
@@ -27,21 +39,26 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-__IO bool isInSleep = false;                    //for SLAVE
-extern __IO uint16_t Running_TimeCount;         //for MASTER & SLAVE
-extern tDeviceNodeSleepAndRandomHop *DeviceNodeSleepAndRandomHop[MAX_LoraNodeNum];  //for MASTER
-extern uint8_t EventCountPriority0, EventCountPriority1, EventCountPriority2;  //for MASTER
-extern tLoraDeviceNode *LoraGateWay;            //for SLAVE
-extern tDeviceNodeSensor *MySensor;             //for SLAVE
-extern __IO uint16_t Sleep_TimeCount;           //for SLAVE
-//extern __IO bool GPS_Located;                 //for SLAVE
-extern __IO bool Slave_PollEventAccomplish;     //for SLAVE
-extern __IO bool Slave_PollEvent;               //for SLAVE
-extern __IO bool Slave_PollEvent_UTCnotZero;    //for SLAVE
-extern bool EnableMaster;                       // 1=Master or 0=Slave selection
-extern tRadioDriver *Radio;
-extern __IO tLoraRunningEvent LoraRunningEvent;
-extern __IO bool GPS_HandmadeOff;
+__IO bool				isInSleep = false;					// for SLAVE
+__IO uint8_t				SLAVE_LoraHoppingStartChannel = 0;			// for SLAVE
+extern __IO uint16_t			Running_TimeCount;					// for MASTER & SLAVE
+extern __IO uint16_t			SLAVE_LoraPollEventInterval;				// for SLAVE
+extern tDeviceNodeSleepAndRandomHop *	DeviceNodeSleepAndRandomHop[MAX_LoraNodeNum];		// for MASTER
+
+extern uint8_t				EventCountPriority0;					// for MASTER
+extern uint8_t				EventCountPriority1;					// for MASTER
+extern uint8_t				EventCountPriority2;					// for MASTER
+
+extern tLoraDeviceNode *		LoraGateWay;				// for SLAVE
+extern tDeviceNodeSensor *		MySensor;				// for SLAVE
+extern __IO uint16_t			Sleep_TimeCount;			// for SLAVE
+extern __IO bool			Slave_PollEventAccomplish;		// for SLAVE
+extern __IO bool			Slave_PollEvent;			// for SLAVE
+extern __IO bool			Slave_PollEvent_UTCnotZero;		// for SLAVE
+extern bool				EnableMaster;				// 1=Master or 0=Slave selection
+extern tRadioDriver *			Radio;
+extern __IO tLoraRunningEvent		LoraRunningEvent;
+extern __IO bool			GPS_HandmadeOff;
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
@@ -57,28 +74,35 @@ extern __IO bool GPS_HandmadeOff;
  *  Return:
  *  Example :
  **************************************************************************************************/
-void SLEEP_SYSCLKConfigFromSTOPMode(void) {
-  
-  /* Enable HSE */
-  RCC_HSEConfig(RCC_HSE_ON);
-  
-  /* Wait till HSE is ready */
-  while (RCC_GetFlagStatus(RCC_FLAG_HSERDY) == RESET);
-  
-  /* Enable PLL */
-  RCC_PLLCmd(ENABLE);
-  
-  /* Wait till PLL is ready */
-  while (RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET);
-  
-  /* Select PLL as system clock source */
-  RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
-  
-  /* Wait till PLL is used as system clock source */
-  while (RCC_GetSYSCLKSource() != 0x08);
-  
-}
+void	SLEEP_SYSCLKConfigFromSTOPMode(void)
+{
+	uint32_t	delay;
 
+	/* Enable HSE */
+	RCC_HSEConfig(RCC_HSE_ON);
+
+	/* Wait till HSE is ready */
+	while (RCC_GetFlagStatus(RCC_FLAG_HSERDY) == RESET) {
+	}
+
+	/* Enable PLL */
+	RCC_PLLCmd(ENABLE);
+
+	/* Wait till PLL is ready */
+	while (RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET) {
+	}
+
+	/* Select PLL as system clock source */
+	RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
+
+	/* Wait till PLL is used as system clock source */
+	while (RCC_GetSYSCLKSource() != 0x08) {
+	}
+
+	delay = GET_TICK_COUNT( );
+	while( ( GET_TICK_COUNT( ) - delay ) < TICK_RATE_MS( 20 ) ) {
+	}
+}
 
 
 /***************************************************************************************************
@@ -90,21 +114,38 @@ void SLEEP_SYSCLKConfigFromSTOPMode(void) {
  *  Return:
  *  Example :
  **************************************************************************************************/
-void SLEEP_SlaveSleepVariableSet(void) {
-  
-  Running_TimeCount = 0;
-  //GPS_Located = false;
-  Slave_PollEvent = false;
-  Slave_PollEvent_UTCnotZero = false;
-  Slave_PollEventAccomplish = false;
-  isInSleep = false;
-  
+void	SLEEP_SlaveSleepVariableSet(void)
+{
+	Running_TimeCount = 0;
+	SLAVE_LoraPollEventInterval = 0;
+	// GPS_Located = false;
+	Slave_PollEvent = false;
+	Slave_PollEvent_UTCnotZero = false;
+	Slave_PollEventAccomplish = false;
+	isInSleep = false;
 }
 
 
+void		SLEEP_SlaveSleep( uint16_t *SleepTime_sec )
+{
+	if( ! SleepTime_sec ) return;
+	if( *SleepTime_sec == 0 ){
+		isInSleep = false;
+		return;
+	}
+
+	if( *SleepTime_sec > 10 ){
+		*SleepTime_sec -= 5;
+		SLEEP_SlaveSleep_STANDBY_Mode( SleepTime_sec );
+		return;
+	}
+
+	SLEEP_SlaveSleep_STOP_Mode( SleepTime_sec );
+}
+
 
 /***************************************************************************************************
- *  Function Name: SLEEP_SlaveSleep
+ *  Function Name: SLEEP_SlaveSleep_STOP_Mode
  *
  *  Description:
  *  Input :
@@ -112,50 +153,115 @@ void SLEEP_SlaveSleepVariableSet(void) {
  *  Return:
  *  Example :
  **************************************************************************************************/
-void SLEEP_SlaveSleep(uint16_t *SleepTime) {
-  
-  if(*SleepTime == 0) {
-    isInSleep = false;
-    return;
-  }
-  
-  SX1276LoRaSetOpMode(RFLR_OPMODE_SLEEP);
-  
-  GPS_MT3333Stop();
-  if(MySensor != NULL) {
-    memset((void *)MySensor, 0, sizeof(tDeviceNodeSensor));
-  }
-  
-  Sleep_TimeCount = 0;
-  
-  isInSleep = true;
-  
-  while(true) {
-    if(Sleep_TimeCount < *SleepTime) {
-      /* Enter Stop Mode */
-      PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
-    } else {
-      break;
-    }
-  }
-  
-  SLEEP_SYSCLKConfigFromSTOPMode();
-  
-  if(GPS_HandmadeOff == false) {
-    GPS_MT3333Run();
-  }
-  
-  SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
-  Radio->StartRx();
-  
-  isInSleep = false;
-  
+void	SLEEP_SlaveSleep_STOP_Mode( uint16_t *SleepTime )
+{
+	uint32_t	delay;
+
+	Console_Output_String( "\r\nSleep(STOP)\r\n" );
+	SX1276LoRaSetOpMode(RFLR_OPMODE_SLEEP);
+
+#ifdef Board__A22_Tracker
+	GPS_MT3333Stop();
+#endif
+
+	if(MySensor != NULL) memset((void *)MySensor, 0, sizeof(tDeviceNodeSensor));
+
+	Sleep_TimeCount = 0;
+	isInSleep = true;
+	delay = GET_TICK_COUNT( );
+	while( true ) {
+		if( CmdUART__is_TX_Queue_Empty() ) {
+// 			if( USART_GetITStatus( CmdUART, USART_IT_TXE ) == SET ) break;
+
+			delay = GET_TICK_COUNT( );
+			while( ( GET_TICK_COUNT( ) - delay ) < TICK_RATE_MS( 2 ) ) {
+			}
+			break;
+		}
+
+		if( ( GET_TICK_COUNT( ) - delay ) > TICK_RATE_MS( 100 ) ) break;
+	}
+
+	while(true) {
+		if(Sleep_TimeCount < *SleepTime) {
+			/* Enter Stop Mode */
+			PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
+		} else {
+			break;
+		}
+	}
+
+	SLEEP_SYSCLKConfigFromSTOPMode();
+	Console_Output_String( "\r\nWake(STOP)\r\n" );
+
+#ifdef Board__A22_Tracker
+	if(GPS_HandmadeOff == false) GPS_MT3333Run();
+#endif
+
+	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
+	Radio->StartRx();
+	isInSleep = false;
 }
 
 
+void	SLEEP_SlaveSleep_STANDBY_Mode( uint16_t *SleepTime_sec )
+{
+	uint32_t	delay;
+
+	Console_Output_String( "\r\nSleep(STANDBY)\r\n" );
+	SX1276LoRaSetOpMode( RFLR_OPMODE_SLEEP );
+
+#ifdef Board__A22_Tracker
+	GPS_MT3333Stop();
+#endif
+
+	RTC_AlarmStop();
+// 	RTC_TimerConfig();		// Reset RTC Domain to clear sub-second alarm
+
+	RTC_AlarmConfig_Timeout( *SleepTime_sec );
+// 	RTC_AlarmRun();
+
+// 	Sleep_TimeCount = 0;
+	isInSleep = true;
+	delay = GET_TICK_COUNT( );
+	while( true ) {
+		if( CmdUART__is_TX_Queue_Empty() ) {
+// 			if( USART_GetITStatus( CmdUART, USART_IT_TXE ) == SET ) break;
+
+			delay = GET_TICK_COUNT( );
+			while( ( GET_TICK_COUNT( ) - delay ) < TICK_RATE_MS( 2 ) ) {
+			}
+			break;
+		}
+
+		if( ( GET_TICK_COUNT( ) - delay ) > TICK_RATE_MS( 100 ) ) break;
+	}
+
+	/* Disable SysTick ISR */
+// 	SysTick->CTRL &= (~SysTick_CTRL_TICKINT_Msk);
+
+// 	RTC_ITConfig( RTC_IT_ALRA, DISABLE );
+
+	/* Clear Power Wake-up (CWUF) flag */
+	PWR_ClearFlag( PWR_FLAG_WU );
+
+	/* Enable RTC Alarm A Interrupt */
+	RTC_ITConfig( RTC_IT_ALRA, ENABLE );
+	RTC_ClearFlag( RTC_FLAG_ALRAF );
+
+	RTC_AlarmRun();
+
+	/* Request to enter STANDBY mode (Wake Up flag is cleared in PWR_EnterSTANDBYMode function) */
+	PWR_EnterSTANDBYMode();
+  
+	/* Infinite loop */
+	while (1) {
+	}
+}
+
 
 /***************************************************************************************************
- *  Function Name: SLEEP_SlaveSleepProcedure
+ *  Function Name: SLEEP_SlaveSleepAandRandomHopChannelProcedure
  *
  *  Description:
  *  Input :
@@ -163,26 +269,46 @@ void SLEEP_SlaveSleep(uint16_t *SleepTime) {
  *  Return:
  *  Example :
  **************************************************************************************************/
-void SLEEP_SlaveSleepProcedure(uint16_t *SleepTime) {
-  
-  if((EnableMaster != false) || (LoraGateWay == NULL) || (*SleepTime == 0)) {
-    Running_TimeCount = 0;
-    return;
-  }
-  
-  if((Running_TimeCount >= GPSnoLocated_RunningTime) /*&& (GPS_Located == false)*/ && (Slave_PollEventAccomplish == false)) {
-    SLEEP_SlaveSleep(SleepTime);
-    Running_TimeCount = 0;
-    //GPS_Located = false;
-  } else if(Slave_PollEventAccomplish == true /*&& (GPS_Located == true)*/) {
-    SLEEP_SlaveSleep(SleepTime);
-    Running_TimeCount = 0;
-    //GPS_Located = false;
-    Slave_PollEventAccomplish = false;
-  }
-  
-}
+void	SLEEP_SlaveSleepAandRandomHopChannelProcedure(uint16_t *SleepTime)
+{
+	if((EnableMaster != false) || (LoraGateWay == NULL) /*|| (*SleepTime == 0)*/) {
+		Running_TimeCount = 0;		// Áï∂Ê≠§Ë£ùÁΩÆ‰∏çÊòØ SLAVE ÊàñÈÇÑÊú™Âä†ÂÖ•Á∂≤ÂüüÊôÇÂ∞±‰∏çÁù°
+		return;
+	}
 
+	if((Running_TimeCount >= GPSnoLocated_RunningTime) && (Slave_PollEventAccomplish == false)) {
+		if(SLAVE_LoraPollEventInterval >= GPSnoLocated_RunningTime) {
+			// Console_Output_String( "Clear&Default\r\n" );
+			SLAVE_LoraPollEventInterval = 0;
+			RandomHopStartChannel_SlaveDefaultHoppingChannel();
+		}
+
+		if(*SleepTime != 0) {
+			SLEEP_SlaveSleep( SleepTime );
+			SLAVE_LoraPollEventInterval = 0;
+			RandomHopStartChannel_SlaveDefaultHoppingChannel();
+		}
+		Running_TimeCount = 0;
+	} else {
+		if(Slave_PollEventAccomplish == true) {
+			if(*SleepTime != 0) {
+				SLEEP_SlaveSleep( SleepTime );
+				RandomHopStartChannel_SetHoppingStartChannelFreq(SLAVE_LoraHoppingStartChannel);
+			}
+			Running_TimeCount = 0;
+			SLAVE_LoraPollEventInterval = 0;
+			Slave_PollEventAccomplish = false;
+		} else {
+			if(SLAVE_LoraPollEventInterval >= GPSnoLocated_RunningTime) {
+				if(*SleepTime != 0) SLEEP_SlaveSleep( SleepTime );
+				RandomHopStartChannel_SlaveDefaultHoppingChannel();
+				SLAVE_LoraPollEventInterval = 0;
+				Running_TimeCount = 0;
+				Slave_PollEventAccomplish = false;
+			}
+		}
+	}
+}
 
 
 /***************************************************************************************************
@@ -194,67 +320,56 @@ void SLEEP_SlaveSleepProcedure(uint16_t *SleepTime) {
  *  Return:
  *  Example :
  **************************************************************************************************/
-void SLEEP_MasterSleepProcedure(void) {
-  
-  uint8_t count;
-  bool sleep = false;
-  
-  if(LoraRunningEvent.RunNodeEvent != 0)        //™Ì•ÿ´e¶≥®∆•Û•ø¶b∞ı¶Ê§§
-    return;
-  
-  if(EventCountPriority0 != 0)                  //™Ì¶@¶P®∆•Û±∆µ{∏Ã¶≥®∆•Û∑«≥∆∞ı¶Ê
-    return;
-  if(EventCountPriority1 != 0)                  //™Ì¶@¶P®∆•Û±∆µ{∏Ã¶≥®∆•Û∑«≥∆∞ı¶Ê
-    return;
-  if(EventCountPriority2 != 0)                  //™Ì¶@¶P®∆•Û±∆µ{∏Ã¶≥®∆•Û∑«≥∆∞ı¶Ê
-    return;
-  
-  for(count = 0 ; count < MAX_LoraNodeNum ; count++) {
-    //¶π SLAVE Node ∏À∏m¨Oß_¶s¶b,§£¶s¶b¥N∏ı®Ï§U§@≠»•hßP¬_
-    if(DeviceNodeSleepAndRandomHop[count] == NULL) {
-      continue;
-    }
-    //ßP¬_≠”ßO®∆•Û±∆µ{∏Ã¨Oß_¶≥®∆•Û∑«≥∆∞ı¶Ê
-    if(DeviceNodeSleepAndRandomHop[count]->isNowSleeping == false) {
-      if(DeviceNodeSleepAndRandomHop[count]->EventCountPriority0 != 0)
-        return;
-      if(DeviceNodeSleepAndRandomHop[count]->EventCountPriority1 != 0)
-        return;
-      if(DeviceNodeSleepAndRandomHop[count]->EventCountPriority2 != 0)
-        return;
-    }
-  }
-  
-  sleep = true;
-  while(sleep) {
-    sleep = false;
-    /* Lora sx1276/78 into sleep mode */
-    SX1276LoRaSetOpMode(RFLR_OPMODE_SLEEP);
-    /* Disable SysTick ISR */
-    SysTick->CTRL &= (~SysTick_CTRL_TICKINT_Msk);
-    /* Enter SLEEP mode */
-    NVIC_SystemLPConfig(NVIC_LP_SLEEPDEEP,DISABLE);
-    NVIC_SystemLPConfig(NVIC_LP_SLEEPONEXIT,DISABLE);
-    __WFI();
-  }
-  
-  SLEEP_SYSCLKConfigFromSTOPMode();
-  
-  /* Enable SysTick ISR */
-  SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
-  
-  /* Lora sx1276/78 into running mode */
-  SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
-  Radio->StartRx();
-  
-  /* ∂i§J SLEEP Mode •≤∂∑•˝±N SYS_TICK §§¬_√ˆ≥¨,
-     §£µM§@∫Œ§U•h§ß´·,•ﬂ®Ë SYS_TICK §§¬_≤£•Õ∂i§J
-     ∞ı¶Ê,¶p¶πÆ⁄•ª§£•Œ∫Œ§F,¶]¨∞ SYS_TICK=1ms */
-  
+void		SLEEP_MasterSleepProcedure(void)
+{
+	uint8_t		count;
+	bool		sleep = false;
+
+	// Ë°®ÁõÆÂâçÊúâ‰∫ã‰ª∂Ê≠£Âú®Âü∑Ë°å‰∏≠
+	if(LoraRunningEvent.RunNodeEvent != 0) return;
+
+	// Ë°®ÂÖ±Âêå‰∫ã‰ª∂ÊéíÁ®ãË£°Êúâ‰∫ã‰ª∂Ê∫ñÂÇôÂü∑Ë°å
+	if(EventCountPriority0 != 0) return;
+	if(EventCountPriority1 != 0) return;
+	if(EventCountPriority2 != 0) return;
+
+	for(count = 0 ; count < MAX_LoraNodeNum ; count++) {
+		// Ê≠§ SLAVE Node Ë£ùÁΩÆÊòØÂê¶Â≠òÂú®,‰∏çÂ≠òÂú®Â∞±Ë∑≥Âà∞‰∏ã‰∏ÄÂÄºÂéªÂà§Êñ∑
+		if(DeviceNodeSleepAndRandomHop[count] == NULL) continue;
+
+		// Âà§Êñ∑ÂÄãÂà•‰∫ã‰ª∂ÊéíÁ®ãË£°ÊòØÂê¶Êúâ‰∫ã‰ª∂Ê∫ñÂÇôÂü∑Ë°å
+		if(DeviceNodeSleepAndRandomHop[count]->isNowSleeping == false) {
+			if(DeviceNodeSleepAndRandomHop[count]->EventCountPriority0 != 0) return;
+			if(DeviceNodeSleepAndRandomHop[count]->EventCountPriority1 != 0) return;
+			if(DeviceNodeSleepAndRandomHop[count]->EventCountPriority2 != 0) return;
+		}
+	}
+
+	sleep = true;
+	while(sleep) {
+		sleep = false;
+
+		/* Lora sx1276/78 into sleep mode */
+		SX1276LoRaSetOpMode(RFLR_OPMODE_SLEEP);
+
+		/* Disable SysTick ISR */
+		SysTick->CTRL &= (~SysTick_CTRL_TICKINT_Msk);
+
+		/* Enter SLEEP mode */
+		NVIC_SystemLPConfig(NVIC_LP_SLEEPDEEP, DISABLE);
+		NVIC_SystemLPConfig(NVIC_LP_SLEEPONEXIT, DISABLE);
+		__WFI();
+	}
+	/* Enable SysTick ISR */
+	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
+
+	SLEEP_SYSCLKConfigFromSTOPMode();
+
+	/* Lora sx1276/78 into running mode */
+	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
+	Radio->StartRx();
+
+	/* ÈÄ≤ÂÖ• SLEEP Mode ÂøÖÈ†àÂÖàÂ∞á SYS_TICK ‰∏≠Êñ∑ÈóúÈñâ, ‰∏çÁÑ∂‰∏ÄÁù°‰∏ãÂéª‰πãÂæå,Á´ãÂàª SYS_TICK ‰∏≠Êñ∑Áî¢ÁîüÈÄ≤ÂÖ• Âü∑Ë°å,Â¶ÇÊ≠§Ê†πÊú¨‰∏çÁî®Áù°‰∫Ü,Âõ†ÁÇ∫ SYS_TICK=1ms */
 }
 
-
-
-/************************ (C) COPYRIGHT Acsip ******************END OF FILE****/
-
-
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

@@ -1,3 +1,15 @@
+ï»¿
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// å”³î©Žåž€è¡„ã„©ï „è…Žè¤ªæ’®å˜–çˆºè¡„ç™¹é¼ ä¾—
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
 /**
   ******************************************************************************
   * @file    Project/ARM-Lora/tim2.c 
@@ -18,21 +30,20 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define  CCR2_Val                 (2000)
-//#define  GPS_Run15                (15)
-//#define  GPS_Run60                (60)
-//#define  GPS_NotActionTimes       (5)
+#define  CCR2_Val		(2000)
+// #define  GPS_Run15		(15)
+// #define  GPS_Run60		(60)
+// #define  GPS_NotActionTimes	(5)
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-__IO uint16_t GPS_DelayCounter;
-//uint8_t GPS_RunTime;
-//uint8_t GPS_NotAction;
-//bool GPS_NowLocated;
+__IO uint16_t	GPS_DelayCounter;
+// uint8_t	GPS_RunTime;
+// uint8_t	GPS_NotAction;
+// bool		GPS_NowLocated;
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
-
 
 
 /***************************************************************************************************
@@ -44,29 +55,28 @@ __IO uint16_t GPS_DelayCounter;
  *  Return:
  *  Example :
  **************************************************************************************************/
-void TIM2_TimerConfig(void) {
-	
-	__IO uint16_t PrescalerValue = 0;
-  //GPS_RunTime = GPS_Run15;
-	
-	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
-	TIM_OCInitTypeDef  TIM_OCInitStructure;
-	NVIC_InitTypeDef NVIC_InitStructure;
-	
+void	TIM2_TimerConfig(void)
+{
+	__IO uint16_t			PrescalerValue = 0;
+	TIM_TimeBaseInitTypeDef		TIM_TimeBaseStructure;
+	TIM_OCInitTypeDef		TIM_OCInitStructure;
+	NVIC_InitTypeDef		NVIC_InitStructure;
+
+	// GPS_RunTime = GPS_Run15;
 	/* TIM2 clock enable */
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
-	
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+
 	/* --------------------------NVIC Configuration -------------------------------*/
-  /* Enable the TIM2 gloabal Interrupt */
-  NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+	/* Enable the TIM2 gloabal Interrupt */
+	NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
-	
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+
 	/* ------------------- TIM2 Configuration:Output Compare Timing Mode ---------*/
-    /* TIM2 Configuration: 
-       The objective is to set TIM2 counter clock at 1KHz(TIM2 counter clock = 1KHz):
+	/* TIM2 Configuration: 
+		The objective is to set TIM2 counter clock at 1KHz(TIM2 counter clock = 1KHz):
 			  - TIM2CLK = 2 * PCLK1 = 2 * (HCLK / 4) = HCLK / 2 = SystemCoreClock /2
 			  - PrescalerValue = (TIM2CLK / TIM2 counter clock) - 1
 				- CC1 update rate = TIM2 counter clock / CCR1_Val
@@ -75,31 +85,29 @@ void TIM2_TimerConfig(void) {
 			 PrescalerValue = (TIM2CLK / TIM2 counter clock) - 1 = (42MHz / 1KHz) - 1 = 41999
 			 TIM2_CH1 update rate = TIM2 counter clock / CCR1_Val = 1000Hz / 1000 = 1s
 		*/
-		/* ¥H¤W¤½¦¡³¡¤À¥X¦Û­ì¼t F401 ½d¨Ò,¦ý¹ê´ú¤£·Ç,¬G¶È¨Ñ°Ñ¦Ò */
-	
-	//PrescalerValue = (uint16_t) ((SystemCoreClock / 2) / 32000) - 1;
+		/* ä»¥ä¸Šå…¬å¼éƒ¨åˆ†å‡ºè‡ªåŽŸå»  F401 ç¯„ä¾‹,ä½†å¯¦æ¸¬ä¸æº–,æ•…åƒ…ä¾›åƒè€ƒ */
+
+	// PrescalerValue = (uint16_t) ((SystemCoreClock / 2) / 32000) - 1;
 	PrescalerValue = (uint16_t) ((SystemCoreClock / 2) / 1000) - 1;
 
-  /* Time base configuration */
-  TIM_TimeBaseStructure.TIM_Period = 0xFFFF;
-  TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;
-  TIM_TimeBaseStructure.TIM_ClockDivision = 0;
-  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-  TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
-	
+	/* Time base configuration */
+	TIM_TimeBaseStructure.TIM_Period = 0xFFFF;
+	TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
+
 	/* Prescaler configuration */
-  //TIM_PrescalerConfig(TIM2, PrescalerValue, TIM_PSCReloadMode_Immediate);
-	
+	// TIM_PrescalerConfig(TIM2, PrescalerValue, TIM_PSCReloadMode_Immediate);
+
 	/* Output Compare Timing Mode configuration: Channel1 */
-  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Disable;
-  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_Timing;
-  TIM_OCInitStructure.TIM_Pulse = CCR2_Val;
+	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Disable;
+	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_Timing;
+	TIM_OCInitStructure.TIM_Pulse = CCR2_Val;
 	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
 	TIM_OC1Init(TIM2, &TIM_OCInitStructure);
 	TIM_OC1PreloadConfig(TIM2, TIM_OCPreload_Disable);
-	
 }
-
 
 
 /***************************************************************************************************
@@ -111,23 +119,21 @@ void TIM2_TimerConfig(void) {
  *  Return:
  *  Example :
  **************************************************************************************************/
-void TIM2_TimerRunOrStop(FunctionalState NewState) {
-  
-  __IO uint16_t capture;
-	
+void	TIM2_TimerRunOrStop(FunctionalState NewState)
+{
+	__IO uint16_t	capture;
+
 	TIM_ITConfig(TIM2, TIM_IT_CC1, NewState);
 	TIM_Cmd(TIM2, NewState);
 	GPS_DelayCounter = 0;
-  GPS_NowLocated = false;
-	
+	GPS_NowLocated = false;
+
 	if(NewState == DISABLE) {
 		TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
 		capture = TIM_GetCapture1(TIM2);
 		TIM_SetCompare1(TIM2, capture + CCR2_Val);
 	}
-	
 }
-
 
 
 /***************************************************************************************************
@@ -139,12 +145,10 @@ void TIM2_TimerRunOrStop(FunctionalState NewState) {
  *  Return:
  *  Example :
  **************************************************************************************************/
-void TIM2_ClearDelayCounter(void) {
-	
+void	TIM2_ClearDelayCounter(void)
+{
 	GPS_DelayCounter = 0;
-	
 }
-
 
 
 /***************************************************************************************************
@@ -156,46 +160,38 @@ void TIM2_ClearDelayCounter(void) {
  *  Return:
  *  Example :
  **************************************************************************************************/
-void TIM2_IRQHandler(void) {
-  
-  __IO uint16_t capture;
-	
+void	TIM2_IRQHandler(void)
+{
+	__IO uint16_t	capture;
+
 #if 1
 	if (TIM_GetITStatus(TIM2, TIM_IT_CC1) != RESET) {
-		
-    /* Clear TIM2 update interrupt pending bit*/
-    TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
-		
+		/* Clear TIM2 update interrupt pending bit*/
+		TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
 		capture = TIM_GetCapture1(TIM2);
 		TIM_SetCompare1(TIM2, capture + CCR2_Val);
-		
 		GPS_DelayCounter++;
 		if(GPS_DelayCounter >= GPS_RunTime) {
 			TIM2_TimerRunOrStop(DISABLE);
-      GPS_MT3333Disable();
-      if(GPS_NowLocated == false) {
-        GPS_NotAction++;
-      }
-      if(GPS_NotAction >= GPS_NotActionTimes) {
-        GPS_NotAction = 0;
-        GPS_RunTime = GPS_Run60;
-      }
+			GPS_MT3333Disable();
+			if(GPS_NowLocated == false) GPS_NotAction++;
+			if(GPS_NotAction >= GPS_NotActionTimes) {
+				GPS_NotAction = 0;
+				GPS_RunTime = GPS_Run60;
+			}
 		}
-		//GPIO_WriteBit(GPIOB, GPIO_Pin_3, (BitAction)(1 - GPIO_ReadOutputDataBit(GPIOB, GPIO_Pin_3)));  //test
-  }
-#else   //for test
+		// GPIO_WriteBit(GPIOB, GPIO_Pin_3, (BitAction)(1 - GPIO_ReadOutputDataBit(GPIOB, GPIO_Pin_3)));  //test
+	}
+
+#else		// for test
+
 	if (TIM_GetITStatus(TIM2, TIM_IT_CC1) != RESET) {
 		/* Clear TIM14 update interrupt pending bit*/
-    TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
-		//PB3 for TIM2 rate in pin output
+		TIM_ClearITPendingBit(TIM2, TIM_IT_CC1);
+		// PB3 for TIM2 rate in pin output
 		GPIO_WriteBit(GPIOB, GPIO_Pin_3, (BitAction)(1 - GPIO_ReadOutputDataBit(GPIOB, GPIO_Pin_3)));
 	}
 #endif
-	
 }
 
-
-
-/************************ (C) COPYRIGHT Acsip ******************END OF FILE****/
-
-
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

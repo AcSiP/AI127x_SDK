@@ -1,15 +1,14 @@
-/**
-  ******************************************************************************
-  * @file    Project/ARM-Lora/base64.c 
-  * @author  JC
-  * @version V1.0.0
-  * @date    25-Feb-2016
-  * @brief   base64 program body
-  ******************************************************************************
-  * 
-  *
-  ******************************************************************************
-  */
+﻿
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// 版權所有：群登科技股份有限公司
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
 
 /* Includes ------------------------------------------------------------------*/
 #include <math.h>
@@ -17,23 +16,24 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include "base64.h"
+
 #include "config.h"
-#include "main.h"
 
 #ifdef STM32F072
 	#include "stm32f0xx.h"
-	#include "usart2.h"
 #endif
 
 #ifdef STM32F401xx
 	#include "stm32f4xx.h"
-	#include "usart2.h"
 #endif
+
+#include "base64.h"
+#include "main.h"
+#include "UART_Console.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define BASE64_SIZE_T_MAX   ( (size_t) -1 )
+#define BASE64_SIZE_T_MAX	( (size_t) -1 )
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -61,7 +61,6 @@ static const uint8_t base64_dec_map[128] = {
      49,  50,  51, 127, 127, 127, 127, 127 };
 
 
-
 /***************************************************************************************************
  *  Function Name: Base64_encode
  *
@@ -71,17 +70,17 @@ static const uint8_t base64_dec_map[128] = {
  *  Return:
  *  Example :
  **************************************************************************************************/
-int32_t Base64_encode( uint8_t *dst, size_t dlen, size_t *olen, const uint8_t *src, size_t slen ) {
-	
-	size_t i, n;
-	int32_t C1, C2, C3;
-	uint8_t *p;
+int32_t Base64_encode( uint8_t *dst, size_t dlen, size_t *olen, const uint8_t *src, size_t slen )
+{
+	size_t		i, n;
+	int32_t		C1, C2, C3;
+	uint8_t *	p;
 
 	if( slen == 0 ) {
 		*olen = 0;
 		return ( 0 );
 	}
-	
+
 	n = slen / 3 + ( slen % 3 != 0 );
 
 	if( n > ( BASE64_SIZE_T_MAX - 1 ) / 4 ) {
@@ -102,7 +101,7 @@ int32_t Base64_encode( uint8_t *dst, size_t dlen, size_t *olen, const uint8_t *s
 		C1 = *src++;
 		C2 = *src++;
 		C3 = *src++;
-		
+
 		*p++ = base64_enc_map[(C1 >> 2) & 0x3F];
 		*p++ = base64_enc_map[(((C1 &  3) << 4) + (C2 >> 4)) & 0x3F];
 		*p++ = base64_enc_map[(((C2 & 15) << 2) + (C3 >> 6)) & 0x3F];
@@ -112,7 +111,7 @@ int32_t Base64_encode( uint8_t *dst, size_t dlen, size_t *olen, const uint8_t *s
 	if( i < slen ) {
 		C1 = *src++;
 		C2 = ( ( i + 1 ) < slen ) ? *src++ : 0;
-		
+
 		*p++ = base64_enc_map[(C1 >> 2) & 0x3F];
 		*p++ = base64_enc_map[(((C1 & 3) << 4) + (C2 >> 4)) & 0x3F];
 
@@ -121,17 +120,15 @@ int32_t Base64_encode( uint8_t *dst, size_t dlen, size_t *olen, const uint8_t *s
 		} else {
 			*p++ = '=';
 		}
-		
+
 		*p++ = '=';
 	}
-	
+
 	*olen = p - dst;
 	*p = 0;
 
 	return ( 0 );
-		
 }
-
 
 
 /***************************************************************************************************
@@ -143,15 +140,14 @@ int32_t Base64_encode( uint8_t *dst, size_t dlen, size_t *olen, const uint8_t *s
  *  Return:
  *  Example :
  **************************************************************************************************/
-int32_t Base64_decode( uint8_t *dst, size_t dlen, size_t *olen, const uint8_t *src, size_t slen ) {
-	
-	size_t i, n;
-	uint32_t j, x;
-	uint8_t *p;
+int32_t		Base64_decode( uint8_t *dst, size_t dlen, size_t *olen, const uint8_t *src, size_t slen )
+{
+	size_t		i, n;
+	uint32_t	j, x;
+	uint8_t *	p;
 
 	/* First pass: check for validity and get output length */
 	for( i = n = j = 0; i < slen; i++ ) {
-		
 		/* Skip spaces before checking for EOL */
 		x = 0;
 		while( i < slen && src[i] == ' ' ) {
@@ -160,28 +156,15 @@ int32_t Base64_decode( uint8_t *dst, size_t dlen, size_t *olen, const uint8_t *s
 		}
 
 		/* Spaces at end of buffer are OK */
-		if( i == slen )
-			break;
-
-		if( ( slen - i ) >= 2 && src[i] == '\r' && src[i + 1] == '\n' )
-			continue;
-
-		if( src[i] == '\n' )
-			continue;
+		if( i == slen ) break;
+		if( ( slen - i ) >= 2 && src[i] == '\r' && src[i + 1] == '\n' ) continue;
+		if( src[i] == '\n' ) continue;
 
 		/* Space inside a line is an error */
-		if( x != 0 )
-			return ( ERR_BASE64_INVALID_CHARACTER );
-
-		if( src[i] == '=' && ++j > 2 )
-			return ( ERR_BASE64_INVALID_CHARACTER );
-
-		if( src[i] > 127 || base64_dec_map[src[i]] == 127 )
-			return ( ERR_BASE64_INVALID_CHARACTER );
-
-		if( base64_dec_map[src[i]] < 64 && j != 0 )
-			return ( ERR_BASE64_INVALID_CHARACTER );
-
+		if( x != 0 ) return ( ERR_BASE64_INVALID_CHARACTER );
+		if( src[i] == '=' && ++j > 2 ) return ( ERR_BASE64_INVALID_CHARACTER );
+		if( src[i] > 127 || base64_dec_map[src[i]] == 127 ) return ( ERR_BASE64_INVALID_CHARACTER );
+		if( base64_dec_map[src[i]] < 64 && j != 0 ) return ( ERR_BASE64_INVALID_CHARACTER );
 		n++;
 	}
 
@@ -214,11 +197,8 @@ int32_t Base64_decode( uint8_t *dst, size_t dlen, size_t *olen, const uint8_t *s
 	}
 
 	*olen = p - dst;
-
 	return ( 0 );
-	
 }
-
 
 
 /***************************************************************************************************
@@ -230,58 +210,43 @@ int32_t Base64_decode( uint8_t *dst, size_t dlen, size_t *olen, const uint8_t *s
  *  Return:
  *  Example :
  **************************************************************************************************/
-int32_t Base64_self_test( int8_t verbose ) {
-	
-	size_t len;
-	const uint8_t *src;
-	uint8_t buffer[128];
-	
+int32_t		Base64_self_test( int8_t verbose )
+{
+	size_t		len;
+	const uint8_t *	src;
+	uint8_t		buffer[128];
+
 	const uint8_t base64_test_dec[64] = {
-    0x24, 0x48, 0x6E, 0x56, 0x87, 0x62, 0x5A, 0xBD,
-    0xBF, 0x17, 0xD9, 0xA2, 0xC4, 0x17, 0x1A, 0x01,
-    0x94, 0xED, 0x8F, 0x1E, 0x11, 0xB3, 0xD7, 0x09,
-    0x0C, 0xB6, 0xE9, 0x10, 0x6F, 0x22, 0xEE, 0x13,
-    0xCA, 0xB3, 0x07, 0x05, 0x76, 0xC9, 0xFA, 0x31,
-    0x6C, 0x08, 0x34, 0xFF, 0x8D, 0xC2, 0x6C, 0x38,
-    0x00, 0x43, 0xE9, 0x54, 0x97, 0xAF, 0x50, 0x4B,
-    0xD1, 0x41, 0xBA, 0x95, 0x31, 0x5A, 0x0B, 0x97 };
-  const uint8_t base64_test_enc[] =
-    "JEhuVodiWr2/F9mixBcaAZTtjx4Rs9cJDLbpEG8i7hPK"
-    "swcFdsn6MWwINP+Nwmw4AEPpVJevUEvRQbqVMVoLlw==";
-	
-	if( verbose != 0 )
-		CmdUART_UartWrite((uint8_t *)"Base64 encoding test : ", strlen("Base64 encoding test : "));
-	
+		0x24, 0x48, 0x6E, 0x56, 0x87, 0x62, 0x5A, 0xBD,
+		0xBF, 0x17, 0xD9, 0xA2, 0xC4, 0x17, 0x1A, 0x01,
+		0x94, 0xED, 0x8F, 0x1E, 0x11, 0xB3, 0xD7, 0x09,
+		0x0C, 0xB6, 0xE9, 0x10, 0x6F, 0x22, 0xEE, 0x13,
+		0xCA, 0xB3, 0x07, 0x05, 0x76, 0xC9, 0xFA, 0x31,
+		0x6C, 0x08, 0x34, 0xFF, 0x8D, 0xC2, 0x6C, 0x38,
+		0x00, 0x43, 0xE9, 0x54, 0x97, 0xAF, 0x50, 0x4B,
+		0xD1, 0x41, 0xBA, 0x95, 0x31, 0x5A, 0x0B, 0x97 };
+	const uint8_t base64_test_enc[] =
+		"JEhuVodiWr2/F9mixBcaAZTtjx4Rs9cJDLbpEG8i7hPK"
+		"swcFdsn6MWwINP+Nwmw4AEPpVJevUEvRQbqVMVoLlw==";
+
+	if( verbose != 0 ) Console_Output_String( "Base64 encoding test : " );
+
 	src = base64_test_dec;
-
 	if( Base64_encode( buffer, sizeof( buffer ), &len, src, 64 ) != 0 || memcmp( base64_test_enc, buffer, 88 ) != 0 ) {
-		if( verbose != 0 )
-			CmdUART_UartWrite((uint8_t *)"failed\r\n", strlen("failed\r\n"));
-
+		if( verbose != 0 ) Console_Output_String( "failed\r\n" );
 		return ( 1 );
 	}
-	
-	if( verbose != 0 )
-		CmdUART_UartWrite((uint8_t *)"passed\r\nBase64 decoding test : ", strlen("passed\r\nBase64 decoding test : "));
+
+	if( verbose != 0 ) Console_Output_String( "passed\r\nBase64 decoding test : " );
 
 	src = base64_test_enc;
-	
 	if( Base64_decode( buffer, sizeof( buffer ), &len, src, 88 ) != 0 || memcmp( base64_test_dec, buffer, 64 ) != 0 ) {
-		if( verbose != 0 )
-			CmdUART_UartWrite((uint8_t *)"failed\r\n", strlen("failed\r\n"));
-		
+		if( verbose != 0 ) Console_Output_String( "failed\r\n" );
 		return ( 1 );
 	}
-	
-	if( verbose != 0 )
-		CmdUART_UartWrite((uint8_t *)"passed\r\n", strlen("passed\r\n"));
 
+	if( verbose != 0 ) Console_Output_String( "passed\r\n" );
 	return ( 0 );
-	
 }
 
-
-
-/************************ (C) COPYRIGHT Acsip ******************END OF FILE****/
-
-
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

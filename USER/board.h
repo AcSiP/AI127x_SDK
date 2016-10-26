@@ -1,3 +1,15 @@
+
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// 版權所有：群登科技股份有限公司
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
 /*
  * THE FOLLOWING FIRMWARE IS PROVIDED: (1) "AS IS" WITH NO WARRANTY; AND 
  * (2)TO ENABLE ACCESS TO CODING INFORMATION TO GUIDE AND FACILITATE CUSTOMER.
@@ -16,8 +28,8 @@
  * \date       Nov 21 2012
  * \author     Miguel Luis
  */
-#ifndef __BOARD_H__
-#define __BOARD_H__
+#ifndef USER_BOARD_H_
+#define USER_BOARD_H_
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -41,8 +53,7 @@
 /*!
  * Functions return codes definition
  */
-typedef enum
-{
+typedef enum {
 	SX_OK,
 	SX_ERROR,
 	SX_BUSY,
@@ -53,7 +64,7 @@ typedef enum
 	SX_WAIT,
 	SX_CLOSE,
 	SX_YES,
-	SX_NO,          
+	SX_NO
 } tReturnCodes;
 
 extern volatile uint32_t	TickCounter;
@@ -93,8 +104,6 @@ void	LongDelay ( uint8_t delay );
  */
 uint32_t	randr( uint32_t min, uint32_t max );
 
-//Program_Sample
-void	LEDBlink ( uint32_t onTime, uint32_t offTime, uint32_t duration );
+#endif		// USER_BOARD_H_
 
-
-#endif // __BOARD_H__
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

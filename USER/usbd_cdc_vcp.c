@@ -1,3 +1,15 @@
+﻿
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// 版權所有：群登科技股份有限公司
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
 /**
   ******************************************************************************
   * @file    usbd_cdc_vcp.c
@@ -25,8 +37,8 @@
   ******************************************************************************
   */ 
 
-#ifdef USB_OTG_HS_INTERNAL_DMA_ENABLED 
-	#pragma		data_alignment = 4 
+#ifdef USB_OTG_HS_INTERNAL_DMA_ENABLED
+	#pragma		data_alignment = 4
 #endif	/* USB_OTG_HS_INTERNAL_DMA_ENABLED */
 
 /* Includes ------------------------------------------------------------------*/
@@ -34,9 +46,6 @@
 #include <string.h>
 
 #include "config.h"
-//#include "Resource.h"
-//#include "Common_Functions.h"
-
 #include "usbd_cdc_vcp.h"
 #include "tim9.h"
 
@@ -44,8 +53,7 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-LINE_CODING		linecoding =
-{
+LINE_CODING	linecoding = {
 	ComPortBaudRate,	/* baud rate*/
 	0x00,	/* stop bits-1*/
 	0x00,	/* parity - none*/
@@ -54,36 +62,32 @@ LINE_CODING		linecoding =
 
 /* These are external variables imported from CDC core to be used for IN  transfer management. */
 
-uint16_t			VCP_count;
-uint16_t			VCP_RX_Length;
-uint8_t				VCP_RX_Buf1[VCP_RX_BufLength];
-uint8_t				VCP_RX_Buf2[VCP_RX_BufLength];
-uint8_t				*VCP_RX_BufPointer;
-bool				isVCP_RX_Buf1Full;
-bool				isVCP_RX_Buf2Full;
-bool				*isVCP_RX_BOOL;
-bool				USBD_VCP_EchoOn = true;
+uint16_t		VCP_count;
+uint16_t		VCP_RX_Length;
+uint8_t			VCP_RX_Buf1[VCP_RX_BufLength];
+uint8_t			VCP_RX_Buf2[VCP_RX_BufLength];
+uint8_t *		VCP_RX_BufPointer;
+bool			isVCP_RX_Buf1Full;
+bool			isVCP_RX_Buf2Full;
+bool *			isVCP_RX_BOOL;
+bool			USBD_VCP_EchoOn = true;
 
-extern		FunctionalState	Timer9_Status;
-
-
-
-extern uint8_t		APP_Rx_Buffer [];
+extern	FunctionalState	Timer9_Status;
+extern	uint8_t		APP_Rx_Buffer[];
 /* Write CDC received data in this buffer. These data will be sent over USB IN endpoint in the CDC core functions. */
 
 extern uint32_t		APP_Rx_ptr_in;
 /* Increment this pointer or roll it back to start address when writing received data in the buffer APP_Rx_Buffer. */
 
 /* Private function prototypes -----------------------------------------------*/
-static uint16_t VCP_Init     (void);
-static uint16_t VCP_DeInit   (void);
-static uint16_t VCP_Ctrl     (uint32_t Cmd, uint8_t* Buf, uint32_t Len);
-uint16_t	VCP_DataTx   (uint8_t* Buf, uint32_t Len);
-static uint16_t VCP_DataRx   (uint8_t* Buf, uint32_t Len);
+static uint16_t	VCP_Init	(void);
+static uint16_t	VCP_DeInit	(void);
+static uint16_t	VCP_Ctrl	(uint32_t Cmd, uint8_t* Buf, uint32_t Len);
+uint16_t	VCP_DataTx	(uint8_t* Buf, uint32_t Len);
+static uint16_t	VCP_DataRx	(uint8_t* Buf, uint32_t Len);
 
 
-CDC_IF_Prop_TypeDef	VCP_fops = 
-{
+CDC_IF_Prop_TypeDef	VCP_fops = {
 	VCP_Init,
 	VCP_DeInit,
 	VCP_Ctrl,
@@ -99,7 +103,7 @@ CDC_IF_Prop_TypeDef	VCP_fops =
   * @param  None
   * @retval Result of the operation (USBD_OK in all cases)
   */
-static uint16_t VCP_Init(void)
+static uint16_t		VCP_Init(void)
 {
 	return USBD_OK;
 }
@@ -110,7 +114,7 @@ static uint16_t VCP_Init(void)
   * @param  None
   * @retval Result of the operation (USBD_OK in all cases)
   */
-static uint16_t VCP_DeInit(void)
+static uint16_t		VCP_DeInit(void)
 {
 	return USBD_OK;
 }
@@ -125,8 +129,8 @@ static uint16_t VCP_DeInit(void)
   * @retval Result of the operation (USBD_OK in all cases)
   */
 static uint16_t		VCP_Ctrl (uint32_t Cmd, uint8_t* Buf, uint32_t Len)
-{ 
-	switch( Cmd ){
+{
+	switch( Cmd ) {
 	case SEND_ENCAPSULATED_COMMAND:
 		/* Not  needed for this driver */
 		break;
@@ -161,7 +165,7 @@ static uint16_t		VCP_Ctrl (uint32_t Cmd, uint8_t* Buf, uint32_t Len)
 		Buf[3] = (uint8_t)(linecoding.bitrate >> 24);
 		Buf[4] = linecoding.format;
 		Buf[5] = linecoding.paritytype;
-		Buf[6] = linecoding.datatype; 
+		Buf[6] = linecoding.datatype;
 		break;
 
 	case SET_CONTROL_LINE_STATE:
@@ -170,7 +174,7 @@ static uint16_t		VCP_Ctrl (uint32_t Cmd, uint8_t* Buf, uint32_t Len)
 
 	case SEND_BREAK:
 		/* Not  needed for this driver */
-		break;    
+		break;
 
 	default:
 		break;
@@ -190,19 +194,18 @@ void	VCP_EnvironmentVariableSet( void )
 	isVCP_RX_BOOL = & isVCP_RX_Buf1Full;
 
 	VCP_count = 0;
-//	USART2_DigitalClear();
 }
 
 void	VCP_VariableSwap( void )
 {
-	if( ( isVCP_RX_Buf1Full ) && ( ! isVCP_RX_Buf2Full ) ){
+	if( ( isVCP_RX_Buf1Full ) && ( ! isVCP_RX_Buf2Full ) ) {
 		VCP_RX_BufPointer = VCP_RX_Buf2;
 		isVCP_RX_BOOL = & isVCP_RX_Buf2Full;
 
 		return;
 	}
 
-	if( ( ! isVCP_RX_Buf1Full ) && ( isVCP_RX_Buf2Full ) ){
+	if( ( ! isVCP_RX_Buf1Full ) && ( isVCP_RX_Buf2Full ) ) {
 		VCP_RX_BufPointer = VCP_RX_Buf1;
 		isVCP_RX_BOOL = &isVCP_RX_Buf1Full;
 
@@ -226,16 +229,15 @@ uint16_t		VCP_DataTx ( uint8_t* Buf, uint32_t Len )
 	uint32_t	i;
 	uint8_t		c;
 
-	for( i = 0; Buf && i < Len && i < APP_RX_DATA_SIZE ; i++ ){
+	for( i = 0; Buf && i < Len && i < APP_RX_DATA_SIZE ; i++ ) {
 		c = Buf[i];
-		if (linecoding.datatype == 7){
+		if (linecoding.datatype == 7) {
 			APP_Rx_Buffer[APP_Rx_ptr_in] = c & 0x7F;
-		}
-		else{
+		} else {
 			APP_Rx_Buffer[APP_Rx_ptr_in] = c;
 		}
 		APP_Rx_ptr_in++;
-  
+
 		/* To avoid buffer overflow */
 		if( APP_Rx_ptr_in == APP_RX_DATA_SIZE ) APP_Rx_ptr_in = 0;
 	}
@@ -267,18 +269,17 @@ static	uint16_t VCP_DataRx( uint8_t* Buf, uint32_t Len )
 
 	if(Timer9_Status == DISABLE) {
 		TIM9_TimerRunOrStop(ENABLE);
-	}
-	else{
+	} else {
 		TIM9_ClearDelayCounter();
 	}
 
-	for( i = 0; i < Len; i++ ){
-		//Read one byte
+	for( i = 0; i < Len; i++ ) {
+		// Read one byte
 		c = Buf[i];
 		VCP_RX_BufPointer[ VCP_count ] = c;
 		VCP_count++;
 
-		if( c == 0x0d ){
+		if( c == 0x0d ) {
 			if( USBD_VCP_EchoOn ) VCP_DataTx((uint8_t *)"\r\n", strlen("\r\n"));
 
 			*isVCP_RX_BOOL = true;
@@ -288,12 +289,11 @@ static	uint16_t VCP_DataRx( uint8_t* Buf, uint32_t Len )
 
 			VCP_count = 0;
 			TIM9_TimerRunOrStop( DISABLE );
-		}
-		else{
-			if( VCP_count >= VCP_RX_BufLength ){
+		} else {
+			if( VCP_count >= VCP_RX_BufLength ) {
 				VCP_EnvironmentVariableSet();
 				TIM9_TimerRunOrStop( DISABLE );
-        VCP_DataTx((uint8_t *)unkownCMD, strlen(unkownCMD));
+				VCP_DataTx((uint8_t *)unkownCMD, strlen(unkownCMD));
 			}
 		}
 	}
@@ -301,5 +301,4 @@ static	uint16_t VCP_DataRx( uint8_t* Buf, uint32_t Len )
 	return USBD_OK;
 }
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

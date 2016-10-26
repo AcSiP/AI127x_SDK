@@ -1,3 +1,15 @@
+﻿
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// 版權所有：群登科技股份有限公司
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
 /**
   ******************************************************************************
   * @file    Project/ARM-Lora/gpio.c 
@@ -33,7 +45,6 @@
 /* Private functions ---------------------------------------------------------*/
 
 
-
 /***************************************************************************************************
  *  Function Name: GPIO_PinInitialization
  *
@@ -46,13 +57,13 @@
 void	GPIO_PinInitialization( void )
 {
 	GPIO_InitTypeDef	GPIO_InitStructure;
-//	EXTI_InitTypeDef	EXTI_InitStructure;
-//	NVIC_InitTypeDef	NVIC_InitStructure;
+// 	EXTI_InitTypeDef	EXTI_InitStructure;
+// 	NVIC_InitTypeDef	NVIC_InitStructure;
 
 #ifdef STM32F072
 	/* Pin configuration */
-	//PB2 for SysTick in pin output
-	//PB3 for TIM4 rate in pin output
+	// PB2 for SysTick in pin output
+	// PB3 for TIM4 rate in pin output
 	RCC_AHBPeriphClockCmd( RCC_AHBPeriph_GPIOA | RCC_AHBPeriph_GPIOB, ENABLE );
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2 | GPIO_Pin_3;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
@@ -75,8 +86,8 @@ void	GPIO_PinInitialization( void )
 
 #ifdef STM32F401xx
 	/* Pin configuration */
-	//PB2 for SysTick in pin output
-	//PB3 for TIM4 rate in pin output
+	// PB2 for SysTick in pin output
+	// PB3 for TIM4 rate in pin output
 	RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOB | RCC_AHB1Periph_GPIOC, ENABLE );
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2 | GPIO_Pin_3;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
@@ -106,33 +117,33 @@ void	GPIO_PinInitialization( void )
 	RCC_MCO2Config( RCC_MCO2Source_SYSCLK, RCC_MCO1Div_1 );
 #endif
 
-//	RCC_MCOConfig(RCC_MCOSource_HSE, RCC_MCOPrescaler_1);
-//	RCC_MCOConfig(RCC_MCOSource_PLLCLK, RCC_MCOPrescaler_1);
+// 	RCC_MCOConfig(RCC_MCOSource_HSE, RCC_MCOPrescaler_1);
+// 	RCC_MCOConfig(RCC_MCOSource_PLLCLK, RCC_MCOPrescaler_1);
 
 	/* Configure PB4 pin as input floating */
-//	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
-//	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-//	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
-//	GPIO_Init(GPIOB, &GPIO_InitStructure);
+// 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
+// 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+// 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+// 	GPIO_Init(GPIOB, &GPIO_InitStructure);
 
 	/* Enable SYSCFG clock */
-//	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+// 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
 	/* Connect EXTI4 Line to PB4 pin */
-//	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOB, EXTI_PinSource4);
+// 	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOB, EXTI_PinSource4);
 
 	/* Configure EXTI04 line */
-//	EXTI_InitStructure.EXTI_Line = EXTI_Line4;
-//	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-//	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
-//	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-//	EXTI_Init(&EXTI_InitStructure);
+// 	EXTI_InitStructure.EXTI_Line = EXTI_Line4;
+// 	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+// 	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+// 	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+// 	EXTI_Init(&EXTI_InitStructure);
 
 	/* Enable and set EXTI0 Interrupt */
-//	NVIC_InitStructure.NVIC_IRQChannel = EXTI4_15_IRQn;
-//	NVIC_InitStructure.NVIC_IRQChannelPriority = 0;
-//	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-//	NVIC_Init(&NVIC_InitStructure);
+// 	NVIC_InitStructure.NVIC_IRQChannel = EXTI4_15_IRQn;
+// 	NVIC_InitStructure.NVIC_IRQChannelPriority = 0;
+// 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+// 	NVIC_Init(&NVIC_InitStructure);
 }
 
 
@@ -216,13 +227,7 @@ void	GPIO_UM402toConfigMode( void )
  **************************************************************************************************/
 void	EXTI4_15_IRQHandler( void )
 {
-	if( EXTI_GetITStatus(EXTI_Line4) != RESET ){
-		EXTI_ClearITPendingBit( EXTI_Line4 );
-	}
+	if( EXTI_GetITStatus(EXTI_Line4) != RESET ) EXTI_ClearITPendingBit( EXTI_Line4 );
 }
 
-
-
-/************************ (C) COPYRIGHT Acsip ******************END OF FILE****/
-
-
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

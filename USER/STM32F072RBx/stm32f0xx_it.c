@@ -1,3 +1,15 @@
+﻿
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2016(C) AcSiP Technology Inc.
+// 版權所有：群登科技股份有限公司
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
 /**
   ******************************************************************************
   * @file    Project/STM32F0xx_StdPeriph_Templates/stm32f0xx_it.c 
@@ -63,10 +75,10 @@ void NMI_Handler(void)
   */
 void HardFault_Handler(void)
 {
-  /* Go to infinite loop when Hard Fault exception occurs */
-  while (1) {
-    CmdUART_UartWrite((uint8_t *)"HardFault\r\n", 11);   //for test
-  }
+	/* Go to infinite loop when Hard Fault exception occurs */
+	while (1) {
+		Console_Output_String( "HardFault\r\n" );
+	}
 }
 
 /**
@@ -92,14 +104,13 @@ void PendSV_Handler(void)
   * @param  None
   * @retval None
   */
-void SysTick_Handler(void) {
-	
+void SysTick_Handler(void)
+{
 	TickCounter++;
-	
-	//test
-	//GPIO_WriteBit(GPIOB, GPIO_Pin_2, (BitAction)(1 - GPIO_ReadOutputDataBit(GPIOB, GPIO_Pin_2)));
-	//test end
-	
+
+	// test
+	// GPIO_WriteBit(GPIOB, GPIO_Pin_2, (BitAction)(1 - GPIO_ReadOutputDataBit(GPIOB, GPIO_Pin_2)));
+	// test end
 }
 
 /******************************************************************************/
@@ -123,15 +134,13 @@ void SysTick_Handler(void) {
 /**
   * @}
   */ 
-//void EXTI0_IRQHandler(void) {
-//	
+// void EXTI0_IRQHandler(void) {
+//
 //  if(EXTI_GetITStatus(EXTI_Line0) != RESET) {
 //    /* Clear the EXTI line 0 pending bit */
 //    EXTI_ClearITPendingBit(EXTI_Line0);
 //  }
-//	
-//}
+//
+// }
 
-
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/
