@@ -42,9 +42,9 @@ Software development kit with Private LoRa protocol for AI127x module
 
 
 ## Reference ##
-+ SX127x driver from Semtech
-http://www.semtech.com/apps/filedown/down.php?file=sx12xxDrivers-V2.1.0.zip
++ SX127x driver from Semtech  
+    http://www.semtech.com/apps/filedown/down.php?file=sx12xxDrivers-V2.1.0.zip
 
-+ LoRaWAN software expansion for STM32Cube
-http://www.st.com/content/st_com/en/products/embedded-software/mcus-embedded-software/stm32-embedded-software/stm32cube-expansion-software/i-cube-lrwan.html
++ LoRaWAN software expansion for STM32Cube  
+    http://www.st.com/content/st_com/en/products/embedded-software/mcus-embedded-software/stm32-embedded-software/stm32cube-expansion-software/i-cube-lrwan.html
 
