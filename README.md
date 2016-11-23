@@ -32,7 +32,7 @@ Software development kit with Private LoRa protocol for AI127x module
 [Keil](https://www.keil.com/demo/eval/arm.htm)
 
 [MDK for STM32L0 and STM32F0 Installation & Activation](http://www2.keil.com/stmicroelectronics-stm32/mdk)
-Product Serial Number (PSN) = U1E21-CM9GY-L3G4L
+    Product Serial Number (PSN) = U1E21-CM9GY-L3G4L
 
 [Tera Term](https://osdn.net/projects/ttssh2/)
 
