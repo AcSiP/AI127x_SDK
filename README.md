@@ -39,3 +39,12 @@ Software development kit with Private LoRa protocol for AI127x module
 [ST-LINK/V2](https://my.st.com/content/my_st_com/en/products/development-tools/hardware-development-tools/development-tool-hardware-for-mcus/debug-hardware-for-mcus/debug-hardware-for-stm32-mcus/st-link-v2.html)
 
 [DfuSe -- USB device firmware upgrade](https://my.st.com/content/my_st_com/en/products/development-tools/software-development-tools/stm32-software-development-tools/stm32-programmers/stsw-stm32080.html)
+
+
+## Reference ##
++ SX127x driver from Semtech
+http://www.semtech.com/apps/filedown/down.php?file=sx12xxDrivers-V2.1.0.zip
+
++ LoRaWAN software expansion for STM32Cube
+http://www.st.com/content/st_com/en/products/embedded-software/mcus-embedded-software/stm32-embedded-software/stm32cube-expansion-software/i-cube-lrwan.html
+
