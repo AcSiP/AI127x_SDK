@@ -61,6 +61,7 @@ typedef struct sDeviceNodeSleepAndRandomHop {
 void	SLEEP_SYSCLKConfigFromSTOPMode(void);
 void	SLEEP_SlaveSleepVariableSet(void);
 void	SLEEP_SlaveSleep_STOP_Mode(uint16_t *);
+void	SLEEP_SlaveSleep_Deep_STOP_Mode( uint16_t *SleepTime_sec );
 void	SLEEP_SlaveSleep_STANDBY_Mode( uint16_t *SleepTime_sec );
 void	SLEEP_SlaveSleepAandRandomHopChannelProcedure(uint16_t *);
 void	SLEEP_MasterSleepProcedure(void);

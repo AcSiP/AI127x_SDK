@@ -34,6 +34,7 @@
 #endif
 #include "main.h"
 #include "sleep.h"
+#include "gpio.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -144,6 +145,109 @@ void		SLEEP_SlaveSleep( uint16_t *SleepTime_sec )
 }
 
 
+void	GPIOs__AnalogConfig( void )
+{
+	GPIO_InitTypeDef	GPIO_InitStructure;
+
+	/* Configure GPIOs as Analog input to reduce current consumption*/
+	/* Enable GPIOs clock */
+#ifdef STM32F072
+	RCC_AHBPeriphClockCmd( RCC_AHBPeriph_GPIOA | RCC_AHBPeriph_GPIOB | RCC_AHBPeriph_GPIOC | RCC_AHBPeriph_GPIOD, ENABLE );
+#endif
+
+#ifdef STM32F401xx
+	RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOB | RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOD | RCC_AHB1Periph_GPIOE | RCC_AHB1Periph_GPIOH, ENABLE );
+#endif
+
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
+	GPIO_Init(GPIOC, &GPIO_InitStructure);
+	GPIO_Init(GPIOD, &GPIO_InitStructure);
+	GPIO_Init(GPIOE, &GPIO_InitStructure);
+
+#ifdef STM32F401xx
+	GPIO_Init(GPIOH, &GPIO_InitStructure);
+#endif
+
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+	/* Disable GPIOs clock */
+#ifdef STM32F072
+	RCC_AHBPeriphClockCmd( RCC_AHBPeriph_GPIOA | RCC_AHBPeriph_GPIOB | RCC_AHBPeriph_GPIOC | RCC_AHBPeriph_GPIOD, DISABLE );
+#endif
+
+#ifdef STM32F401xx
+	RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOB | RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOD | RCC_AHB1Periph_GPIOE | RCC_AHB1Periph_GPIOH, DISABLE );
+#endif
+}
+
+
+
+/**
+  * @brief  This function configures the system to enter Stop mode
+  *         for current consumption measurement purpose.
+  *         ===========================================
+  *           - Regulator in Low Power mode
+  *           - HSI, HSE OFF and LSI OFF if not used as RTC Clock source
+  *           - No IWDG
+  *           - FLASH in deep power down mode
+  *           - Wakeup using WakeUp Pin (PA.00)
+  * @param  None
+  * @retval None
+  */
+
+/*
+void	PWR_StopLowPwrRegFlashPwrDown( void )
+{
+	// Clear Wakeup flag
+	PWR_ClearFlag( PWR_FLAG_WU );
+
+	// Enable the wakeup pin
+//	PWR_WakeUpPinCmd( ENABLE );
+
+	// FLASH Deep Power Down Mode enabled
+	PWR_FlashPowerDownCmd( ENABLE );
+
+	// Enter Stop Mode Reg LP
+	PWR_EnterSTOPMode( PWR_Regulator_LowPower, PWR_STOPEntry_WFI );
+}
+
+static	void	Sleep_Mode_Exit ( void )
+{
+	// Clock init configuration
+	RCC_DeInit();
+
+	// Disable HSE
+	RCC_HSEConfig(RCC_HSE_OFF);
+
+	// Enable HSI
+	RCC_HSICmd(ENABLE);
+
+	// Wait till HSI is ready
+	while (RCC_GetFlagStatus(RCC_FLAG_HSIRDY) == RESET) {
+	}
+
+	// Select HSI as system clock source
+	RCC_SYSCLKConfig(RCC_SYSCLKSource_HSI);
+
+	// Wait till HSI is used as system clock source
+	while (RCC_GetSYSCLKSource() != 0x00) {
+	}
+
+	// Enable PWR APB1 Clock
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR, ENABLE);
+
+	// Configure Leds GPIOs
+	LedsConfig();
+
+	// Configure Wakeup pin
+	WakeUpPinInt_configuration();
+}
+*/
+
 /***************************************************************************************************
  *  Function Name: SLEEP_SlaveSleep_STOP_Mode
  *
@@ -193,6 +297,108 @@ void	SLEEP_SlaveSleep_STOP_Mode( uint16_t *SleepTime )
 
 	SLEEP_SYSCLKConfigFromSTOPMode();
 	Console_Output_String( "\r\nWake(STOP)\r\n" );
+
+#ifdef Board__A22_Tracker
+	if(GPS_HandmadeOff == false) GPS_MT3333Run();
+#endif
+
+	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
+	Radio->StartRx();
+	isInSleep = false;
+}
+
+void	SLEEP_SlaveSleep_Deep_STOP_Mode( uint16_t *SleepTime_sec )
+{
+	uint32_t	delay;
+
+	Console_Output_String( "\r\nSleep(Deep STOP)\r\n" );
+	SX1276LoRaSetOpMode( RFLR_OPMODE_SLEEP );
+
+#ifdef Board__A22_Tracker
+	GPS_MT3333Stop();
+#endif
+
+	RTC_AlarmStop();
+// 	RTC_TimerConfig();		// Reset RTC Domain to clear sub-second alarm
+
+	RTC_AlarmConfig_Timeout( *SleepTime_sec );
+// 	RTC_AlarmRun();
+
+// 	Sleep_TimeCount = 0;
+	isInSleep = true;
+	delay = GET_TICK_COUNT( );
+	while( true ) {
+		if( CmdUART__is_TX_Queue_Empty() ) {
+// 			if( USART_GetITStatus( CmdUART, USART_IT_TXE ) == SET ) break;
+
+			delay = GET_TICK_COUNT( );
+			while( ( GET_TICK_COUNT( ) - delay ) < TICK_RATE_MS( 2 ) ) {
+			}
+			break;
+		}
+
+		if( ( GET_TICK_COUNT( ) - delay ) > TICK_RATE_MS( 100 ) ) break;
+	}
+
+	Board_DeInit();
+	CmdUART__Close();
+	GPIOs__AnalogConfig();
+
+	SX127x_Init_NSS();
+
+	/* Disable SysTick ISR */
+//	SysTick->CTRL &= (~SysTick_CTRL_ENABLE_Msk);
+
+// 	RTC_ITConfig( RTC_IT_ALRA, DISABLE );
+
+	/* Clear Power Wake-up (CWUF) flag */
+	PWR_ClearFlag( PWR_FLAG_WU );
+
+	/* Enable RTC Alarm A Interrupt */
+	RTC_ITConfig( RTC_IT_ALRA, ENABLE );
+	RTC_ClearFlag( RTC_FLAG_ALRAF );
+
+	RTC_AlarmRun();
+
+#ifdef STM32F401xx
+	/* FLASH Deep Power Down Mode enabled */
+	PWR_FlashPowerDownCmd( ENABLE );
+#endif
+
+	PWR_EnterSTOPMode( PWR_Regulator_LowPower, PWR_STOPEntry_WFI );
+	// ==============================================================================
+	// Sleep
+	// ==============================================================================
+
+
+	// ==============================================================================
+	// Wake up
+	// ==============================================================================
+	SLEEP_SYSCLKConfigFromSTOPMode();
+
+#ifdef Board__A22_Tracker
+//	Led_BootFlashLed();
+
+//	BlueTooth_DA14580Run(ComPortBaudRate);
+//	if(EnableMaster == false) {				// ┐
+//		CmdUART__Open(ComPortBaudRate);		// ├暫時給 SLAVE 測試用,若不執行此,則 CMD UART 輸出會一直等待完成而使得無限等待
+//		CmdTIMER_TimerConfig();				// ┘
+//	}
+
+//	if(EnableMaster == false) GPS_MT3333Run();
+#else
+	CmdUART__Open( ComPortBaudRate );
+//	CmdTIMER_TimerConfig();
+#endif
+	Console_Output_String( "\r\nWake(STOP)\r\n" );
+
+//	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
+
+	BoardInit();
+	Console_Output_String( "Board Initialized.\r\n" );
+
+	Radio->Init();
+	Console_Output_String( "Radio Initialized.\r\n" );
 
 #ifdef Board__A22_Tracker
 	if(GPS_HandmadeOff == false) GPS_MT3333Run();
@@ -283,16 +489,16 @@ void	SLEEP_SlaveSleepAandRandomHopChannelProcedure(uint16_t *SleepTime)
 			RandomHopStartChannel_SlaveDefaultHoppingChannel();
 		}
 
-		if(*SleepTime != 0) {
-			SLEEP_SlaveSleep( SleepTime );
+		if( *SleepTime ) {
+			SLEEP_SlaveSleep_Deep_STOP_Mode( SleepTime );
 			SLAVE_LoraPollEventInterval = 0;
 			RandomHopStartChannel_SlaveDefaultHoppingChannel();
 		}
 		Running_TimeCount = 0;
 	} else {
 		if(Slave_PollEventAccomplish == true) {
-			if(*SleepTime != 0) {
-				SLEEP_SlaveSleep( SleepTime );
+			if( *SleepTime ) {
+				SLEEP_SlaveSleep_Deep_STOP_Mode( SleepTime );
 				RandomHopStartChannel_SetHoppingStartChannelFreq(SLAVE_LoraHoppingStartChannel);
 			}
 			Running_TimeCount = 0;
@@ -300,7 +506,8 @@ void	SLEEP_SlaveSleepAandRandomHopChannelProcedure(uint16_t *SleepTime)
 			Slave_PollEventAccomplish = false;
 		} else {
 			if(SLAVE_LoraPollEventInterval >= GPSnoLocated_RunningTime) {
-				if(*SleepTime != 0) SLEEP_SlaveSleep( SleepTime );
+				if( *SleepTime ) SLEEP_SlaveSleep_Deep_STOP_Mode( SleepTime );
+
 				RandomHopStartChannel_SlaveDefaultHoppingChannel();
 				SLAVE_LoraPollEventInterval = 0;
 				Running_TimeCount = 0;

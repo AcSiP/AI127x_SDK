@@ -3647,7 +3647,8 @@ int	CLI_ShellCmd__System_Stop( shell_cmd_args *args )
 	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
 	duration_sec = atoi( args->args[0].val );
-	SLEEP_SlaveSleep_STOP_Mode( & duration_sec );
+//	SLEEP_SlaveSleep_STOP_Mode( & duration_sec );
+	SLEEP_SlaveSleep_Deep_STOP_Mode( & duration_sec );
 	return SHELL_PROCESS_OK;
 }
 
