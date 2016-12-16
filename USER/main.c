@@ -329,41 +329,44 @@ int	main( void )
 
 		switch(SystemOperMode) {
 			case SystemInNormal:
-				if( (LoraStartWork == true) && (EnableMaster == true) ) {
+				if( ! LoraStartWork ) break;
+
+				if( EnableMaster ) {
 					OnMasterForNormal();
 					SLEEP_MasterSleepProcedure();
 				} else {
-					if( (LoraStartWork == true) &&  (EnableMaster == false) ) {
 #ifdef STM32F401xx
-						if(MySensor != NULL)  MySensor->Battery = ADC1ConvertedValue;
+					if(MySensor != NULL)  MySensor->Battery = ADC1ConvertedValue;
 #endif
 
 
 #ifdef Board__A22_Tracker
-						GPS_ReadIn(MySensor);
+					GPS_ReadIn(MySensor);
 #endif
 
-						OnSlaveForNormal();
-						if(LoraGateWay != NULL) SLEEP_SlaveSleepAandRandomHopChannelProcedure(&LoraGateWay->Interval);
-					}
+					OnSlaveForNormal();
+					if(LoraGateWay != NULL) SLEEP_SlaveSleepAandRandomHopChannelProcedure(&LoraGateWay->Interval);
 				}
 				break;
 
 			case SystemInProductVerification:
-				if( LoraStartWork == true ) {
-					if(LoRaOn == true) {
-						ForLoraProductVerification();
-					} else {
-						ForFskProductVerification();
-					}
+				if( ! LoraStartWork ) break;
+
+
+				if(LoRaOn == true) {
+					ForLoraProductVerification();
+				} else {
+					ForFskProductVerification();
 				}
 				break;
 
 			case SystemInPingPognTest:
-				if( (EnableMaster == true) && (LoraStartWork == true) ) {
+				if( ! LoraStartWork ) break;
+
+				if( ( EnableMaster ) ) {
 					OnMasterForPingPongTest();
 				} else {
-					if( LoraStartWork == true ) OnSlaveForPingPongTest();
+					OnSlaveForPingPongTest();
 				}
 				break;
 
