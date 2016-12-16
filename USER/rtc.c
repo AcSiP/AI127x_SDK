@@ -314,24 +314,14 @@ static void	RTC__Process_ISR( void )
 {
 	static uint8_t	LoraNum;
 	uint8_t		status;
-// 	uint32_t	rtc_tick;
-// 	uint16_t	rtc_tick_h, rtc_tick_l;
-// 	char		buf[32];
 
 	if( SystemOperMode != SystemInNormal ) return;
-
-// 	rtc_tick = RTC_GetAlarmSubSecond( RTC_Alarm_A );
-// 	rtc_tick_l = rtc_tick & 0xFFFF;
-// 	rtc_tick_h = ( rtc_tick >> 16 ) & 0xFFFF;
-// 	Console_Output_String( "rtc_tick=0x" );
-// 	snprintf( buf, sizeof(buf), "%04X %04X\r\n", rtc_tick_h, rtc_tick_l );
-// 	Console_Output_String( buf );
 
 	if ( ! EnableMaster ) {
 		if ( isInSleep ) Sleep_TimeCount++;
 	}
 
-	if( (EnableMaster == false) && (LoraGateWay != NULL) ) {		// SLAVE & Joined the Acsip-LoraNet
+	if( ( ! EnableMaster ) && ( ! LoraGateWay ) ) {		// SLAVE & Joined the Acsip-LoraNet
 		if( isInSleep == false ) {		// MCU running
 			Running_TimeCount++;
 			SLAVE_LoraPollEventInterval++;
@@ -339,7 +329,7 @@ static void	RTC__Process_ISR( void )
 		return;
 	}
 
-	if( EnableMaster == true ) {		// MASTER
+	if( EnableMaster ) {		// MASTER
 		Running_TimeCount++;
 		status = (uint8_t)(Running_TimeCount % SecondOfOneTimes);
 		// status = (uint8_t)(Running_TimeCount & 0x0001);		// every 2 seconds
@@ -347,7 +337,9 @@ static void	RTC__Process_ISR( void )
 		for(LoraNum = 0 ; LoraNum < MAX_LoraNodeNum ; LoraNum++) {
 			if((LoraNodeDevice[LoraNum] != NULL) && (DeviceNodeSleepAndRandomHop[LoraNum] != NULL)) {
 				if((DeviceNodeSleepAndRandomHop[LoraNum]->isNowSleeping == false) && (status == 0)) {
-					if(DeviceNodeSleepAndRandomHop[LoraNum]->EventCountPriority2 == 0) LoraLinkListEvent_BuildLoraEvent(LoraEventPriority2, LoraNum, Master_AcsipProtocol_Poll, LoraNodeDevice[LoraNum]->NodeAddress, NULL, NULL);
+					if(DeviceNodeSleepAndRandomHop[LoraNum]->EventCountPriority2 == 0) {
+						LoraLinkListEvent_BuildLoraEvent( LoraEventPriority2, LoraNum, Master_AcsipProtocol_Poll, LoraNodeDevice[LoraNum]->NodeAddress, NULL, NULL );
+					}
 				} else {
 					if(Running_TimeCount >= DeviceNodeSleepAndRandomHop[LoraNum]->WakeUpTimePoint) {
 						DeviceNodeSleepAndRandomHop[LoraNum]->isNowSleeping = false;
@@ -380,10 +372,6 @@ void	RTC_IRQHandler(void)
 		/* Clear RTC AlarmA Flags */
 		RTC_ClearITPendingBit( RTC_IT_ALRA );
 
-		// 20160715 for the test
-// 		Console_Output_String( "RTC_IT_ALRA\r\n" );
-		// Console_Output_String( "RTC_Counter:" );
-		// 20160715 test end
 		RTC__Process_ISR();
 	}
 
