@@ -41,47 +41,45 @@
 #define SPI_INTERFACE			SPI2
 #define SPI_CLK				RCC_APB1Periph_SPI2
 
+
+#define SPI_PIN_NSS_PORT		GPIOB
+#define SPI_PIN_SCK_PORT		GPIOB
+#define SPI_PIN_MISO_PORT		GPIOB
+#define SPI_PIN_MOSI_PORT		GPIOB
+
+#define SPI_PIN_NSS			GPIO_Pin_12
+#define SPI_PIN_SCK			GPIO_Pin_13
+#define SPI_PIN_MISO			GPIO_Pin_14
+#define SPI_PIN_MOSI			GPIO_Pin_15
+
+#define SPI_PIN_SCK_AF_SOURCE		GPIO_PinSource13
+#define SPI_PIN_MISO_AF_SOURCE		GPIO_PinSource14
+#define SPI_PIN_MOSI_AF_SOURCE		GPIO_PinSource15
+
+
 #if defined( STM32F401xx )
-// 	#define SPI_PIN_NSS_PORT		GPIOB
-// 	#define SPI_PIN_NSS_PORT_CLK		RCC_AHB1Periph_GPIOB
-// 	#define SPI_PIN_NSS			GPIO_Pin_12
+	#define SPI_PIN_NSS_PORT_CLK		RCC_AHB1Periph_GPIOB
 // 	#define SPI_PIN_NSS_AF_SOURCE		GPIO_PinSource12
 // 	#define SPI_PIN_NSS_AF			GPIO_AF_SPI2
 
-	#define SPI_PIN_SCK_PORT		GPIOB
 	#define SPI_PIN_SCK_PORT_CLK		RCC_AHB1Periph_GPIOB
-	#define SPI_PIN_SCK			GPIO_Pin_13
-	#define SPI_PIN_SCK_AF_SOURCE		GPIO_PinSource13
 	#define SPI_PIN_SCK_AF			GPIO_AF_SPI2
 
-	#define SPI_PIN_MISO_PORT		GPIOB
 	#define SPI_PIN_MISO_PORT_CLK		RCC_AHB1Periph_GPIOB
-	#define SPI_PIN_MISO			GPIO_Pin_14
-	#define SPI_PIN_MISO_AF_SOURCE		GPIO_PinSource14
 	#define SPI_PIN_MISO_AF			GPIO_AF_SPI2
 
-	#define SPI_PIN_MOSI_PORT		GPIOB
 	#define SPI_PIN_MOSI_PORT_CLK		RCC_AHB1Periph_GPIOB
-	#define SPI_PIN_MOSI			GPIO_Pin_15
-	#define SPI_PIN_MOSI_AF_SOURCE		GPIO_PinSource15
 	#define SPI_PIN_MOSI_AF			GPIO_AF_SPI2
 #elif defined( STM32F072 )
-	#define SPI_PIN_SCK_PORT		GPIOB
+	#define SPI_PIN_NSS_PORT_CLK		RCC_AHBPeriph_GPIOB
+
 	#define SPI_PIN_SCK_PORT_CLK		RCC_AHBPeriph_GPIOB
-	#define SPI_PIN_SCK			GPIO_Pin_13
-	#define SPI_PIN_SCK_AF_SOURCE		GPIO_PinSource13
 	#define SPI_PIN_SCK_AF			GPIO_AF_0
 
-	#define SPI_PIN_MISO_PORT		GPIOB
 	#define SPI_PIN_MISO_PORT_CLK		RCC_AHBPeriph_GPIOB
-	#define SPI_PIN_MISO			GPIO_Pin_14
-	#define SPI_PIN_MISO_AF_SOURCE		GPIO_PinSource14
 	#define SPI_PIN_MISO_AF			GPIO_AF_0
 
-	#define SPI_PIN_MOSI_PORT		GPIOB
 	#define SPI_PIN_MOSI_PORT_CLK		RCC_AHBPeriph_GPIOB
-	#define SPI_PIN_MOSI			GPIO_Pin_15
-	#define SPI_PIN_MOSI_AF_SOURCE		GPIO_PinSource15
 	#define SPI_PIN_MOSI_AF			GPIO_AF_0
 #else
 	#error "Missing define MCU type (STM32F072 or STM32F401xx)"
@@ -163,6 +161,42 @@ void	SpiInit( void )
 #endif
 // 	SPI_SSOutputCmd( SPI_INTERFACE, ENABLE );
 	SPI_Cmd( SPI_INTERFACE, ENABLE );
+}
+
+void	SPI_De_Init( void )
+{
+	GPIO_InitTypeDef	GPIO_InitStructure;
+
+	SPI_Cmd( SPI_INTERFACE, DISABLE );
+	RCC_APB1PeriphClockCmd( SPI_CLK, DISABLE );
+	SPI_I2S_DeInit( SPI_INTERFACE );
+
+
+#if defined( STM32F401xx )
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+#elif defined( STM32F072 )
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_Level_3;
+#endif
+
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
+	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+
+	GPIO_InitStructure.GPIO_Pin = SPI_PIN_SCK;
+	GPIO_Init( SPI_PIN_SCK_PORT, & GPIO_InitStructure );
+
+	GPIO_InitStructure.GPIO_Pin = SPI_PIN_MOSI;
+	GPIO_Init( SPI_PIN_MOSI_PORT, & GPIO_InitStructure );
+
+	GPIO_InitStructure.GPIO_Pin = SPI_PIN_MISO;
+	GPIO_Init( SPI_PIN_MISO_PORT, & GPIO_InitStructure );
+
+
+//	GPIO_InitStructure.GPIO_Pin = SPI_PIN_NSS;
+//	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+//	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+//	GPIO_Init( SPI_PIN_NSS_PORT, & GPIO_InitStructure );
+//	GPIO_SetBits( SPI_PIN_NSS_PORT, SPI_PIN_NSS );
 }
 
 uint8_t		SpiInOut( uint8_t outData )

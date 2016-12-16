@@ -61,6 +61,7 @@
 /* Exported functions ------------------------------------------------------- */
 
 void		SpiInit( void );
+void		SPI_De_Init( void );
 uint8_t		SpiInOut( uint8_t outData );
 
 #endif		// USER_SPI_H_
