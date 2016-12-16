@@ -29,7 +29,7 @@
 
 
 /* Exported define -----------------------------------------------------------*/
-#define FirmwareVersion				("1.2.2016.0923")
+#define FirmwareVersion				("1.2.2016.1205")
 #define ComPortBaudRate				(38400)
 #define GPSnoLocated_RunningTime		(30)		// Unit:s
 #define	CONSOLE_TIMER__CCR1_DelayForCMD		(3)		// second
