@@ -104,10 +104,10 @@ uint8_t		NormalMaster(__IO tLoraRunningEvent *Event)
 			// result = AcsipProtocol_LoraPollResponseCB(LoraNodeDevice[Event->RunNodeNumber], DeviceNodeSensor[Event->RunNodeNumber], &RxFrame);
 			result = AcsipProtocol_LoraPollResponseCB(LoraNodeDevice[Event->RunNodeNumber], DeviceNodeSensor[Event->RunNodeNumber], &RxFrame, &TxFrame);
 
-			if((result == AcsipProtocol_OK) && (DeviceNodeSensor[Event->RunNodeNumber] != NULL)) {
+			if( (result == AcsipProtocol_OK) && ( DeviceNodeSensor[Event->RunNodeNumber] ) ) {
 				// NormalMaster_RecordNodeRandomHoppingChannel(&(Event->RunNodeNumber), &(TxFrame.LoraRF_NextChannel));
 				NormalMaster_RecordNodeRandomHoppingChannel(Event->RunNodeAddr, &(TxFrame.LoraRF_NextChannel));
-				if(DeviceNodeSleepAndRandomHop[Event->RunNodeNumber] != NULL) {
+				if( DeviceNodeSleepAndRandomHop[Event->RunNodeNumber] ) {
 					if((DeviceNodeSensor[Event->RunNodeNumber]->UTC != 0) && (LoraNodeDevice[Event->RunNodeNumber]->Interval != 0)) {
 						DeviceNodeSleepAndRandomHop[Event->RunNodeNumber]->isNowSleeping = true;
 						DeviceNodeSleepAndRandomHop[Event->RunNodeNumber]->WakeUpTimePoint = (uint16_t)ceil(((double)LoRaSettings.TxPacketTimeout) * 0.001);

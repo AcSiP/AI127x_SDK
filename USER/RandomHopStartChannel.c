@@ -59,7 +59,7 @@ __IO uint8_t		Running_HoppingStartChannel = 0;
 void		RandomHopStartChannel_SetHoppingStartChannelFreq(uint8_t channel)
 {
 	if(LoRaSettings.FreqHopOn == false) return;
-	if(channel >= 64) return;
+	if(channel >= 51) return;
 
 	if(Running_HoppingStartChannel != channel) {
 		Running_HoppingStartChannel = channel;

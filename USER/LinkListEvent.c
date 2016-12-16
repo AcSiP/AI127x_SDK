@@ -427,26 +427,6 @@ bool		LoraLinkListEvent_BuildLoraEvent(uint8_t Priority, uint8_t Num, uint8_t Ev
 		break;
 	}
 
-	/*
-	switch(Priority) {
-	case 0:
-		temp = LoraLinkListEvent_CreateEvent(EventHeadPriority0, EventTailPriority0, &EventCountPriority0, Num, Event, Addr, Data, DataSize);
-		break;
-
-	case 1:
-		temp = LoraLinkListEvent_CreateEvent(EventHeadPriority1, EventTailPriority1, &EventCountPriority1, Num, Event, Addr, Data, DataSize);
-		break;
-
-	case 2:
-		temp = LoraLinkListEvent_CreateEvent(EventHeadPriority2, EventTailPriority2, &EventCountPriority2, Num, Event, Addr, Data, DataSize);
-		break;
-
-	default:
-		temp = false;
-		break;
-	}
-	*/
-
 	return result;
 }
 
