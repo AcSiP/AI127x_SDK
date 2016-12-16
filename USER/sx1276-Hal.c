@@ -60,6 +60,38 @@
 #define RXTX_IOPORT
 #define RXTX_PIN			FEM_CTX_PIN
 
+void		SX127x_Init_NSS( void )
+{
+	GPIO_InitTypeDef	GPIO_InitStructure;
+
+#if defined( STM32F401xx )
+	RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOB, ENABLE );
+#elif defined( STM32F072 )
+	RCC_AHBPeriphClockCmd( RCC_AHBPeriph_GPIOB, ENABLE );
+#endif
+
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+
+	// Configure NSS as output
+	GPIO_InitStructure.GPIO_Pin = NSS_PIN;
+	GPIO_Init( NSS_IOPORT, &GPIO_InitStructure );
+	GPIO_WriteBit( NSS_IOPORT, NSS_PIN, Bit_SET );
+
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
+	GPIO_Init( GPIOB, &GPIO_InitStructure );
+	GPIO_WriteBit( GPIOB, GPIO_Pin_13, Bit_SET );
+
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_14;
+	GPIO_Init( GPIOB, &GPIO_InitStructure );
+	GPIO_WriteBit( GPIOB, GPIO_Pin_14, Bit_SET );
+
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;
+	GPIO_Init( GPIOB, &GPIO_InitStructure );
+	GPIO_WriteBit( GPIOB, GPIO_Pin_15, Bit_SET );
+}
 
 void		SX1276InitIo( void )
 {

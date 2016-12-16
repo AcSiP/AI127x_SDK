@@ -51,6 +51,9 @@ typedef enum
 	RADIO_RESET_ON,
 } tRadioResetState;
 
+
+void		SX127x_Init_NSS( void );
+
 /*!
  * \brief Initializes the radio interface I/Os
  */
