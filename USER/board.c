@@ -62,11 +62,22 @@ void	BoardInit( void )
 
 #ifdef STM32F401xx
 	// Init. ADC1
-	ADC1_CH8_DMA_Config();
+//	ADC1_CH8_DMA_Config();
 
 	// Start ADC1 Software Conversion
-	ADC_SoftwareStartConv(ADC1);
+//	ADC_SoftwareStartConv(ADC1);
 #endif
+}
+
+void	Board_DeInit( void )
+{
+	if( SysTick_Config( SystemCoreClock / 20 ) ) {		// SystemCoreClock / 20 = 50ms
+		/* Capture error */
+		while (1) {
+		}
+	}
+
+	SPI_De_Init();
 }
 
 #ifdef STM32F401xx

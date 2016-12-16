@@ -83,7 +83,7 @@ extern volatile uint32_t	TickCounter;
  * Initializes board peripherals
  */
 void	BoardInit( void );
-
+void	Board_DeInit( void );
 
 /*!
  * Delay code execution for "delay" ms
