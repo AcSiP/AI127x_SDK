@@ -35,7 +35,8 @@
 /**
  * max number of character for a single argument form a command line passed to the shell
  */
-#define SHELL_MAX_ARG_LEN	324//(MaxMsgDataSize-1)/3*4
+#define SHELL_MAX_ARG_LEN	MAX_LoraPayloadLength
+
 /**
  * return code given when processing of a command line was OK
  */
