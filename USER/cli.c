@@ -44,6 +44,7 @@
 #include "main.h"
 #include "spi.h"
 #include "UART_Console.h"
+#include "acsip_protocol.h"
 
 #ifdef STM32F072
 	#include "stm32f0xx.h"
@@ -115,9 +116,9 @@ const uint16_t		PortOther_Pin[] = {GPIO_Pin_0, GPIO_Pin_1};		// PortOther = Port
 
 shell_cmds		LORA_shell_cmds = {
 #ifdef Board__A22_Tracker
-	.count = 91,
+	.count = 93,
 #else
-	.count = 87,
+	.count = 89,
 #endif
 	.cmds = {
 		{
@@ -205,9 +206,21 @@ shell_cmds		LORA_shell_cmds = {
 		},
 
 		{
+			.cmd	= "LoraForceJoinNode",
+			.desc	= "Acsip Protocol LORA base Join LoraNet in Force",
+			.func	= CLI_ShellCmd_LoraJoinNode_in_Force,
+		},
+
+		{
 			.cmd	= "LoraLeaveNode",
 			.desc	= "Acsip Protocol LORA base Leave LoraNet",
 			.func	= CLI_ShellCmd_LoraLeaveNode,
+		},
+
+		{
+			.cmd	= "LoraForceLeaveNode",
+			.desc	= "Acsip Protocol LORA base Leave LoraNet",
+			.func	= CLI_ShellCmd_LoraLeaveNode_in_Force,
 		},
 
 		{
@@ -1657,6 +1670,61 @@ int	CLI_ShellCmd_LoraJoinNode( shell_cmd_args *args )
 	return SHELL_PROCESS_OK;
 }
 
+int	CLI_ShellCmd_LoraJoinNode_in_Force( shell_cmd_args *args )
+{
+	uint32_t	addr;
+	uint8_t		Addr[3], ret;
+	char		cb[16];
+
+	if( args->count != 1 ) return SHELL_PROCESS_ERR_CMD_UNKN;
+
+	if( ( SystemOperMode != SystemInNormal ) || ( ! EnableMaster ) ) {
+		Console_Output_String( "System NOT in Normal mode,\r\n" );
+		Console_Output_String( "Or Lora module NOT Master.\r\n" );
+		return SHELL_PROCESS_ERR_CMD_UNKN;
+	}
+
+	if( strlen(args->args[0].val) != 6 ) {
+		Console_Output_String( "Addr format error.\r\n" );
+		return SHELL_PROCESS_ERR_CMD_UNKN;
+	}
+
+	if(LoraNodeCount >= MAX_LoraNodeNum) {
+		Console_Output_String( "Node number full.\r\n" );
+		return SHELL_PROCESS_ERR_CMD_UNKN;
+	}
+
+	addr = (uint32_t)strtol(args->args[0].val, NULL, 16);
+
+	if( !! (addr & 0xFF000000) ) {
+		Console_Output_String( "Addr format error.\r\n" );
+		return SHELL_PROCESS_ERR_CMD_UNKN;
+	}
+
+	Addr[0] = (uint8_t)(addr & 0x000000FF);
+	Addr[1] = (uint8_t)((addr & 0x0000FF00) >> 8);
+	Addr[2] = (uint8_t)((addr & 0x00FF0000) >> 16);
+
+//	if( LoraLinkListEvent_BuildLoraEvent(LoraEventPriority1, 0, Master_AcsipProtocol_Join, Addr, NULL, NULL) == false ) return SHELL_PROCESS_ERR_CMD_UNKN;
+	ret = AcsipProtocol__Add_Node( Addr );
+	if( ret != AcsipProtocol_OK ) {
+		snprintf( cb, sizeof( cb ), "Error %d\r\n", ret );
+		Console_Output_String( cb );
+		return SHELL_PROCESS_ERR_CMD_UNKN;
+	}
+
+#ifdef STM32F401xx
+	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
+#endif
+
+#ifdef STM32F072
+	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
+#endif
+	SaveRecord_WriteInLoraMode();
+
+	return SHELL_PROCESS_OK;
+}
+
 
 int	CLI_ShellCmd_LoraLeaveNode( shell_cmd_args *args )
 {
@@ -1701,6 +1769,48 @@ int	CLI_ShellCmd_LoraLeaveNode( shell_cmd_args *args )
 	return SHELL_PROCESS_OK;
 }
 
+int	CLI_ShellCmd_LoraLeaveNode_in_Force( shell_cmd_args *args )
+{
+	if( args->count != 1 ) return SHELL_PROCESS_ERR_CMD_UNKN;
+
+	if( ( SystemOperMode != SystemInNormal ) || ( ! EnableMaster ) ) {
+		Console_Output_String( "System NOT in Normal mode,\r\n" );
+		Console_Output_String( "Or Lora module NOT Master.\r\n" );
+		return SHELL_PROCESS_ERR_CMD_UNKN;
+	}
+
+	if( strlen(args->args[0].val) != 6 ){
+		Console_Output_String( "Addr format error.\r\n" );
+		return SHELL_PROCESS_ERR_CMD_UNKN;
+	}
+
+	uint32_t	addr;
+	uint8_t		Addr[3];
+
+	addr = (uint32_t)strtol(args->args[0].val, NULL, 16);
+
+	if( !!(addr & 0xFF000000) ) return SHELL_PROCESS_ERR_CMD_UNKN;
+
+	Addr[0] = (uint8_t)(addr & 0x000000FF);
+	Addr[1] = (uint8_t)((addr & 0x0000FF00) >> 8);
+	Addr[2] = (uint8_t)((addr & 0x00FF0000) >> 16);
+
+	if( ! AcsipProtocol__Del_Node( (uint8_t *) Addr ) ){
+		Console_Output_String( "This node NOT in AcSipLoraNet.\r\n" );
+		return SHELL_PROCESS_ERR_CMD_UNKN;
+	}
+
+#ifdef STM32F401xx
+	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
+#endif
+
+#ifdef STM32F072
+	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
+#endif
+
+	SaveRecord_WriteInLoraMode();
+	return SHELL_PROCESS_OK;
+}
 
 int	CLI_ShellCmd_LoraSetNodePara(shell_cmd_args *args)
 {
@@ -1804,7 +1914,7 @@ IntervalSet:
 				LoraNodeDevice[count]->Interval = atoi(args->args[1].val);
 				if(LoraLinkListEvent_BuildLoraEvent(LoraEventPriority1, count, Master_AcsipProtocol_Interval, Addr, NULL, NULL) == false) return SHELL_PROCESS_ERR_CMD_UNKN;
 				if(LoraNodeDevice[count]->Interval != 0) {
-					DeviceNodeSleepAndRandomHop[count]->DefineLoraRxFailureTimes = ceil(LoraNodeDevice[count]->Interval / SecondOfOneTimes);
+					DeviceNodeSleepAndRandomHop[count]->DefineLoraRxFailureTimes = DEF_Allowed_LoRa_Rx_Failure_Times_Times;
 				} else {
 					DeviceNodeSleepAndRandomHop[count]->DefineLoraRxFailureTimes = 0;
 				}

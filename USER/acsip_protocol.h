@@ -109,6 +109,16 @@ typedef struct sDeviceNodeSensor {
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
+bool			AcsipProtocol__Verify_Lora_Address( const uint8_t *addr_a, const uint8_t *addr_b );
+void			AcsipProtocol__Assign_Lora_Address( uint8_t *addr_dest, const uint8_t *addr_src );
+bool			AcsipProtocol__Malloc_Node( uint8_t idx );
+bool			AcsipProtocol__Free_Node( uint8_t idx );
+bool			AcsipProtocol__Initialize_Node( uint8_t idx );
+int16_t			AcsipProtocol__Find_Node( const uint8_t *addr );
+uint8_t			AcsipProtocol__Add_Node( const uint8_t *addr );
+bool			AcsipProtocol__Del_Node( const uint8_t *addr );
+
+
 tLoraDeviceNode **	AcsipProtocol_ReadLoraDeviceNodeStatus(void);
 tDeviceNodeSensor **	AcsipProtocol_ReadDeviceNodeSensorStatus(void);
 uint8_t *		AcsipProtocol_ReadDeviceNodeConnectedCounter(void);

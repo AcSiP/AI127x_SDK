@@ -289,7 +289,7 @@ void	SaveRecord_ReadOutLoraNodePara(void)
 				memcpy(( void * )LoraNodeDevice[count]->Aliases, ( void * )prov.NodePara.Aliases,  AliasesSize);
 				LoraNodeDevice[count]->Interval = prov.NodePara.Interval;
 				if(LoraNodeDevice[count]->Interval != 0) {
-					DeviceNodeSleepAndRandomHop[count]->DefineLoraRxFailureTimes = ceil(LoraNodeDevice[count]->Interval / SecondOfOneTimes);
+					DeviceNodeSleepAndRandomHop[count]->DefineLoraRxFailureTimes = DEF_Allowed_LoRa_Rx_Failure_Times_Times;
 				} else {
 					DeviceNodeSleepAndRandomHop[count]->DefineLoraRxFailureTimes = 0;
 				}
