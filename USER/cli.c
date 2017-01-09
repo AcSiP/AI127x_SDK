@@ -46,12 +46,14 @@
 #include "UART_Console.h"
 #include "acsip_protocol.h"
 
+
 #ifdef STM32F072
 	#include "stm32f0xx.h"
 #endif
 
 #ifdef STM32F401xx
 	#include "stm32f4xx.h"
+	#include "Base_Driver__ADC1.h"
 #endif
 
 /* Private typedef -----------------------------------------------------------*/
@@ -84,9 +86,6 @@ extern tLoraDeviceNode *		LoraGateWay;						// for SLAVE
 extern tDeviceNodeSensor *		MySensor;						// for SLAVE
 extern __IO uint16_t 			Running_TimeCount;					// for MASTER & SLAVE
 
-#ifdef STM32F401xx
-extern __IO uint16_t			ADC1ConvertedValue;
-#endif
 
 extern tFskSettings			FskSettings;
 __IO bool				FskPV_TxTest = false;
@@ -1208,15 +1207,43 @@ int	CLI_ShellCmd_GetBatteryADC( shell_cmd_args *args )
 {
 #ifdef STM32F401xx
 	int8_t		str[40];
+	uint16_t	adc_val;
+
 	__IO uint32_t	ADC1ConvertedVoltage = 0;
 	__IO uint32_t	VBAT = 0;
 
 	if( args->count != 0 ) return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	ADC1ConvertedVoltage = ADC1ConvertedValue*3300/0xFF;		// note: can do embedded reference voltage(VRefint: Type 1.21
+	adc_val = ADC1__Get_Converted_Value( ADC_IDX___ADC0 );
+	ADC1ConvertedVoltage = adc_val * 3300/0xFFF;		// note: can do embedded reference voltage(VRefint: Type 1.21
 	VBAT = ADC1ConvertedVoltage*4200/3300;
-	snprintf( (char *)str, sizeof(str), "V_PB0=%d, ADC_PB0=%d, VBT=%d\n\r", ADC1ConvertedVoltage, ADC1ConvertedValue, VBAT);		// for cli
+	snprintf( (char *)str, sizeof(str), "V_ADC0=%d, ADC0=%d, VBAT=%d \n\r", ADC1ConvertedVoltage, adc_val, VBAT);		// for cli
 	Console_Output_String( (const char *)str );
+
+	adc_val = ADC1__Get_Converted_Value( ADC_IDX___ADC1 );
+	ADC1ConvertedVoltage = adc_val * 3300/0xFFF;		// note: can do embedded reference voltage(VRefint: Type 1.21
+	VBAT = ADC1ConvertedVoltage*4200/3300;
+	snprintf( (char *)str, sizeof(str), "V_ADC1=%d, ADC1=%d, VBAT=%d \n\r", ADC1ConvertedVoltage, adc_val, VBAT);		// for cli
+	Console_Output_String( (const char *)str );
+
+	adc_val = ADC1__Get_Converted_Value( ADC_IDX___ADC4 );
+	ADC1ConvertedVoltage = adc_val * 3300/0xFFF;		// note: can do embedded reference voltage(VRefint: Type 1.21
+	VBAT = ADC1ConvertedVoltage*4200/3300;
+	snprintf( (char *)str, sizeof(str), "V_ADC4=%d, ADC4=%d, VBAT=%d \n\r", ADC1ConvertedVoltage, adc_val, VBAT);		// for cli
+	Console_Output_String( (const char *)str );
+
+	adc_val = ADC1__Get_Converted_Value( ADC_IDX___ADC5 );
+	ADC1ConvertedVoltage = adc_val * 3300/0xFFF;		// note: can do embedded reference voltage(VRefint: Type 1.21
+	VBAT = ADC1ConvertedVoltage*4200/3300;
+	snprintf( (char *)str, sizeof(str), "V_ADC5=%d, ADC5=%d, VBAT=%d \n\r", ADC1ConvertedVoltage, adc_val, VBAT);		// for cli
+	Console_Output_String( (const char *)str );
+
+	adc_val = ADC1__Get_Converted_Value( ADC_IDX___VBat );
+	ADC1ConvertedVoltage = adc_val * 3300/0xFFF;		// note: can do embedded reference voltage(VRefint: Type 1.21
+	VBAT = ADC1ConvertedVoltage*4200/3300;
+	snprintf( (char *)str, sizeof(str), "V_PB0=%d, ADC_PB0=%d, VBAT=%d \n\r", ADC1ConvertedVoltage, adc_val, VBAT);		// for cli
+	Console_Output_String( (const char *)str );
+
 #endif
 
 	return SHELL_PROCESS_OK;

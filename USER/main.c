@@ -17,6 +17,10 @@
 #include "UART_Console.h"
 
 
+#ifdef STM32F401xx
+	#include "Base_Driver__ADC1.h"
+#endif
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 #ifdef STM32F072
@@ -96,10 +100,6 @@ extern __IO bool		Slave_PollEvent;				// for SLAVE
 extern __IO bool		Slave_PollEvent_UTCnotZero;			// for SLAVE
 extern __IO uint8_t		SLAVE_LoraHoppingStartChannel;			// for SLAVE
 
-///////////////// for Battery ADC ///////////////////////////
-#ifdef STM32F401xx
-extern __IO uint16_t		ADC1ConvertedValue;				// for MASTER & SLAVE
-#endif
 
 ///////////////// for Product Verification /////////////////
 __IO uint32_t		LoraPV_RxCount;
@@ -336,7 +336,7 @@ int	main( void )
 					SLEEP_MasterSleepProcedure();
 				} else {
 #ifdef STM32F401xx
-					if(MySensor != NULL)  MySensor->Battery = ADC1ConvertedValue;
+					if(MySensor != NULL)  MySensor->Battery = ADC1__Get_Converted_Value( ADC_IDX___VBat );
 #endif
 
 
