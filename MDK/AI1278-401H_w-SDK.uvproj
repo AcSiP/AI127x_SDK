@@ -900,6 +900,11 @@
               <FileType>1</FileType>
               <FilePath>..\USER\STM32F401VCx\Base_Driver__UART1.c</FilePath>
             </File>
+            <File>
+              <FileName>Base_Driver__ADC1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\STM32F401VCx\Base_Driver__ADC1.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
