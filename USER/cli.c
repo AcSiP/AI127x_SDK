@@ -45,7 +45,7 @@
 #include "spi.h"
 #include "UART_Console.h"
 #include "acsip_protocol.h"
-
+#include "Base_Driver__ADC1.h"
 
 #ifdef STM32F072
 	#include "stm32f0xx.h"
@@ -53,7 +53,6 @@
 
 #ifdef STM32F401xx
 	#include "stm32f4xx.h"
-	#include "Base_Driver__ADC1.h"
 #endif
 
 /* Private typedef -----------------------------------------------------------*/

@@ -34,9 +34,8 @@
 
 #include "config.h"
 
-#ifdef STM32F401xx
-	#include "Base_Driver__ADC1.h"
-#endif
+#include "Base_Driver__ADC1.h"
+
 
 // System tick (1ms)
 volatile uint32_t	TickCounter = 0;
@@ -56,14 +55,19 @@ void	BoardInit( void )
 	// Initialize SPI
 	SpiInit( );
 
-#ifdef STM32F401xx
+
 	ADC1__Configure_w_DMA(	ADC_IDX___ADC0 |
 				ADC_IDX___ADC1 |
 				ADC_IDX___ADC4 |
 				ADC_IDX___VBat );
 
+#ifdef STM32F401xx
 	// Start ADC1 Software Conversion
 	ADC_SoftwareStartConv( ADC1 );
+#endif
+
+#ifdef STM32F072
+	ADC_StartOfConversion( ADC1 );
 #endif
 }
 
