@@ -13,6 +13,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "config.h"
 #include "Base_Driver__ADC1.h"
@@ -120,15 +121,79 @@ int8_t		ADC1__Get_Item_Index( uint16_t ch_sel )
 	return( -1 );
 }
 
+void		ADC1__Dump_Values( void )
+{
+	int8_t		n = 0;
+	char		cs[64];
+
+	if( ADC1_Current_Configuration & ADC_IDX___ADC0 ){
+		snprintf( cs, sizeof( cs ), " ADC0= 0x%03X ", ADC1_Converted_Value[n] );
+		Console_Output_String( cs );
+		n++;
+	}
+
+	if( ADC1_Current_Configuration & ADC_IDX___ADC1 ){
+		snprintf( cs, sizeof( cs ), " ADC1= 0x%03X ", ADC1_Converted_Value[n] );
+		Console_Output_String( cs );
+		n++;
+	}
+
+	if( ADC1_Current_Configuration & ADC_IDX___ADC4 ){
+		snprintf( cs, sizeof( cs ), " ADC4= 0x%03X ", ADC1_Converted_Value[n] );
+		Console_Output_String( cs );
+		n++;
+	}
+
+	if( ADC1_Current_Configuration & ADC_IDX___ADC5 ){
+		snprintf( cs, sizeof( cs ), " ADC5= 0x%03X ", ADC1_Converted_Value[n] );
+		Console_Output_String( cs );
+		n++;
+	}
+
+	if( ADC1_Current_Configuration & ADC_IDX___ADC6 ){
+		snprintf( cs, sizeof( cs ), " ADC6= 0x%03X ", ADC1_Converted_Value[n] );
+		Console_Output_String( cs );
+		n++;
+	}
+
+	if( ADC1_Current_Configuration & ADC_IDX___ADC7 ){
+		snprintf( cs, sizeof( cs ), " ADC7= 0x%03X ", ADC1_Converted_Value[n] );
+		Console_Output_String( cs );
+		n++;
+	}
+
+	if( ADC1_Current_Configuration & ADC_IDX___ADC8 ){
+		snprintf( cs, sizeof( cs ), " ADC8= 0x%03X ", ADC1_Converted_Value[n] );
+		Console_Output_String( cs );
+		n++;
+	}
+
+	if( ADC1_Current_Configuration & ADC_IDX___Vref ){
+		snprintf( cs, sizeof( cs ), " Vref= 0x%03X ", ADC1_Converted_Value[n] );
+		Console_Output_String( cs );
+		n++;
+	}
+
+	if( ADC1_Current_Configuration & ADC_IDX___VBat ){
+		snprintf( cs, sizeof( cs ), " VBat= 0x%03X ", ADC1_Converted_Value[n] );
+		Console_Output_String( cs );
+		n++;
+	}
+
+	if( ADC1_Current_Configuration & ADC_IDX___VTemp ){
+		snprintf( cs, sizeof( cs ), " VTemp= 0x%03X ", ADC1_Converted_Value[n] );
+		Console_Output_String( cs );
+		n++;
+	}
+	Console_Output_String( "\r\n" );
+}
+
 
 uint16_t	ADC1__Get_Converted_Value( uint16_t ch_sel )
 {
 	int8_t		i;
-	char		cs[64];
 
 	i = ADC1__Get_Item_Index( ch_sel );
-	snprintf( cs, sizeof( cs ), "%d, i = %d \r\n", __LINE__, i );
-	Console_Output_String( cs );
 	if( 0 <= i && i < 16 ) return( ADC1_Converted_Value[ i ] & 0x0FFF );
 
 	return( 0 );
@@ -223,51 +288,38 @@ void		ADC1__ADC_Configure( uint16_t ch_sel )
 
 	// ADC1 Init
 	ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
-	ADC_InitStructure.ADC_ScanConvMode = DISABLE;
+	ADC_InitStructure.ADC_ScanConvMode = ENABLE;
 	ADC_InitStructure.ADC_ContinuousConvMode = ENABLE;
 	ADC_InitStructure.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None;
 	ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T1_CC1;
 	ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
-	ADC_InitStructure.ADC_NbrOfConversion = 1;
+	ADC_InitStructure.ADC_NbrOfConversion = ADC1__Count_Items( ch_sel );
 	ADC_Init( ADC1, & ADC_InitStructure );
 
 
 	// ADC1 regular channel configuration
-	int8_t		n = 1;
-	if( ch_sel & ADC_IDX___ADC0 ) ADC_RegularChannelConfig( ADC1, ADC_Channel_0, n, ADC_SampleTime_3Cycles );
-
-	n++;
-	if( ch_sel & ADC_IDX___ADC1 ) ADC_RegularChannelConfig( ADC1, ADC_Channel_1, n, ADC_SampleTime_3Cycles );
-
-	n++;
-	if( ch_sel & ADC_IDX___ADC4 ) ADC_RegularChannelConfig( ADC1, ADC_Channel_4, n, ADC_SampleTime_3Cycles );
-
-	n++;
-	if( ch_sel & ADC_IDX___ADC5 ) ADC_RegularChannelConfig( ADC1, ADC_Channel_5, n, ADC_SampleTime_3Cycles );
-
-	n++;
-	if( ch_sel & ADC_IDX___ADC6 ) ADC_RegularChannelConfig( ADC1, ADC_Channel_6, n, ADC_SampleTime_3Cycles );
-
-	n++;
-	if( ch_sel & ADC_IDX___ADC7 ) ADC_RegularChannelConfig( ADC1, ADC_Channel_7, n, ADC_SampleTime_3Cycles );
-
-	n++;
-	if( ch_sel & ADC_IDX___ADC8 ) ADC_RegularChannelConfig( ADC1, ADC_Channel_8, n, ADC_SampleTime_3Cycles );
-
-	n++;
+	int8_t		n = 0;
+	if( ch_sel & ADC_IDX___ADC0 ){	n++;	ADC_RegularChannelConfig( ADC1, ADC_Channel_0, n, ADC_SampleTime_3Cycles );	}
+	if( ch_sel & ADC_IDX___ADC1 ){	n++;	ADC_RegularChannelConfig( ADC1, ADC_Channel_1, n, ADC_SampleTime_3Cycles );	}
+	if( ch_sel & ADC_IDX___ADC4 ){	n++;	ADC_RegularChannelConfig( ADC1, ADC_Channel_4, n, ADC_SampleTime_3Cycles );	}
+	if( ch_sel & ADC_IDX___ADC5 ){	n++;	ADC_RegularChannelConfig( ADC1, ADC_Channel_5, n, ADC_SampleTime_3Cycles );	}
+	if( ch_sel & ADC_IDX___ADC6 ){	n++;	ADC_RegularChannelConfig( ADC1, ADC_Channel_6, n, ADC_SampleTime_3Cycles );	}
+	if( ch_sel & ADC_IDX___ADC7 ){	n++;	ADC_RegularChannelConfig( ADC1, ADC_Channel_7, n, ADC_SampleTime_3Cycles );	}
+	if( ch_sel & ADC_IDX___ADC8 ){	n++;	ADC_RegularChannelConfig( ADC1, ADC_Channel_8, n, ADC_SampleTime_3Cycles );	}
 	if( ch_sel & ADC_IDX___Vref ){
+		n++;
 		ADC_RegularChannelConfig( ADC1, ADC_Channel_17, n, ADC_SampleTime_3Cycles );
 		ADC_TempSensorVrefintCmd( ENABLE );
 	}
 
-	n++;
 	if( ch_sel & ADC_IDX___VBat ){
+		n++;
 		ADC_RegularChannelConfig( ADC1, ADC_Channel_18, n, ADC_SampleTime_3Cycles );
 		ADC_VBATCmd( ENABLE );
 	}
 
-	n++;
 	if( ch_sel & ADC_IDX___VTemp ){
+		n++;
 		ADC_RegularChannelConfig( ADC1, ADC_Channel_17, n, ADC_SampleTime_3Cycles );
 		ADC_TempSensorVrefintCmd( ENABLE );
 		ADC_VBATCmd( DISABLE );
