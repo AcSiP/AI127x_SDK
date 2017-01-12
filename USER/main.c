@@ -15,11 +15,8 @@
 
 #include "Base_Driver__UART1.h"
 #include "UART_Console.h"
+#include "Base_Driver__ADC1.h"
 
-
-#ifdef STM32F401xx
-	#include "Base_Driver__ADC1.h"
-#endif
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -49,6 +46,7 @@ __IO uint32_t			SystemOperMode;
 bool				LoraStartWork = 1;		// 1=start or 0=stop LORA
 bool				EnableMaster;			// 1=Master or 0=Slave selection
 bool				Flag__Init_RTC = false;
+uint32_t			Last_Measure_TickCounter = 0;
 
 ///////////////// for CmdUART & CLI ///////////////////////
 extern __IO bool		LoRaOn;
@@ -327,7 +325,7 @@ int	main( void )
 #endif
 
 
-		switch(SystemOperMode) {
+		switch( SystemOperMode ){
 			case SystemInNormal:
 				if( ! LoraStartWork ) break;
 
@@ -335,10 +333,18 @@ int	main( void )
 					OnMasterForNormal();
 					SLEEP_MasterSleepProcedure();
 				} else {
-#ifdef STM32F401xx
-					if(MySensor != NULL)  MySensor->Battery = ADC1__Get_Converted_Value( ADC_IDX___VBat );
-#endif
+				// Show ADC values
+					if( Last_Measure_TickCounter < TickCounter ){
+						Last_Measure_TickCounter = TickCounter + 3000;
+						ADC1__Dump_Values();
 
+						if(MySensor != NULL) {
+							MySensor->GPS_Latitude =	ADC1__Get_Converted_Value( ADC_IDX___ADC0 );
+							MySensor->GPS_Longitude =	ADC1__Get_Converted_Value( ADC_IDX___ADC1 );
+							MySensor->UTC =			ADC1__Get_Converted_Value( ADC_IDX___ADC4 );
+							MySensor->Battery =		ADC1__Get_Converted_Value( ADC_IDX___VBat );
+						}
+					}
 
 #ifdef Board__A22_Tracker
 					GPS_ReadIn(MySensor);
