@@ -1,7 +1,3 @@
-# Command List
-This page lists and describes available commands.<BR><BR>
-
-
 <H2> 1. Command / Respose Format </H2>
 
 - <B>Command</B>
