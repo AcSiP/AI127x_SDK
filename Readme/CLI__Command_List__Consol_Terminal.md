@@ -12,7 +12,7 @@
 <BR>
 
 
-- <B>LoraMode</B>
+- <B>UartEchoOff</B>
 <TABLE>
 <TR align="Left" valign="center"><TD><B>Parameter(s)</B></TD>		<TD> N/A </TD></TR>
 <TR align="Left" valign="center"><TD><B>Response on Success</B></TD>	<TD> OK </TD></TR>
