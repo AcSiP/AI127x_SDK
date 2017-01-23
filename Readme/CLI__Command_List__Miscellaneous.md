@@ -7,7 +7,7 @@
 <TR align="Left" valign="center">
 	<TD><B>Parameter(s)</B></TD>
 	<TD>
-		inNormal  =>   For user normal application<BR>
+		inNormal   =>   For user normal application(defult)<BR>
 		inTD       =>   Demo Ping/Pong test<BR>
 		inPV       =>   Reserved for production test<BR>
 		inIdle     =>   Reserved for RD use<BR>
@@ -15,6 +15,7 @@
 </TR>
 <TR align="Left" valign="center"><TD><B>Response on Success</B></TD>	<TD> OK </TD></TR>
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Setup system operation mode. </TD></TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD> LoraSystemMode  inNormal </TD></TR>
 </TABLE>
 <BR>
 
@@ -24,7 +25,7 @@
 <TR align="Left" valign="center">
 	<TD><B>Parameter(s)</B></TD>
 	<TD>
-		<B>MASTER</B> or <B>SLAVE</B><BR>
+		<B>MASTER</B> or <B>SLAVE</B> (default)<BR>
 	</TD>
 </TR>
 <TR align="Left" valign="center"><TD><B>Response on Success</B></TD>	<TD> OK </TD></TR>
