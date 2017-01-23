@@ -26,7 +26,14 @@ There are several pre-defined sensitivity mode
 
 
 <TABLE>
-<TR align="Left" valign="center"><TD><B>Parameter(s)</B></TD>		<TD> N/A </TD></TR>
+<TR align="Left" valign="center">
+	<TD><B>Parameter(s)</B></TD>
+	<TD>
+		HopOn   =>   Enable frequency hopping<BR>
+		HopOff  =>   Disable frequency hopping<BR>
+	</TD>
+</TR>
+
 <TR align="Left" valign="center"><TD><B>Response on Success</B></TD>	<TD> OK </TD></TR>
 <TR align="Left" valign="center"><TD><B>Description</B></TD>
 <TD>
@@ -61,6 +68,7 @@ There are several pre-defined sensitivity mode
 	
 </TD>
 </TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD> LoraSF10BW125RS132  HopOn </TD></TR>
 </TABLE>
 <BR>
 
