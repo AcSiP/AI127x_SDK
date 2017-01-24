@@ -30,12 +30,17 @@ There are several pre-defined sensitivity mode
 	<TD><B>Parameter(s)</B></TD>
 	<TD>
 		HopOn     => Enable frequency hopping<BR>
-		HopOff    => Disable frequency hopping<BR>
+		HopOff    => Disable frequency hopping (default)<BR>
 	</TD>
 </TR>
 <TR align="Left" valign="center"><TD><B>Description</B></TD>
 <TD>
-	Use pre-defined modulation / sensitivity mode.<BR><BR>
+	Use pre-defined modulation / sensitivity mode.<BR>
+	Error Coding Rate = 1.25<BR>
+	Payload Header = ON (Explicit)<BR>
+	Payload CRC = true<BR>
+	Output Power = 20 dBm<BR>
+	<BR>
 	<TABLE>
 	<TR align="center" valign="center">
 		<TD><B> Sensitivity </B></TD>
