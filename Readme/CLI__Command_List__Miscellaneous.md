@@ -16,10 +16,10 @@
 <TR align="Left" valign="center">
 	<TD><B>Parameter(s)</B></TD>
 	<TD>
-		<B>inNormal</B>   =>   For user normal application(defult)<BR>
-		<B>inTD</B>       =>   Demo Ping/Pong test<BR>
-		<B>inPV</B>       =>   Reserved for production test<BR>
-		<B>inIdle</B>     =>   Reserved for RD use<BR>
+		<B>inNormal</B>       => For user normal application(defult)<BR>
+		<B>inTD</B>           => Demo Ping/Pong test<BR>
+		<B>inPV</B>           => Reserved for production test<BR>
+		<B>inIdle</B>         => Reserved for RD use<BR>
 	</TD>
 </TR>
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Setup system operation mode. </TD></TR>
@@ -33,8 +33,8 @@
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Query system operation mode. </TD></TR>
 <TR align="Left" valign="center"><TD><B>Example</B></TD>
 	<TD>
-		Command:	<B>LoraGetSystemMode</B><BR>
-		Response:	<B>SystemOperationMode=InNormal</B>
+		Command:<BR>	<B>LoraGetSystemMode</B><BR>
+		Response:<BR>	<B>SystemOperationMode=InNormal</B>
 	</TD>
 </TR>
 </TABLE>
@@ -63,8 +63,8 @@
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Query the role of device. </TD></TR>
 <TR align="Left" valign="center"><TD><B>Example</B></TD>
 	<TD>
-		Command:	<B>LoraGetMode</B><BR>
-		Response:	<B>LoraMode=MASTER</B>
+		Command:<BR>	<B>LoraGetMode</B><BR>
+		Response:<BR>	<B>LoraMode=MASTER</B>
 	</TD>
 </TR>
 </TABLE>
@@ -77,8 +77,8 @@
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Query the version of application firmware. </TD></TR>
 <TR align="Left" valign="center"><TD><B>Example</B></TD>
 	<TD>
-		Command:	<B>GetFWVersion</B><BR>
-		Response:	<I>FirmwareVersion=<B>1.4.2017.0110</B> for <B>SX1276</B></I>
+		Command:<BR>	<B>GetFWVersion</B><BR>
+		Response:<BR>	<I>FirmwareVersion=<B>1.4.2017.0110</B> for <B>SX1276</B></I>
 	</TD>
 </TR>
 </TABLE>
@@ -91,8 +91,8 @@
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Query the role of device. </TD></TR>
 <TR align="Left" valign="center"><TD><B>Example</B></TD>
 	<TD>
-		Command:	<B>LoraGetMode</B><BR>
-		Response:	<B>LoraMode=MASTER</B>
+		Command:<BR>	<B>LoraGetMode</B><BR>
+		Response:<BR>	<B>LoraMode=MASTER</B>
 	</TD>
 </TR>
 
