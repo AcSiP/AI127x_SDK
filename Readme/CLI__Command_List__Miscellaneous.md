@@ -2,6 +2,15 @@
 
 <BR>
 
+- <B>SystemReset</B>
+<TABLE>
+<TR align="Left" valign="center"><TD><B>Parameter(s)</B></TD>		<TD> N/A </TD></TR>
+<TR align="Left" valign="center"><TD><B>Response on Success</B></TD>	<TD> OK </TD></TR>
+<TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Soft Reboot the system. </TD></TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD> SystemReset </TD></TR>
+</TABLE>
+<BR>
+
 - <B>LoraSystemMode</B>
 <TABLE>
 <TR align="Left" valign="center">
