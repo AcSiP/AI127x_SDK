@@ -28,8 +28,8 @@
   <TD><B> End Of Line </B></TD>
 </TR>
 <TR align="Left" valign="center"><td colspan="2">Ex.</td></TR>
-<TR align="center" valign="center"><TD> TxPacketTimeout=2183 </TD><TD> (CR)(LF) </TD></TR>
-<TR align="center" valign="center"><TD> RFFrequency=915000000  BW=6  SF=12 ErrorCoding=1 </TD><TD> (CR)(LF) </TD></TR>
+<TR align="Left" valign="center"><TD> TxPacketTimeout=2183 </TD><TD> (CR)(LF) </TD></TR>
+<TR align="Left" valign="center"><TD> RFFrequency=915000000  BW=6  SF=12 ErrorCoding=1 </TD><TD> (CR)(LF) </TD></TR>
 </TABLE>
 <BR>
 

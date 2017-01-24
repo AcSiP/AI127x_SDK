@@ -33,8 +33,6 @@ There are several pre-defined sensitivity mode
 		HopOff  =>   Disable frequency hopping<BR>
 	</TD>
 </TR>
-
-<TR align="Left" valign="center"><TD><B>Response on Success</B></TD>	<TD> OK </TD></TR>
 <TR align="Left" valign="center"><TD><B>Description</B></TD>
 <TD>
 	Use pre-defined modulation / sensitivity mode.

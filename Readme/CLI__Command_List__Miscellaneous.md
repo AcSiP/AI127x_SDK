@@ -5,26 +5,38 @@
 - <B>SystemReset</B>
 <TABLE>
 <TR align="Left" valign="center"><TD><B>Parameter(s)</B></TD>		<TD> N/A </TD></TR>
-<TR align="Left" valign="center"><TD><B>Response on Success</B></TD>	<TD> OK </TD></TR>
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Soft Reboot the system. </TD></TR>
 <TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD> SystemReset </TD></TR>
 </TABLE>
 <BR>
+
 
 - <B>LoraSystemMode</B>
 <TABLE>
 <TR align="Left" valign="center">
 	<TD><B>Parameter(s)</B></TD>
 	<TD>
-		inNormal   =>   For user normal application(defult)<BR>
-		inTD       =>   Demo Ping/Pong test<BR>
-		inPV       =>   Reserved for production test<BR>
-		inIdle     =>   Reserved for RD use<BR>
+		<B>inNormal</B>   =>   For user normal application(defult)<BR>
+		<B>inTD</B>       =>   Demo Ping/Pong test<BR>
+		<B>inPV</B>       =>   Reserved for production test<BR>
+		<B>inIdle</B>     =>   Reserved for RD use<BR>
 	</TD>
 </TR>
-<TR align="Left" valign="center"><TD><B>Response on Success</B></TD>	<TD> OK </TD></TR>
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Setup system operation mode. </TD></TR>
 <TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD> LoraSystemMode  inNormal </TD></TR>
+</TABLE>
+<BR>
+
+- <B>LoraGetSystemMode</B>
+<TABLE>
+<TR align="Left" valign="center"><TD><B>Parameter(s)</B></TD>		<TD> N/A </TD></TR>
+<TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Query system operation mode. </TD></TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>
+	<TD>
+		Command:	<B>LoraGetSystemMode</B><BR>
+		Response:	<B>SystemOperationMode=InNormal</B>
+	</TD>
+</TR>
 </TABLE>
 <BR>
 
@@ -34,12 +46,56 @@
 <TR align="Left" valign="center">
 	<TD><B>Parameter(s)</B></TD>
 	<TD>
-		<B>MASTER</B> or <B>SLAVE</B> (default)<BR>
+		<B>MASTER</B><BR>
+		or<BR>
+		<B>SLAVE</B> (default)<BR>
 	</TD>
 </TR>
-<TR align="Left" valign="center"><TD><B>Response on Success</B></TD>	<TD> OK </TD></TR>
-<TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Configure the role of LoRa device. </TD></TR>
+<TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Configure the role of device. </TD></TR>
 <TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD> LoraMode  MASTER </TD></TR>
+</TABLE>
+<BR>
+
+
+- <B>LoraGetMode</B>
+<TABLE>
+<TR align="Left" valign="center"><TD><B>Parameter(s)</B></TD>		<TD> N/A </TD></TR>
+<TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Query the role of device. </TD></TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>
+	<TD>
+		Command:	<B>LoraGetMode</B><BR>
+		Response:	<B>LoraMode=MASTER</B>
+	</TD>
+</TR>
+</TABLE>
+<BR>
+
+
+- <B>GetFWVersion</B>
+<TABLE>
+<TR align="Left" valign="center"><TD><B>Parameter(s)</B></TD>		<TD> N/A </TD></TR>
+<TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Query the version of application firmware. </TD></TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>
+	<TD>
+		Command:	<B>GetFWVersion</B><BR>
+		Response:	<I>FirmwareVersion=<B>1.4.2017.0110</B> for <B>SX1276</B></I>
+	</TD>
+</TR>
+</TABLE>
+<BR>
+
+
+- <B>GetUUID</B>
+<TABLE>
+<TR align="Left" valign="center"><TD><B>Parameter(s)</B></TD>		<TD> N/A </TD></TR>
+<TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Query the role of device. </TD></TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>
+	<TD>
+		Command:	<B>LoraGetMode</B><BR>
+		Response:	<B>LoraMode=MASTER</B>
+	</TD>
+</TR>
+
 </TABLE>
 <BR>
 
