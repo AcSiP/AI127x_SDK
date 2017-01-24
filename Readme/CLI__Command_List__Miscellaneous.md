@@ -33,8 +33,10 @@
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Query system operation mode. </TD></TR>
 <TR align="Left" valign="center"><TD><B>Example</B></TD>
 	<TD>
-		Command:<BR>	<I>LoraGetSystemMode</I><BR>
-		Response:<BR>	<I>SystemOperationMode=InNormal</I>
+		Command:<BR>
+		&nbsp; &nbsp;	<I>LoraGetSystemMode</I><BR>
+		Response:<BR>
+		&nbsp; &nbsp;	<I>SystemOperationMode=InNormal</I>
 	</TD>
 </TR>
 </TABLE>
@@ -63,8 +65,10 @@
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Query the role of device. </TD></TR>
 <TR align="Left" valign="center"><TD><B>Example</B></TD>
 	<TD>
-		Command:<BR>	<I>LoraGetMode</I><BR>
-		Response:<BR>	<I>LoraMode=MASTER</I>
+		Command:<BR>
+		&nbsp; &nbsp;	<I>LoraGetMode</I><BR>
+		Response:<BR>
+		&nbsp; &nbsp;	<I>LoraMode=MASTER</I>
 	</TD>
 </TR>
 </TABLE>
@@ -77,8 +81,10 @@
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Query the version of application firmware. </TD></TR>
 <TR align="Left" valign="center"><TD><B>Example</B></TD>
 	<TD>
-		Command:<BR>	<I>GetFWVersion</I><BR>
-		Response:<BR>	<I>FirmwareVersion=<B>1.4.2017.0110</B> for <B>SX1276</B></I>
+		Command:<BR>
+		&nbsp; &nbsp;	<I>GetFWVersion</I><BR>
+		Response:<BR>
+		&nbsp; &nbsp;	<I>FirmwareVersion=<B>1.4.2017.0110</B> for <B>SX1276</B></I>
 	</TD>
 </TR>
 </TABLE>
