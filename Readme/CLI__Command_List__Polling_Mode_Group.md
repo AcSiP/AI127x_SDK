@@ -255,7 +255,7 @@
 		<BR>
 		This method is used for slave-end device.<BR>
 		<BR>
-		The slave will be buffered the private data <B>until requesting</B>.<BR>
+		The slave buffers the private data <B>until requesting</B>.<BR>
 		If the buffer is not empty, this command returns failure.
 	</TD>
 </TR>
