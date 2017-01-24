@@ -88,11 +88,11 @@
 - <B>GetUUID</B>
 <TABLE>
 <TR align="Left" valign="center"><TD><B>Parameter(s)</B></TD>		<TD> N/A </TD></TR>
-<TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Query the role of device. </TD></TR>
+<TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Query the (MCU) unique device ID by STM. </TD></TR>
 <TR align="Left" valign="center"><TD><B>Example</B></TD>
 	<TD>
-		Command:<BR>	<I><LoraGetMode</I><BR>
-		Response:<BR>	<I>LoraMode=MASTER</I>
+		Command:<BR>	<I>GetUUID</I><BR>
+		Response:<BR>	<I>UUID=3736393834335109006b0052</I>
 	</TD>
 </TR>
 

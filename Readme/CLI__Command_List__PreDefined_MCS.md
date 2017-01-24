@@ -35,7 +35,7 @@ There are several pre-defined sensitivity mode
 </TR>
 <TR align="Left" valign="center"><TD><B>Description</B></TD>
 <TD>
-	Use pre-defined modulation / sensitivity mode.<BR>
+	Use pre-defined modulation / sensitivity mode.<BR><BR>
 	<TABLE>
 	<TR align="center" valign="center">
 		<TD><B> Sensitivity </B></TD>
