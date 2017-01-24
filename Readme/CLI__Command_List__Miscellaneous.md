@@ -92,9 +92,9 @@
 <TR align="Left" valign="center"><TD><B>Example</B></TD>
 	<TD>
 		Command:<BR>
-		&#9;	<I>GetUUID</I><BR>
+		&nbsp; &nbsp;	<I>GetUUID</I><BR>
 		Response:<BR>
-		&#9;	<I>UUID=3736393834335109006b0052</I>
+		&nbsp; &nbsp;	<I>UUID=3736393834335109006b0052</I>
 	</TD>
 </TR>
 
