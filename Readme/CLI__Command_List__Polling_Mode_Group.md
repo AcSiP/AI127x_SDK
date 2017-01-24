@@ -136,7 +136,7 @@
 		The duration (in second) of slave device sleeping.<BR>
 		<BR>
 		The alias in Base64 encoding of slave device.<BR>
-		The quotation marks must be used for encoded Base64 string.
+		The quotation marks <B>MUST</B> be used for encoded Base64 string.
 	</TD>
 </TR>
 <TR align="Left" valign="center"><TD><B>Description</B></TD>
@@ -207,6 +207,60 @@
 </TR>
 </TABLE>
 <BR>
+
+- <B>LoraNodeData</B>  (for Master)
+<TABLE>
+<TR align="Left" valign="center"><TD><B>Parameter(s)</B></TD>
+	<TD>
+		Slave device address of AcSiP's polling protocol.<BR>
+		<BR>
+		The private payload in Base64 encoding of slave device.<BR>
+		The quotation marks is <B>NOT<B> used for encoded Base64 string.
+	</TD>
+</TR>
+<TR align="Left" valign="center"><TD><B>Description</B></TD>
+	<TD>
+		Ask master device polls the slave device to fetch private data from slave.<BR>
+		<BR>
+		This command is used for master-end device.<BR>
+		<BR>
+		The master will poll target slave device with data exchange request(Master_AcsipProtocol_Data).<BR>
+		The slave will send the private data <B>while requesting</B>.
+	</TD>
+</TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>
+	<TD>
+		Command:<BR>
+		&nbsp; &nbsp;	<I>LoraNodeData 1e002c Qwer1ad8</I><BR>
+		Response:<BR>
+		(On the Slave-End)
+		&nbsp; &nbsp;	<I>LoraGateWayAddr=6b0052  DataLength=8  Data=Qwer1ad8</I>
+	</TD>
+</TR>
+</TABLE>
+<BR>
+
+
+- <B>LoraNodeData</B>  (for Slave)
+<TABLE>
+<TR align="Left" valign="center"><TD><B>Parameter(s)</B></TD>
+	<TD>
+		The private payload in Base64 encoding of slave device.<BR>
+		The quotation marks is <B>NOT<B> used for encoded Base64 string.
+	</TD>
+</TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>
+	<TD>
+		Command:<BR>
+		&nbsp; &nbsp;	<I>LoraNodeData Abcd12345678</I><BR>
+		Response:<BR>
+		(On the Master-End)
+		&nbsp; &nbsp;	<I>Node=1e002c  DataLength=12  Data=Abcd12345678</I>
+	</TD>
+</TR>
+</TABLE>
+<BR>
+
 
 <BR>
 <BR>
