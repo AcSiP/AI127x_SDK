@@ -222,7 +222,7 @@
 	<TD>
 		Ask master device polls the slave device to fetch private data from slave.<BR>
 		<BR>
-		This command is used for master-end device.<BR>
+		This method is used for master-end device.<BR>
 		<BR>
 		The master will poll target slave device with data exchange request(Master_AcsipProtocol_Data).<BR>
 		The slave will send the private data <B>while requesting</B>.
@@ -247,6 +247,16 @@
 	<TD>
 		The private payload in Base64 encoding of slave device.<BR>
 		The quotation marks is <B>NOT<B> used for encoded Base64 string.
+	</TD>
+</TR>
+<TR align="Left" valign="center"><TD><B>Description</B></TD>
+	<TD>
+		Prepare private data and wait for polling by master.<BR>
+		<BR>
+		This method is used for slave-end device.<BR>
+		<BR>
+		The slave will buffer the private data <B>until requesting</B>.<BR>
+		If the buffer is not empty, this command returns failure.
 	</TD>
 </TR>
 <TR align="Left" valign="center"><TD><B>Example</B></TD>
