@@ -29,13 +29,13 @@ There are several pre-defined sensitivity mode
 <TR align="Left" valign="center">
 	<TD><B>Parameter(s)</B></TD>
 	<TD>
-		HopOn   =>   Enable frequency hopping<BR>
-		HopOff  =>   Disable frequency hopping<BR>
+		HopOn     => Enable frequency hopping<BR>
+		HopOff    => Disable frequency hopping<BR>
 	</TD>
 </TR>
 <TR align="Left" valign="center"><TD><B>Description</B></TD>
 <TD>
-	Use pre-defined modulation / sensitivity mode.
+	Use pre-defined modulation / sensitivity mode.<BR>
 	<TABLE>
 	<TR align="center" valign="center">
 		<TD><B> Sensitivity </B></TD>
@@ -66,7 +66,7 @@ There are several pre-defined sensitivity mode
 	
 </TD>
 </TR>
-<TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD> LoraSF10BW125RS132  HopOn </TD></TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD><I>LoraSF10BW125RS132    HopOn</I></TD></TR>
 </TABLE>
 <BR>
 

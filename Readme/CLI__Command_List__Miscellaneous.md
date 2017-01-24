@@ -6,7 +6,7 @@
 <TABLE>
 <TR align="Left" valign="center"><TD><B>Parameter(s)</B></TD>		<TD> N/A </TD></TR>
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Soft Reboot the system. </TD></TR>
-<TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD> SystemReset </TD></TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD><I>SystemReset</I></TD></TR>
 </TABLE>
 <BR>
 
@@ -23,7 +23,7 @@
 	</TD>
 </TR>
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Setup system operation mode. </TD></TR>
-<TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD> LoraSystemMode  inNormal </TD></TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD><I>LoraSystemMode  inNormal</I></TD></TR>
 </TABLE>
 <BR>
 
@@ -33,8 +33,8 @@
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Query system operation mode. </TD></TR>
 <TR align="Left" valign="center"><TD><B>Example</B></TD>
 	<TD>
-		Command:<BR>	<B>LoraGetSystemMode</B><BR>
-		Response:<BR>	<B>SystemOperationMode=InNormal</B>
+		Command:<BR>	<I>LoraGetSystemMode</I><BR>
+		Response:<BR>	<I>SystemOperationMode=InNormal</I>
 	</TD>
 </TR>
 </TABLE>
@@ -52,7 +52,7 @@
 	</TD>
 </TR>
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Configure the role of device. </TD></TR>
-<TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD> LoraMode  MASTER </TD></TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD><I>LoraMode  MASTER</I></TD></TR>
 </TABLE>
 <BR>
 
@@ -63,8 +63,8 @@
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Query the role of device. </TD></TR>
 <TR align="Left" valign="center"><TD><B>Example</B></TD>
 	<TD>
-		Command:<BR>	<B>LoraGetMode</B><BR>
-		Response:<BR>	<B>LoraMode=MASTER</B>
+		Command:<BR>	<I>LoraGetMode</I><BR>
+		Response:<BR>	<I>LoraMode=MASTER</I>
 	</TD>
 </TR>
 </TABLE>
@@ -77,7 +77,7 @@
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Query the version of application firmware. </TD></TR>
 <TR align="Left" valign="center"><TD><B>Example</B></TD>
 	<TD>
-		Command:<BR>	<B>GetFWVersion</B><BR>
+		Command:<BR>	<I>GetFWVersion</I><BR>
 		Response:<BR>	<I>FirmwareVersion=<B>1.4.2017.0110</B> for <B>SX1276</B></I>
 	</TD>
 </TR>
@@ -91,8 +91,8 @@
 <TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Query the role of device. </TD></TR>
 <TR align="Left" valign="center"><TD><B>Example</B></TD>
 	<TD>
-		Command:<BR>	<B>LoraGetMode</B><BR>
-		Response:<BR>	<B>LoraMode=MASTER</B>
+		Command:<BR>	<I><LoraGetMode</I><BR>
+		Response:<BR>	<I>LoraMode=MASTER</I>
 	</TD>
 </TR>
 
