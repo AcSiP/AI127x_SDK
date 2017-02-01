@@ -107,6 +107,26 @@
 </TABLE>
 <BR>
 
+
+- <B>SleepStop</B>
+<TABLE>
+<TR align="Left" valign="center"><TD><B>Parameter(s)</B></TD>
+	<TD>
+		Desired period of sleep time in seconds.
+	</TD>
+</TR>
+<TR align="Left" valign="center"><TD><B>Description</B></TD>
+	<TD>
+		Make device sleep a while.<BR>
+		It will wake up after the specific sleep time.<BR>
+		The maximun time period is 86400 seconds (24 Hours)
+	</TD>
+</TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD><I>SleepStop  300</I></TD></TR>
+
+</TABLE>
+<BR>
+
 <BR>
 <BR>
 [Back to Index](CLI__Command_List__Index.md)
