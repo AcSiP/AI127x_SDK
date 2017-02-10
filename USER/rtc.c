@@ -335,6 +335,7 @@ static void	RTC__Process_ISR( void )
 	uint16_t	i;
 	bool		flag_need_build_pool = true;
 
+	Running_TimeCount++;
 	for( i = 0; i < MAX_LoraNodeNum; i++ ){
 		if( LoraNodeDevice[i] && DeviceNodeSleepAndRandomHop[i] ){
 			if( DeviceNodeSleepAndRandomHop[i]->EventCountPriority2 ){
