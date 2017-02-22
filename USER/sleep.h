@@ -42,17 +42,8 @@ typedef struct sDeviceNodeSleepAndRandomHop {
 	uint8_t			LoraHoppingStartChannel;
 
 	// for Lora Event
-	tLoraNodeEvent *	EventHeadPriority0;
-	tLoraNodeEvent *	EventTailPriority0;
-	uint8_t			EventCountPriority0;
-
-	tLoraNodeEvent *	EventHeadPriority1;
-	tLoraNodeEvent *	EventTailPriority1;
-	uint8_t			EventCountPriority1;
-
-	tLoraNodeEvent *	EventHeadPriority2;
-	tLoraNodeEvent *	EventTailPriority2;
-	uint8_t			EventCountPriority2;
+	tLoraNodeEvent *	Event_Head[ LoraEventPriorities ];
+	uint8_t			Event_Count[ LoraEventPriorities ];
 } tDeviceNodeSleepAndRandomHop;
 
 /* Exported constants --------------------------------------------------------*/

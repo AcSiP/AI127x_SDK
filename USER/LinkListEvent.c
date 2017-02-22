@@ -34,302 +34,182 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+tLoraNodeEvent *	Event_Head[ LoraEventPriorities ];
+uint8_t			Event_Count[ LoraEventPriorities ];
+
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
-tLoraNodeEvent				*EventHeadPriority0, *EventHeadPriority1, *EventHeadPriority2;
-tLoraNodeEvent				*EventTailPriority0, *EventTailPriority1, *EventTailPriority2;
-uint8_t					EventCountPriority0, EventCountPriority1, EventCountPriority2;
-static tLoraNodeEvent *			temp = NULL;
+
+
 extern __IO tLoraRunningEvent		LoraRunningEvent;
-extern tLoraDeviceNode *		LoraNodeDevice[MAX_LoraNodeNum];			// for MASTER
-extern tDeviceNodeSleepAndRandomHop *	DeviceNodeSleepAndRandomHop[MAX_LoraNodeNum];		// for MASTER
+extern tLoraDeviceNode *		LoraNodeDevice[ MAX_LoraNodeNum ];			// for MASTER
+extern tDeviceNodeSleepAndRandomHop *	DeviceNodeSleepAndRandomHop[ MAX_LoraNodeNum ];		// for MASTER
 
 
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_Initialization
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
-void		LoraLinkListEvent_Initialization(void)
+void		LoraLinkListEvent_Initialization( void )
 {
-	EventHeadPriority0 = NULL;
-	EventTailPriority0 = NULL;
-	EventCountPriority0 = 0;
+	uint8_t		i;
 
-	EventHeadPriority1 = NULL;
-	EventTailPriority1 = NULL;
-	EventCountPriority1 = 0;
-
-	EventHeadPriority2 = NULL;
-	EventTailPriority2 = NULL;
-	EventCountPriority2 = 0;
+	for( i = 0; i < LoraEventPriorities; i++ ){
+		Event_Head[i] = NULL;
+		Event_Count[i] = 0;
+	}
 }
 
 
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_CreateEvent
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
-bool		LoraLinkListEvent_CreateEvent(uint8_t Priority, uint8_t Num, uint8_t Event, uint8_t *Addr, uint8_t *Data, uint8_t *DataSize)
+tLoraNodeEvent *	LoraLinkListEvent__Get_Tail( tLoraNodeEvent *event_chain )
 {
-	// int8_t		str[5];    //test output
-	uint8_t			count;
-	// tLoraNodeEvent *	temp = NULL;
-	tLoraNodeEvent **	EventHead = NULL;
-	tLoraNodeEvent **	EventTail = NULL;
-	uint8_t *		EventCount = NULL;
+	tLoraNodeEvent	*ret;
+	tLoraNodeEvent	*tmp;
 
-	temp = NULL;
-	switch(Priority) {
-	case LoraEventPriority0:
-		EventHead = &EventHeadPriority0;
-		EventTail = &EventTailPriority0;
-		EventCount = &EventCountPriority0;
-		break;
+	if( ! event_chain ) return( NULL );
 
-	case LoraEventPriority1:
-		EventHead = &EventHeadPriority1;
-		EventTail = &EventTailPriority1;
-		EventCount = &EventCountPriority1;
-		break;
-
-	case LoraEventPriority2:
-		EventHead = &EventHeadPriority2;
-		EventTail = &EventTailPriority2;
-		EventCount = &EventCountPriority2;
-		break;
-
-	default:
-		break;
+	ret = event_chain;
+	while( ret->Next ){
+		tmp = ret->Next;
+		ret = tmp;
 	}
 
-	if(*EventCount == 0) {
-		temp = (tLoraNodeEvent *) malloc(sizeof(tLoraNodeEvent));
-		if(temp != NULL) {
-			temp->NodeNumber = Num;
-			temp->NodeEvent = Event;
-			temp->NodeAddr[0] = Addr[0];
-			temp->NodeAddr[1] = Addr[1];
-			temp->NodeAddr[2] = Addr[2];
-			if((DataSize != NULL) && (Data != NULL)) {
-				temp->NodeData = (uint8_t *) malloc((*DataSize) * sizeof(uint8_t));
-				if(temp->NodeData != NULL) {
-					temp->NodeDataSize = *DataSize;
-					for(count = 0 ; count < *DataSize ; count++ ) temp->NodeData[count] = Data[count];
-				} else {
-					temp->NodeData = NULL;
-					temp->NodeDataSize = 0;
-				}
-			} else  {
-				temp->NodeData = NULL;
-				temp->NodeDataSize = 0;
-			}
+	return( ret );
+}
 
-			*EventHead = *EventTail = temp;
-			(*EventHead)->Next = NULL;
-			(*EventHead)->Previous = NULL;
-			*EventCount += 1;
-			return true;
+
+uint16_t		LoraLinkListEvent__Count_Events( tLoraNodeEvent *event_chain )
+{
+	tLoraNodeEvent	*p;
+	tLoraNodeEvent	*tmp;
+	uint16_t	r;
+
+	if( ! event_chain ) return( 0 );
+
+	p = event_chain;
+	r = 1;
+	while( p->Next ){
+		r++;
+		tmp = p->Next;
+		p = tmp;
+	}
+
+	return( r );
+}
+
+
+bool			LoraLinkListEvent__Append( tLoraNodeEvent *event_chain, tLoraNodeEvent *event_node )
+{
+	tLoraNodeEvent	*tail;
+
+	if( ! event_node ) return( false );
+
+	tail = LoraLinkListEvent__Get_Tail( event_chain );
+	if( ! tail ) return( false );
+
+	tail->Next = event_node;
+	event_node->Previous = tail;
+	return( true );
+}
+
+
+void			LoraLinkListEvent__Free_Event( tLoraNodeEvent *event )
+{
+	if( event->NodeData ){
+		free( event->NodeData );
+		event->NodeData = NULL;
+	}
+	free( event );
+}
+
+
+tLoraNodeEvent *	LoraLinkListEvent__Malloc_Event( uint8_t Num, uint8_t Event, const uint8_t *Addr, const uint8_t *Data, uint8_t DataSize )
+{
+	tLoraNodeEvent *	temp;
+	uint8_t			i;
+
+	temp = (tLoraNodeEvent *) malloc( sizeof(tLoraNodeEvent) );
+	if( ! temp ) return( NULL );		// malloc for link node fail
+
+	temp->NodeNumber = Num;
+	temp->NodeEvent = Event;
+	temp->NodeAddr[0] = Addr[0];
+	temp->NodeAddr[1] = Addr[1];
+	temp->NodeAddr[2] = Addr[2];
+	temp->NodeData = NULL;
+	temp->NodeDataSize = 0;
+	temp->Next = NULL;
+	temp->Previous = NULL;
+
+	if( DataSize && Data ){
+		temp->NodeData = (uint8_t *) malloc( DataSize );
+		if( ! temp->NodeData ){		// malloc for payload fail
+			free( temp );
+			return( NULL );
 		}
-	} else {
-		if((*EventCount > 0) && (*EventCount < MAX_LoraEventCount)) {
-			temp = (tLoraNodeEvent *) malloc(sizeof(tLoraNodeEvent));
-			if(temp != NULL) {
-				temp->NodeNumber = Num;
-				temp->NodeEvent = Event;
-				temp->NodeAddr[0] = Addr[0];
-				temp->NodeAddr[1] = Addr[1];
-				temp->NodeAddr[2] = Addr[2];
-				if((DataSize  != NULL) && (Data != NULL)) {
-					temp->NodeData = (uint8_t *) malloc((*DataSize) * sizeof(uint8_t));
-					if(temp->NodeData != NULL) {
-						temp->NodeDataSize = *DataSize;
-						for(count = 0 ; count < *DataSize ; count++) temp->NodeData[count] = Data[count];
-					} else {
-						temp->NodeData = NULL;
-						temp->NodeDataSize = 0;
-					}
-				} else  {
-					temp->NodeData = NULL;
-					temp->NodeDataSize = 0;
-				}
 
-				(*EventTail)->Next = temp;
-				temp->Previous = *EventTail;
-				temp->Next = NULL;
-				*EventTail = temp;
-				*EventCount += 1;
-				return true;
-			}
+		temp->NodeDataSize = DataSize;
+		for( i = 0 ; i < DataSize ; i++ ) temp->NodeData[i] = Data[i];
+	}
+
+	return( temp );
+}
+
+
+bool		LoraLinkListEvent_CreateEvent( uint8_t priority, uint8_t Num, uint8_t Event, const uint8_t *Addr, const uint8_t *Data, uint8_t *DataSize )
+{
+	uint16_t		n;
+	tLoraNodeEvent *	temp = NULL;
+	tLoraNodeEvent **	pEvent_Head;
+	uint8_t *		pEvent_Count;
+
+	pEvent_Head = & Event_Head[ priority ];
+	pEvent_Count = & Event_Count[ priority ];
+
+	n = LoraLinkListEvent__Count_Events( *pEvent_Head );
+	if( ( n + 1 ) < MAX_LoraEventCount ){
+		temp = LoraLinkListEvent__Malloc_Event( Num, Event, Addr, Data, *DataSize );
+		if( ! temp ) return( false );
+
+		if( ! LoraLinkListEvent__Append( *pEvent_Head, temp ) ){
+			*pEvent_Head = temp;
+			*pEvent_Count = 1;
+			return( true );
 		}
-	}
 
-	// Console_Output_String( "LoraLinkListEvent_CreateEvent()\r\n" );		// test output
-	// snprintf( (char *)str, sizeof(str), "%02d", EventCountPriority2 );		// test output
-	// Console_Output_String( "EventCountPriority2=" );				// test output
-	// Console_Output_String( (const char *)str );					// test output
-	// Console_Output_String( "\r\n" );						// test output
-	return false;
+		*pEvent_Count += 1;
+		return( true );
+	}
+	return( false );
 }
 
 
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_DestroyHeadEvent
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
-void		LoraLinkListEvent_DestroyHeadEvent(uint8_t Priority)
+void		LoraLinkListEvent_DestroyHeadEvent( uint8_t priority )
 {
-	// int8_t		str[5];		// test output
-	// tLoraNodeEvent *	temp = NULL;
-	tLoraNodeEvent **	EventHead = NULL;
-	tLoraNodeEvent **	EventTail = NULL;
-	uint8_t *		EventCount = NULL;
+	tLoraNodeEvent *	temp = NULL;
+	tLoraNodeEvent **	pEvent_Head;
+	uint8_t *		pEvent_Count;
 
-	temp = NULL;
-	switch(Priority) {
-	case LoraEventPriority0:
-		EventHead = &EventHeadPriority0;
-		EventTail = &EventTailPriority0;
-		EventCount = &EventCountPriority0;
-		break;
+	pEvent_Head = & Event_Head[ priority ];
+	pEvent_Count = & Event_Count[ priority ];
 
-	case LoraEventPriority1:
-		EventHead = &EventHeadPriority1;
-		EventTail = &EventTailPriority1;
-		EventCount = &EventCountPriority1;
-		break;
+	if( *pEvent_Count == 0 ) return;
 
-	case LoraEventPriority2:
-		EventHead = &EventHeadPriority2;
-		EventTail = &EventTailPriority2;
-		EventCount = &EventCountPriority2;
-		break;
-
-	default:
-		break;
-	}
-
-	if(*EventCount == 0) return;
-	if(*EventCount == 1) {
-		temp = *EventHead;
-		*EventHead = NULL;
-		*EventTail = NULL;
-		*EventCount = 0;
+	if( *pEvent_Count == 1 ){
+		temp = *pEvent_Head;
+		*pEvent_Head = NULL;
+		*pEvent_Count = 0;
 	} else {
-		temp = *EventHead;
-		*EventHead = temp->Next;
-		(*EventHead)->Previous = NULL;
-		*EventCount -= 1;
+		temp = *pEvent_Head;
+		*pEvent_Head = temp->Next;
+		(*pEvent_Head)->Previous = NULL;
+		*pEvent_Count -= 1;
 	}
 
-	free(temp->NodeData);
-	free(temp);
-
-	// Console_Output_String( "LoraLinkListEvent_DestroyHeadEvent()\r\n" );		// test output
-	// snprintf( (char *)str, sizeof(str), "%02d", EventCountPriority2);		// test output
-	// Console_Output_String( "EventCountPriority2=" );				// test output
-	// Console_Output_String( (const char *)str );					// test output
-	// Console_Output_String( "\r\n" );						// test output
+	LoraLinkListEvent__Free_Event( temp );
 }
 
 
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_DestroyTailEvent
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
-void		LoraLinkListEvent_DestroyTailEvent(uint8_t Priority)
-{
-	// int8_t		str[5];		// test output
-	// tLoraNodeEvent *	temp = NULL;
-	tLoraNodeEvent **	EventHead = NULL;
-	tLoraNodeEvent **	EventTail = NULL;
-	uint8_t *		EventCount = NULL;
-
-	temp = NULL;
-	switch(Priority) {
-	case LoraEventPriority0:
-		EventHead = &EventHeadPriority0;
-		EventTail = &EventTailPriority0;
-		EventCount = &EventCountPriority0;
-		break;
-
-	case LoraEventPriority1:
-		EventHead = &EventHeadPriority1;
-		EventTail = &EventTailPriority1;
-		EventCount = &EventCountPriority1;
-		break;
-
-	case LoraEventPriority2:
-		EventHead = &EventHeadPriority2;
-		EventTail = &EventTailPriority2;
-		EventCount = &EventCountPriority2;
-		break;
-
-	default:
-		break;
-	}
-
-	if(*EventCount == 0) return;
-	if(*EventCount == 1) {
-		temp = *EventTail;
-		*EventHead = NULL;
-		*EventTail = NULL;
-		*EventCount = 0;
-	} else {
-		temp = *EventTail;
-		*EventTail = temp->Previous;
-		(*EventTail)->Next = NULL;
-		*EventCount -= 1;
-	}
-
-	free(temp->NodeData);
-	free(temp);
-
-	// Console_Output_String( "LoraLinkListEvent_DestroyTailEvent()\r\n" );		// test output
-	// snprintf( (char *)str, sizeof(str), "%02d", EventCountPriority2);		// test output
-	// Console_Output_String( "EventCountPriority2=" );				// test output
-	// Console_Output_String( (const char *)str );					// test output
-	// Console_Output_String( "\r\n" );						//test output
-}
-
-
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_ComputeEvent
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
 uint8_t		LoraLinkListEvent_ComputeEvent(tLoraNodeEvent *EventHead, uint8_t *EventCount)
 {
 	uint8_t			count;
-	// tLoraNodeEvent *	temp;
+	tLoraNodeEvent *	temp;
 
 	temp = EventHead;
 	count = 0;
@@ -344,83 +224,23 @@ uint8_t		LoraLinkListEvent_ComputeEvent(tLoraNodeEvent *EventHead, uint8_t *Even
 }
 
 
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_isEventPriority0BufferFull
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
-bool		LoraLinkListEvent_isEventPriority0BufferFull(void)
-{
-	if(LoraLinkListEvent_ComputeEvent(EventHeadPriority0, &EventCountPriority0) >= MAX_LoraEventCount) return true;
-	return false;
-}
-
-
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_isEventPriority1BufferFull
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
-bool		LoraLinkListEvent_isEventPriority1BufferFull(void)
-{
-	if(LoraLinkListEvent_ComputeEvent(EventHeadPriority1, &EventCountPriority1) >= MAX_LoraEventCount) return true;
-	return false;
-}
-
-
-
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_isEventPriority2BufferFull
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
-bool		LoraLinkListEvent_isEventPriority2BufferFull(void)
-{
-	if(LoraLinkListEvent_ComputeEvent(EventHeadPriority2, &EventCountPriority2) >= MAX_LoraEventCount) return true;
-	return false;
-}
-
-
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_BuildLoraEvent
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
-bool		LoraLinkListEvent_BuildLoraEvent(uint8_t Priority, uint8_t Num, uint8_t Event, uint8_t *Addr, uint8_t *Data, uint8_t *DataSize)
+bool		LoraLinkListEvent_BuildLoraEvent( uint8_t Priority, uint8_t Num, uint8_t Event, const uint8_t *Addr, const uint8_t *Data, uint8_t *DataSize )
 {
 	bool	result = false;
 
 	switch(Event) {
 	case Master_AcsipProtocol_Broadcast:
 	case Master_AcsipProtocol_Join:
-		result = LoraLinkListEvent_CreateEvent(Priority, Num, Event, Addr, Data, DataSize);
+		result = LoraLinkListEvent_CreateEvent( Priority, Num, Event, Addr, Data, DataSize );
 		break;
 
 	case Master_AcsipProtocol_Poll:
 	case Master_AcsipProtocol_Data:
 	case Master_AcsipProtocol_Leave:
 	case Master_AcsipProtocol_Interval:
-		if(DeviceNodeSleepAndRandomHop[Num] != NULL) result = LoraLinkListEvent_CreateNodeEvent(Priority, Num, Event, Data, DataSize);
+		if( DeviceNodeSleepAndRandomHop[Num] ){
+			result = LoraLinkListEvent_CreateNodeEvent(Priority, Num, Event, Data, DataSize);
+		}
 		break;
 
 	default:
@@ -431,295 +251,146 @@ bool		LoraLinkListEvent_BuildLoraEvent(uint8_t Priority, uint8_t Num, uint8_t Ev
 }
 
 
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_DispatcherLoraEvent
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
-bool		LoraLinkListEvent_DispatcherLoraEvent(void)
+void		Copy_NodeEvent_2_RunningEvent( const tLoraNodeEvent *event )
 {
-#pragma O0
-	static int8_t		Priority0Num = -1, Priority1Num = -1, Priority2Num = -1;
-	int8_t *		PriorityNum;
-	uint8_t			count, temp;
-	tLoraNodeEvent *	HeadTemp = NULL;
+	uint8_t		i;
 
-	count = 0;
-	PriorityNum = &Priority0Num;
-	while(count < 3) {
-		if(*PriorityNum < 0) {
-			switch(count) {
-			case 0:
-				if((EventHeadPriority0 != NULL) && (EventCountPriority0 > 0)) {
-					HeadTemp = EventHeadPriority0;
-					goto EventPackage;
-				}
-				break;
+	LoraRunningEvent.RunNodeNumber = event->NodeNumber;
+	LoraRunningEvent.RunNodeEvent = event->NodeEvent;
+	LoraRunningEvent.RunNodeAddr[0] = event->NodeAddr[0];
+	LoraRunningEvent.RunNodeAddr[1] = event->NodeAddr[1];
+	LoraRunningEvent.RunNodeAddr[2] = event->NodeAddr[2];
 
-			case 1:
-				if((EventHeadPriority1 != NULL) && (EventCountPriority1 > 0)) {
-					HeadTemp = EventHeadPriority1;
-					goto EventPackage;
-				}
-				break;
-
-			case 2:
-				if((EventHeadPriority2 != NULL) && (EventCountPriority2 > 0)) {
-					HeadTemp = EventHeadPriority2;
-					goto EventPackage;
-				}
-				break;
-
-			default:
-				break;
-			}
-		} else {
-			if((*PriorityNum >= 0) && (*PriorityNum < MAX_LoraNodeNum)) {
-				if((DeviceNodeSleepAndRandomHop[*PriorityNum] != NULL) && (DeviceNodeSleepAndRandomHop[*PriorityNum]->isNowSleeping == false)) {
-					switch(count) {			// 上面判斷式表示 SLAVE 端是存在的,且現在是醒著狀態
-					case 0:
-						if((DeviceNodeSleepAndRandomHop[*PriorityNum]->EventHeadPriority0 != NULL) && (DeviceNodeSleepAndRandomHop[*PriorityNum]->EventCountPriority0 > 0)) {
-							HeadTemp = DeviceNodeSleepAndRandomHop[*PriorityNum]->EventHeadPriority0;
-							goto EventPackage;
-						}
-						break;
-
-					case 1:
-						if((DeviceNodeSleepAndRandomHop[*PriorityNum]->EventHeadPriority1 != NULL) && (DeviceNodeSleepAndRandomHop[*PriorityNum]->EventCountPriority1 > 0)) {
-							HeadTemp = DeviceNodeSleepAndRandomHop[*PriorityNum]->EventHeadPriority1;
-							goto EventPackage;
-						}
-						break;
-
-					case 2:
-						if((DeviceNodeSleepAndRandomHop[*PriorityNum]->EventHeadPriority2 != NULL) && (DeviceNodeSleepAndRandomHop[*PriorityNum]->EventCountPriority2 > 0)) {
-							HeadTemp = DeviceNodeSleepAndRandomHop[*PriorityNum]->EventHeadPriority2;
-							goto EventPackage;
-						}
-						break;
-
-					default:
-						break;
-					}
-				}
-			} else {
-				break;
-			}
+	LoraRunningEvent.RunNodeDataSize = 0;
+	if( event->NodeData ){
+		for( i = 0 ; i < event->NodeDataSize && i < MaxMsgDataSize ; i++ ){
+			LoraRunningEvent.RunNodeData[i] = event->NodeData[i];
 		}
-
-		(*PriorityNum)++;
-		if(*PriorityNum >= MAX_LoraNodeNum) {
-			*PriorityNum = -1;
-			count++;
-			switch(count) {
-			case 0:
-				PriorityNum = &Priority0Num;
-				break;
-
-			case 1:
-				PriorityNum = &Priority1Num;
-				break;
-
-			case 2:
-				PriorityNum = &Priority2Num;
-				break;
-
-			default:
-				break;
-			}
-		}
+		LoraRunningEvent.RunNodeDataSize = i;
 	}
-
-	return false;
-
-EventPackage:
-	if(HeadTemp == NULL) return false;
-
-	LoraRunningEvent.RunNodeNumber = HeadTemp->NodeNumber;
-	LoraRunningEvent.RunNodeEvent = HeadTemp->NodeEvent;
-	LoraRunningEvent.RunNodeAddr[0] = HeadTemp->NodeAddr[0];
-	LoraRunningEvent.RunNodeAddr[1] = HeadTemp->NodeAddr[1];
-	LoraRunningEvent.RunNodeAddr[2] = HeadTemp->NodeAddr[2];
-
-	if((HeadTemp->NodeDataSize > 0) && (HeadTemp->NodeData != NULL)) {
-		LoraRunningEvent.RunNodeDataSize = HeadTemp->NodeDataSize;
-		for(temp = 0 ; temp < HeadTemp->NodeDataSize ; temp++) LoraRunningEvent.RunNodeData[temp] = HeadTemp->NodeData[temp];
-	} else  {
-		LoraRunningEvent.RunNodeDataSize = 0;
-	}
-
-	if(*PriorityNum < 0) {
-		switch(count) {
-		case 0:
-			LoraLinkListEvent_DestroyHeadEvent(LoraEventPriority0);
-			break;
-
-		case 1:
-			LoraLinkListEvent_DestroyHeadEvent(LoraEventPriority1);
-			break;
-
-		case 2:
-			LoraLinkListEvent_DestroyHeadEvent(LoraEventPriority2);
-			break;
-
-		default:
-			return false;
-		}
-	} else {
-		if((*PriorityNum >= 0) && (*PriorityNum < MAX_LoraNodeNum)) {
-			switch(count) {
-			case 0:
-				LoraLinkListEvent_DestroyNodeHeadEvent(LoraEventPriority0, *PriorityNum);
-				break;
-
-			case 1:
-				LoraLinkListEvent_DestroyNodeHeadEvent(LoraEventPriority1, *PriorityNum);
-				break;
-
-			case 2:
-				LoraLinkListEvent_DestroyNodeHeadEvent(LoraEventPriority2, *PriorityNum);
-				break;
-
-			default:
-				return false;
-			}
-		} else {
-			return false;
-		}
-	}
-	return true;
-#pragma O2
 }
 
 
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_LoraEventDelete
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
-void		LoraLinkListEvent_LoraEventDelete(uint8_t Priority, uint8_t *Addr)
+bool		Dispatch__Lora_Event( uint8_t priority )
+{
+	tLoraNodeEvent *	pHead;
+	uint8_t			i;
+//	char			cs[64];
+
+	// Check Non group node event
+	pHead = Event_Head[ priority ];
+	if( pHead ){
+		Copy_NodeEvent_2_RunningEvent( pHead );
+		LoraLinkListEvent_DestroyHeadEvent( priority );
+
+//		snprintf( cs, sizeof(cs), "%d, p=%d \r\n", __LINE__, priority );
+//		Console_Output_String( cs );
+		return( true );
+	}
+
+	// Check group node event
+	for( i = 0; i < MAX_LoraNodeNum; i++ ){
+		if( ! DeviceNodeSleepAndRandomHop[i] ) continue;			// Slave is not exist
+		if( DeviceNodeSleepAndRandomHop[i]->isNowSleeping ) continue;		// Slave is sleeping
+
+		pHead = DeviceNodeSleepAndRandomHop[i]->Event_Head[ priority ];
+		if( pHead ){
+			Copy_NodeEvent_2_RunningEvent( pHead );
+			LoraLinkListEvent_DestroyNodeHeadEvent( priority, i );
+
+//			if( i == 0 ) Console_Output_String( "\r\n" );
+//			snprintf( cs, sizeof(cs), "%d, p=%d, i=%d \r\n", __LINE__, priority, i );
+//			Console_Output_String( cs );
+			return( true );
+		}
+	}
+
+	return( false );
+}
+
+
+bool		LoraLinkListEvent_DispatcherLoraEvent(void)
+{
+	if( Dispatch__Lora_Event( LoraEventPriority0 ) ) return( true );
+	if( Dispatch__Lora_Event( LoraEventPriority1 ) ) return( true );
+	if( Dispatch__Lora_Event( LoraEventPriority2 ) ) return( true );
+
+	return( false );
+}
+
+
+void		LoraLinkListEvent_LoraEventDelete( uint8_t Priority, const uint8_t *Addr )
 {
 	tLoraNodeEvent *	HeadTemp = NULL;
-	tLoraNodeEvent *	TailTemp = NULL;
 	tLoraNodeEvent *	PreTemp = NULL;
 	tLoraNodeEvent *	NxtTemp = NULL;
+	tLoraNodeEvent *	temp;
 
 	switch(Priority) {
 	case LoraEventPriority0:
-		temp = EventHeadPriority0;
+		temp = Event_Head[0];
 		break;
 
 	case LoraEventPriority1:
-		temp = EventHeadPriority1;
+		temp = Event_Head[1];
 		break;
 
 	case LoraEventPriority2:
-		temp = EventHeadPriority2;
+		temp = Event_Head[2];
 		break;
 
 	default:
 		return;
 	}
 
-	while(temp != NULL) {
+	while( temp ){
 		PreTemp = temp->Previous;
 		NxtTemp = temp->Next;
-		if((temp->NodeAddr[0] == Addr[0]) && (temp->NodeAddr[1] == Addr[1]) && (temp->NodeAddr[2] == Addr[2])) {
-			if(PreTemp != NULL) PreTemp->Next = NxtTemp;
-			if(NxtTemp != NULL) NxtTemp->Previous = PreTemp;
+		if( temp->NodeAddr[0] == Addr[0] && temp->NodeAddr[1] == Addr[1] && temp->NodeAddr[2] == Addr[2] ){
+			if( PreTemp ) PreTemp->Next = NxtTemp;
+			if( NxtTemp ) NxtTemp->Previous = PreTemp;
 
-			free(temp->NodeData);
-			free(temp);
+			LoraLinkListEvent__Free_Event( temp );
 			temp = NxtTemp;
 		} else {
-			if(HeadTemp == NULL) HeadTemp = temp;
-			TailTemp = temp;
+			if( ! HeadTemp ) HeadTemp = temp;
 			temp = NxtTemp;
 		}
-	}
-
-	switch(Priority) {
-	case LoraEventPriority0:
-		EventHeadPriority0 = HeadTemp;
-		EventTailPriority0 = TailTemp;
-		break;
-
-	case LoraEventPriority1:
-		EventHeadPriority1 = HeadTemp;
-		EventTailPriority1 = TailTemp;
-		break;
-
-	case LoraEventPriority2:
-		EventHeadPriority2 = HeadTemp;
-		EventTailPriority2 = TailTemp;
-		break;
-
-	default:
-		break;
 	}
 }
 
 
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_LoraEventReconfirm
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
+
 void		LoraLinkListEvent_LoraEventReconfirm(uint8_t *Addr)
 {
 	LoraLinkListEvent_LoraEventDelete(LoraEventPriority0, Addr);
 	LoraLinkListEvent_LoraEventDelete(LoraEventPriority1, Addr);
 	LoraLinkListEvent_LoraEventDelete(LoraEventPriority2, Addr);
 
-	LoraLinkListEvent_ComputeEvent(EventHeadPriority0, &EventCountPriority0);
-	LoraLinkListEvent_ComputeEvent(EventHeadPriority1, &EventCountPriority1);
-	LoraLinkListEvent_ComputeEvent(EventHeadPriority2, &EventCountPriority2);
+	LoraLinkListEvent_ComputeEvent( Event_Head[0], & Event_Count[0] );
+	LoraLinkListEvent_ComputeEvent( Event_Head[1], & Event_Count[1] );
+	LoraLinkListEvent_ComputeEvent( Event_Head[2], & Event_Count[2] );
 }
 
 
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_LoraEventClearAll
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
 void		LoraLinkListEvent_LoraEventClearAll(void)
 {
-	uint8_t			count;
+	uint8_t			priority;
 	tLoraNodeEvent *	HeadTemp = NULL;
 	tLoraNodeEvent *	NxtTemp = NULL;
 
-	for(count = 0 ; count < 3 ; count++) {
-		switch(count) {
+	for(priority = 0 ; priority < 3 ; priority++) {
+		switch(priority) {
 		case 0:
-			HeadTemp = EventHeadPriority0;
+			HeadTemp = Event_Head[0];
 			break;
 
 		case 1:
-			HeadTemp = EventHeadPriority1;
+			HeadTemp = Event_Head[1];
 			break;
 
 		case 2:
-			HeadTemp = EventHeadPriority2;
+			HeadTemp = Event_Head[2];
 			break;
 
 		default:
@@ -728,156 +399,77 @@ void		LoraLinkListEvent_LoraEventClearAll(void)
 
 		while(HeadTemp != NULL) {
 			NxtTemp = HeadTemp->Next;
-			free(HeadTemp->NodeData);
-			free(HeadTemp);
+			LoraLinkListEvent__Free_Event( HeadTemp );
 			HeadTemp = NxtTemp;
 		}
 	}
 
 ClearAllOut:
-	EventCountPriority0 = 0;
-	EventCountPriority1 = 0;
-	EventCountPriority2 = 0;
+	Event_Count[0] = 0;
+	Event_Count[1] = 0;
+	Event_Count[2] = 0;
 }
 
 
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_CreateNodeEvent
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
-bool		LoraLinkListEvent_CreateNodeEvent(uint8_t Priority, uint8_t Num, uint8_t Event, uint8_t *Data, uint8_t *DataSize)
+bool		LoraLinkListEvent_CreateNodeEvent( uint8_t Priority, uint8_t Num, uint8_t Event, const uint8_t *Data, uint8_t *DataSize )
 {
-	uint8_t			count;
 	tLoraNodeEvent **	EventHead = NULL;
-	tLoraNodeEvent **	EventTail = NULL;
 	uint8_t *		EventCount = NULL;
+	tLoraNodeEvent *	temp;
+	char			cs[48];
 
-	temp = NULL;
-	switch(Priority) {
+	switch( Priority ){
 	case LoraEventPriority0:
-		EventHead = &DeviceNodeSleepAndRandomHop[Num]->EventHeadPriority0;
-		EventTail = &DeviceNodeSleepAndRandomHop[Num]->EventTailPriority0;
-		EventCount = &DeviceNodeSleepAndRandomHop[Num]->EventCountPriority0;
+		EventHead = &DeviceNodeSleepAndRandomHop[Num]->Event_Head[0];
+		EventCount = &DeviceNodeSleepAndRandomHop[Num]->Event_Count[0];
 		break;
 
 	case LoraEventPriority1:
-		EventHead = &DeviceNodeSleepAndRandomHop[Num]->EventHeadPriority1;
-		EventTail = &DeviceNodeSleepAndRandomHop[Num]->EventTailPriority1;
-		EventCount = &DeviceNodeSleepAndRandomHop[Num]->EventCountPriority1;
+		EventHead = &DeviceNodeSleepAndRandomHop[Num]->Event_Head[1];
+		EventCount = &DeviceNodeSleepAndRandomHop[Num]->Event_Count[1];
 		break;
 
 	case LoraEventPriority2:
-		EventHead = &DeviceNodeSleepAndRandomHop[Num]->EventHeadPriority2;
-		EventTail = &DeviceNodeSleepAndRandomHop[Num]->EventTailPriority2;
-		EventCount = &DeviceNodeSleepAndRandomHop[Num]->EventCountPriority2;
+		EventHead = &DeviceNodeSleepAndRandomHop[Num]->Event_Head[2];
+		EventCount = &DeviceNodeSleepAndRandomHop[Num]->Event_Count[2];
 		break;
 
 	default:
-		break;
+		return( false );
 	}
 
-	temp = (tLoraNodeEvent *) malloc(sizeof(tLoraNodeEvent));
-	if(temp != NULL) {
-		temp->NodeNumber = Num;
-		temp->NodeEvent = Event;
-		temp->NodeAddr[0] = LoraNodeDevice[Num]->NodeAddress[0];
-		temp->NodeAddr[1] = LoraNodeDevice[Num]->NodeAddress[1];
-		temp->NodeAddr[2] = LoraNodeDevice[Num]->NodeAddress[2];
-		if((DataSize != NULL) && (Data != NULL)) {
-			temp->NodeData = (uint8_t *) malloc((*DataSize) * sizeof(uint8_t));
-			if(temp->NodeData != NULL) {
-				temp->NodeDataSize = *DataSize;
-				for(count = 0 ; count < *DataSize ; count++) temp->NodeData[count] = Data[count];
-			} else {
-				temp->NodeData = NULL;
-				temp->NodeDataSize = 0;
-			}
-		} else  {
-			temp->NodeData = NULL;
-			temp->NodeDataSize = 0;
-		}
+	temp = LoraLinkListEvent__Malloc_Event( Num, Event, LoraNodeDevice[Num]->NodeAddress, Data, *DataSize );
+	if( ! temp ){
+		snprintf( cs, sizeof(cs), "%d, %s() \r\n", __LINE__, __FUNCTION__ );
+		Console_Output_String( cs );
+		return( false );
 	}
 
-	if(*EventCount == 0) {
-		if(temp != NULL) {
-			*EventHead = *EventTail = temp;
-			(*EventHead)->Next = NULL;
-			(*EventHead)->Previous = NULL;
-			*EventCount += 1;
-			return true;
-		}
+	if( LoraLinkListEvent__Append( *EventHead, temp ) ){
+		*EventCount += 1;
 	} else {
-		if((*EventCount > 0) && (*EventCount < MAX_LoraEventCount)) {
-			if(temp != NULL) {
-				(*EventTail)->Next = temp;
-				temp->Previous = *EventTail;
-				temp->Next = NULL;
-				*EventTail = temp;
-				*EventCount += 1;
-				return true;
-			}
-		} else {
-			free(temp->NodeData);
-			free(temp);
-			temp = NULL;
-		}
+		*EventHead = temp;
+		*EventCount = 1;
 	}
-	return false;
+	return( true );
 }
 
 
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_DestroyNodeHeadEvent
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
-void		LoraLinkListEvent_DestroyNodeHeadEvent(uint8_t Priority, uint8_t Num)
+
+void		LoraLinkListEvent_DestroyNodeHeadEvent( uint8_t priority, uint8_t num )
 {
+	tLoraNodeEvent *	temp = NULL;
 	tLoraNodeEvent **	EventHead = NULL;
-	tLoraNodeEvent **	EventTail = NULL;
 	uint8_t *		EventCount = NULL;
 
-	temp = NULL;
-	switch(Priority) {
-	case LoraEventPriority0:
-		EventHead = &DeviceNodeSleepAndRandomHop[Num]->EventHeadPriority0;
-		EventTail = &DeviceNodeSleepAndRandomHop[Num]->EventTailPriority0;
-		EventCount = &DeviceNodeSleepAndRandomHop[Num]->EventCountPriority0;
-		break;
+	EventHead = & DeviceNodeSleepAndRandomHop[num]->Event_Head[ priority ];
+	EventCount = & DeviceNodeSleepAndRandomHop[num]->Event_Count[ priority ];
 
-	case LoraEventPriority1:
-		EventHead = &DeviceNodeSleepAndRandomHop[Num]->EventHeadPriority1;
-		EventTail = &DeviceNodeSleepAndRandomHop[Num]->EventTailPriority1;
-		EventCount = &DeviceNodeSleepAndRandomHop[Num]->EventCountPriority1;
-		break;
+	if( *EventCount == 0 ) return;
 
-	case LoraEventPriority2:
-		EventHead = &DeviceNodeSleepAndRandomHop[Num]->EventHeadPriority2;
-		EventTail = &DeviceNodeSleepAndRandomHop[Num]->EventTailPriority2;
-		EventCount = &DeviceNodeSleepAndRandomHop[Num]->EventCountPriority2;
-		break;
-
-	default:
-		break;
-	}
-
-	if(*EventCount == 0) return;
-
-	if(*EventCount == 1) {
+	if( *EventCount == 1 ){
 		temp = *EventHead;
 		*EventHead = NULL;
-		*EventTail = NULL;
 		*EventCount = 0;
 	} else {
 		temp = *EventHead;
@@ -886,132 +478,10 @@ void		LoraLinkListEvent_DestroyNodeHeadEvent(uint8_t Priority, uint8_t Num)
 		*EventCount -= 1;
 	}
 
-	free(temp->NodeData);
-	free(temp);
+	LoraLinkListEvent__Free_Event( temp );
 }
 
 
-
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_DestroyNodeTailEvent
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
-void		LoraLinkListEvent_DestroyNodeTailEvent(uint8_t Priority, uint8_t Num)
-{
-	tLoraNodeEvent **	EventHead = NULL;
-	tLoraNodeEvent **	EventTail = NULL;
-	uint8_t *		EventCount = NULL;
-
-
-	temp = NULL;
-	switch(Priority) {
-	case LoraEventPriority0:
-		EventHead = &DeviceNodeSleepAndRandomHop[Num]->EventHeadPriority0;
-		EventTail = &DeviceNodeSleepAndRandomHop[Num]->EventTailPriority0;
-		EventCount = &DeviceNodeSleepAndRandomHop[Num]->EventCountPriority0;
-		break;
-
-	case LoraEventPriority1:
-		EventHead = &DeviceNodeSleepAndRandomHop[Num]->EventHeadPriority1;
-		EventTail = &DeviceNodeSleepAndRandomHop[Num]->EventTailPriority1;
-		EventCount = &DeviceNodeSleepAndRandomHop[Num]->EventCountPriority1;
-		break;
-
-	case LoraEventPriority2:
-		EventHead = &DeviceNodeSleepAndRandomHop[Num]->EventHeadPriority2;
-		EventTail = &DeviceNodeSleepAndRandomHop[Num]->EventTailPriority2;
-		EventCount = &DeviceNodeSleepAndRandomHop[Num]->EventCountPriority2;
-		break;
-
-	default:
-		break;
-	}
-
-	if(*EventCount == 0) return;
-	if(*EventCount == 1) {
-		temp = *EventTail;
-		*EventHead = NULL;
-		*EventTail = NULL;
-		*EventCount = 0;
-	} else {
-		temp = *EventTail;
-		*EventTail = temp->Previous;
-		(*EventTail)->Next = NULL;
-		*EventCount -= 1;
-	}
-
-	free(temp->NodeData);
-	free(temp);
-}
-
-
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_isNodeEventPriority0BufferFull
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
-bool		LoraLinkListEvent_isNodeEventPriority0BufferFull(uint8_t Num)
-{
-	if(LoraLinkListEvent_ComputeEvent(DeviceNodeSleepAndRandomHop[Num]->EventHeadPriority0, &DeviceNodeSleepAndRandomHop[Num]->EventCountPriority0) >= MAX_LoraEventCount) return true;
-	return false;
-}
-
-
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_isNodeEventPriority1BufferFull
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
-bool		LoraLinkListEvent_isNodeEventPriority1BufferFull(uint8_t Num)
-{
-	if(LoraLinkListEvent_ComputeEvent(DeviceNodeSleepAndRandomHop[Num]->EventHeadPriority1, &DeviceNodeSleepAndRandomHop[Num]->EventCountPriority1) >= MAX_LoraEventCount) return true;
-	return false;
-}
-
-
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_isNodeEventPriority2BufferFull
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
-bool		LoraLinkListEvent_isNodeEventPriority2BufferFull(uint8_t Num)
-{
-	if(LoraLinkListEvent_ComputeEvent(DeviceNodeSleepAndRandomHop[Num]->EventHeadPriority2, &DeviceNodeSleepAndRandomHop[Num]->EventCountPriority2) >= MAX_LoraEventCount) return true;
-	return false;
-}
-
-
-/***************************************************************************************************
- *  Function Name: LoraLinkListEvent_LoraNodeEventDelete
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- *  Readme: for MASTER
- **************************************************************************************************/
 void		LoraLinkListEvent_LoraNodeEventDelete(uint8_t Num)
 {
 	tLoraNodeEvent *	HeadTemp = NULL;
@@ -1020,32 +490,29 @@ void		LoraLinkListEvent_LoraNodeEventDelete(uint8_t Num)
 	if(Num >= MAX_LoraNodeNum) return;
 	if(DeviceNodeSleepAndRandomHop[Num] == NULL) return;
 
-	HeadTemp = DeviceNodeSleepAndRandomHop[Num]->EventHeadPriority0;
+	HeadTemp = DeviceNodeSleepAndRandomHop[Num]->Event_Head[0];
 	while(HeadTemp != NULL) {
 		NxtTemp = HeadTemp->Next;
-		free(HeadTemp->NodeData);
-		free(HeadTemp);
+		LoraLinkListEvent__Free_Event( HeadTemp );
 		HeadTemp = NxtTemp;
 	}
-	DeviceNodeSleepAndRandomHop[Num]->EventCountPriority0 = 0;
+	DeviceNodeSleepAndRandomHop[Num]->Event_Count[0] = 0;
 
-	HeadTemp = DeviceNodeSleepAndRandomHop[Num]->EventHeadPriority1;
+	HeadTemp = DeviceNodeSleepAndRandomHop[Num]->Event_Head[1];
 	while(HeadTemp != NULL) {
 		NxtTemp = HeadTemp->Next;
-		free(HeadTemp->NodeData);
-		free(HeadTemp);
+		LoraLinkListEvent__Free_Event( HeadTemp );
 		HeadTemp = NxtTemp;
 	}
-	DeviceNodeSleepAndRandomHop[Num]->EventCountPriority1 = 0;
+	DeviceNodeSleepAndRandomHop[Num]->Event_Count[1] = 0;
 
-	HeadTemp = DeviceNodeSleepAndRandomHop[Num]->EventHeadPriority2;
+	HeadTemp = DeviceNodeSleepAndRandomHop[Num]->Event_Head[2];
 	while(HeadTemp != NULL) {
 		NxtTemp = HeadTemp->Next;
-		free(HeadTemp->NodeData);
-		free(HeadTemp);
+		LoraLinkListEvent__Free_Event( HeadTemp );
 		HeadTemp = NxtTemp;
 	}
-	DeviceNodeSleepAndRandomHop[Num]->EventCountPriority2 = 0;
+	DeviceNodeSleepAndRandomHop[Num]->Event_Count[2] = 0;
 }
 
 /************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

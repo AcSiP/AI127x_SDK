@@ -84,8 +84,6 @@ extern uint8_t				LoraNodeCount;						// for MASTER
 extern tLoraDeviceNode *		LoraGateWay;						// for SLAVE
 extern tDeviceNodeSensor *		MySensor;						// for SLAVE
 
-///////////////// for Lora Event ///////////////////////////
-extern uint8_t			EventCountPriority0, EventCountPriority1, EventCountPriority2;
 
 ///////////////// for Button ///////////////////////////
 extern __IO bool		PowerButton;
@@ -555,7 +553,7 @@ static	bool	MasterLoraEvent_PROCESS( void )
 
 		if(LoraRunningEvent.RunNodeEvent == Master_AcsipProtocol_Poll) {
 			// Console_Output_String( "LoraEvent=Poll\r\n" );		// test output
-			if(EventCountPriority2 > 0) EventCountPriority2--;
+			if( Event_Count[2] > 0 ) Event_Count[2]--;
 		}
 		// Console_Output_String( "MemsetLoraEvent\r\n" );			// test output
 		memset((void *)&LoraRunningEvent, 0, sizeof(tLoraRunningEvent));

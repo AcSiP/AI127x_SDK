@@ -338,7 +338,7 @@ static void	RTC__Process_ISR( void )
 	Running_TimeCount++;
 	for( i = 0; i < MAX_LoraNodeNum; i++ ){
 		if( LoraNodeDevice[i] && DeviceNodeSleepAndRandomHop[i] ){
-			if( DeviceNodeSleepAndRandomHop[i]->EventCountPriority2 ){
+			if( DeviceNodeSleepAndRandomHop[i]->Event_Count[2] ){
 				flag_need_build_pool = false;
 				break;
 			}
@@ -359,7 +359,7 @@ static void	RTC__Process_ISR( void )
 			}
 
 			if( ! DeviceNodeSleepAndRandomHop[i]->isNowSleeping && flag_need_build_pool ){
-//				snprintf( cb, sizeof( cb ), "%d, RandomHop[%d]->P2 = %d \r\n", __LINE__, i, DeviceNodeSleepAndRandomHop[i]->EventCountPriority2 );
+//				snprintf( cb, sizeof( cb ), "%d, RHop[%d]->P2 = %d \r\n", __LINE__, i, DeviceNodeSleepAndRandomHop[i]->Event_Head[ LoraEventPriority2 ] );
 //				Console_Output_String( cb );
 
 				LoraLinkListEvent_BuildLoraEvent( LoraEventPriority2, i, Master_AcsipProtocol_Poll, LoraNodeDevice[i]->NodeAddress, NULL, NULL );

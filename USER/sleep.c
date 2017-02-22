@@ -46,10 +46,6 @@ extern __IO uint16_t			Running_TimeCount;					// for MASTER & SLAVE
 extern __IO uint16_t			SLAVE_LoraPollEventInterval;				// for SLAVE
 extern tDeviceNodeSleepAndRandomHop *	DeviceNodeSleepAndRandomHop[MAX_LoraNodeNum];		// for MASTER
 
-extern uint8_t				EventCountPriority0;					// for MASTER
-extern uint8_t				EventCountPriority1;					// for MASTER
-extern uint8_t				EventCountPriority2;					// for MASTER
-
 extern tLoraDeviceNode *		LoraGateWay;				// for SLAVE
 extern tDeviceNodeSensor *		MySensor;				// for SLAVE
 extern __IO uint16_t			Sleep_TimeCount;			// for SLAVE
@@ -536,9 +532,9 @@ void		SLEEP_MasterSleepProcedure(void)
 	if(LoraRunningEvent.RunNodeEvent != 0) return;
 
 	// 表共同事件排程裡有事件準備執行
-	if(EventCountPriority0 != 0) return;
-	if(EventCountPriority1 != 0) return;
-	if(EventCountPriority2 != 0) return;
+	if( Event_Count[0] ) return;
+	if( Event_Count[1] ) return;
+	if( Event_Count[2] ) return;
 
 	for(count = 0 ; count < MAX_LoraNodeNum ; count++) {
 		// 此 SLAVE Node 裝置是否存在,不存在就跳到下一值去判斷
@@ -546,9 +542,9 @@ void		SLEEP_MasterSleepProcedure(void)
 
 		// 判斷個別事件排程裡是否有事件準備執行
 		if(DeviceNodeSleepAndRandomHop[count]->isNowSleeping == false) {
-			if(DeviceNodeSleepAndRandomHop[count]->EventCountPriority0 != 0) return;
-			if(DeviceNodeSleepAndRandomHop[count]->EventCountPriority1 != 0) return;
-			if(DeviceNodeSleepAndRandomHop[count]->EventCountPriority2 != 0) return;
+			if( DeviceNodeSleepAndRandomHop[count]->Event_Count[0] ) return;
+			if( DeviceNodeSleepAndRandomHop[count]->Event_Count[1] ) return;
+			if( DeviceNodeSleepAndRandomHop[count]->Event_Count[2] ) return;
 		}
 	}
 
