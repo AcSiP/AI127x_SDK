@@ -217,8 +217,13 @@ void		ADC1__Enable_CLK( uint16_t ch_sel )
 	if( flag_port_A ) RCC_AHBPeriphClockCmd( RCC_AHBPeriph_GPIOA, ENABLE );
 	if( flag_port_B ) RCC_AHBPeriphClockCmd( RCC_AHBPeriph_GPIOB, ENABLE );
 
-	RCC_AHBPeriphClockCmd( RCC_AHBPeriph_DMA1, ENABLE );
-	RCC_APB2PeriphClockCmd( RCC_APB2Periph_ADC1, ENABLE );
+	if( flag_port_A || flag_port_B ){
+		RCC_AHBPeriphClockCmd( RCC_AHBPeriph_DMA1, ENABLE );
+		RCC_APB2PeriphClockCmd( RCC_APB2Periph_ADC1, ENABLE );
+	} else {
+		RCC_APB2PeriphClockCmd( RCC_APB2Periph_ADC1, DISABLE );
+		RCC_AHBPeriphClockCmd( RCC_AHBPeriph_DMA1, DISABLE );
+	}
 }
 
 void		ADC1__Configure_GPIO( uint16_t ch_sel )
@@ -333,6 +338,13 @@ void		ADC1__ADC_Configure( uint16_t ch_sel )
 	ADC_GetCalibrationFactor( ADC1 );
 }
 
+void		ADC1__DeInit( void )
+{
+	ADC1__ADC_Configure( 0 );
+//	ADC_DMARequestAfterLastTransferCmd( ADC1, DISABLE );
+	ADC1__DMA_Configure( 0 );
+	ADC1__Enable_CLK( 0 );
+}
 
 void		ADC1__Configure_w_DMA( uint16_t ch_sel )
 {

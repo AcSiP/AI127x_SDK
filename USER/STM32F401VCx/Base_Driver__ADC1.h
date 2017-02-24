@@ -51,6 +51,7 @@ uint8_t		ADC1__Count_Items( uint16_t ch_sel );
 int8_t		ADC1__Get_Item_Index( uint16_t ch_sel );
 void		ADC1__Dump_Values( void );
 
+void		ADC1__DeInit( void );
 void		ADC1__Configure_w_DMA( uint16_t ch_sel );
 uint16_t	ADC1__Get_Converted_Value( uint16_t ch_sel );
 

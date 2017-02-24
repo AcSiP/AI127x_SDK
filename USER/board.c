@@ -1,10 +1,10 @@
-
+ï»¿
 //---------------------------------------------------------------------------
 /*
 //==========================================
 // Author : JC<jc@acsip.com.tw>
 // Copyright 2016(C) AcSiP Technology Inc.
-// ª©Åv©Ò¦³¡G¸sµn¬ì§ÞªÑ¥÷¦³­­¤½¥q
+// ç‰ˆæ¬Šæ‰€æœ‰ï¼šç¾¤ç™»ç§‘æŠ€è‚¡ä»½æœ‰é™å…¬å¸
 // http://www.acsip.com.tw
 //==========================================
 */
@@ -79,6 +79,7 @@ void	Board_DeInit( void )
 		}
 	}
 
+	ADC1__DeInit();
 	SPI_De_Init();
 }
 
@@ -117,9 +118,9 @@ void	InitUnusedGPIO( void )
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8|GPIO_Pin_9|GPIO_Pin_10|GPIO_Pin_11|GPIO_Pin_12;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
-	// -> save 10 to 50 µA
+	// -> save 10 to 50 æ¸™
 
-	// activate pullups on B10 and B11 (I²C)
+	// activate pullups on B10 and B11 (Iæ¶Ž)
 	//GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 	//GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10|GPIO_Pin_11;
 	//GPIO_Init(GPIOB, &GPIO_InitStructure);
@@ -129,13 +130,13 @@ void	InitUnusedGPIO( void )
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_12|GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15;
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
-	// very little influence (<<5 µA)
+	// very little influence (<<5 æ¸™)
 
 	// activate pulldowns on A11 and A12 (USB)
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11|GPIO_Pin_12;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	// very little influence (<<5 µA)
+	// very little influence (<<5 æ¸™)
 
 	// activate pulldowns on A10, B0, B1, C3 and C13 (unused pins)
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
@@ -145,7 +146,7 @@ void	InitUnusedGPIO( void )
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3|GPIO_Pin_13;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
-	// little influence? (~10 µA)
+	// little influence? (~10 æ¸™)
 }
 */
 
