@@ -1,4 +1,4 @@
-﻿
+
 //---------------------------------------------------------------------------
 /*
 //==========================================
@@ -116,7 +116,14 @@ static uint8_t		Buffer[9];			// RF buffer
 const uint8_t		PingMsg[] = "PING";
 const uint8_t		PongMsg[] = "PONG";
 
-
+/////////////// for LIS3DH sensor /////////////////////////
+#define Sensor_LIS3DH_Enable 1
+#ifdef Sensor_LIS3DH_Enable
+//include MEMS driver
+#include "lis3dh_driver.h"
+#include "i2c1.h"
+#endif
+///////////////////////////////////////////////////////////
 /* Private function prototypes -----------------------------------------------*/
 static void	RX_DataCopy(uint8_t *, const uint8_t *, uint16_t);
 static bool	MasterLoraEvent_PROCESS(void);
@@ -130,7 +137,9 @@ static void	RxTestOutput(void);
 static void	PacketOutput(uint8_t *, size_t);
 
 /* Private functions ---------------------------------------------------------*/
-
+#ifdef Sensor_LIS3DH_Enable
+static uint16_t checkIRQ;
+#endif
 /**
   * @brief  Main program.
   * @param  None
@@ -144,8 +153,12 @@ int	main( void )
 #ifdef Board__A22_Tracker
 	uint32_t		delayTick, totalDelay;
 #endif
-
-
+#ifdef Sensor_LIS3DH_Enable
+	checkIRQ = 0;
+	uint8_t response;
+	uint8_t buffer[26]; 
+	AxesRaw_t data;
+#endif
 #ifdef STM32F072
 	uint32_t		i;
 
@@ -268,6 +281,30 @@ int	main( void )
 
 	SLEEP_SlaveSleepVariableSet();
 	RandomHopStartChannel_SlaveDefaultHoppingChannel();
+	
+#ifdef Sensor_LIS3DH_Enable
+		I2C_Master__Init(0);
+		Console_Output_String( "I2C Bus INIT..\r\n" );
+		/* Configure PA7 as interrupt */
+		Configure_IRQ_PA7();
+		Delay(1000);
+		//LIS3DH_dumpREG();
+
+	response = LIS3DH_GetWHO_AM_I();
+	if(response ==1)  //I2C connect success
+	{
+		LIS3DH_init_CLICK();
+	}
+  response = LIS3DH_GetAccAxesRaw(&data);
+  if(response==1){
+    //print data values
+    sprintf((char*)buffer, "X=%6d Y=%6d Z=%6d,IRQ=%d \r\n", data.AXIS_X, data.AXIS_Y, data.AXIS_Z,checkIRQ);
+		Console_Output_String( "SENSOR LIS3DH DATA ");
+		Console_Output_String( (const char *) buffer);
+		Console_Output_String( "\r\n");
+	}
+#endif
+
 
 	// SLEEP_SlaveSleepAandRandomHopChannelProcedure(60);		// for sleep test
 	// Console_Output_String( "wake up...\r\n" );			// for sleep test
@@ -1132,4 +1169,16 @@ void	assert_failed( uint8_t* file, uint32_t line )
 }
 #endif
 
+#ifdef Sensor_LIS3DH_Enable
+/* Set interrupt handlers */
+/* Handle PA7 interrupt */
+void EXTI9_5_IRQHandler(void) {
+	/* Make sure that interrupt flag is set */
+	if (EXTI_GetITStatus(EXTI_Line7) != RESET){
+		checkIRQ ++;
+	}
+	/* Clear interrupt flag */	
+	EXTI_ClearITPendingBit(EXTI_Line7);
+}
+#endif
 /************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

@@ -36,6 +36,8 @@
 #include "sleep.h"
 #include "gpio.h"
 
+#define Sensor_LIS3DH_Enable 1
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -157,6 +159,9 @@ void	GPIOs__AnalogConfig( void )
 
 #ifdef STM32F401xx
 	RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOB | RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOD | RCC_AHB1Periph_GPIOE | RCC_AHB1Periph_GPIOH, ENABLE );
+#ifdef Sensor_LIS3DH_Enable  /*Don't disable GPIOA since we use PA7 be a wakeup source for LIS3DH*/
+	RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOB | RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOD | RCC_AHB1Periph_GPIOE | RCC_AHB1Periph_GPIOH, ENABLE );
+#endif
 #endif
 
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
@@ -171,7 +176,11 @@ void	GPIOs__AnalogConfig( void )
 	GPIO_Init(GPIOH, &GPIO_InitStructure);
 #endif
 
+#ifdef Sensor_LIS3DH_Enable /*Don't disable GPIOA since we use PA7 be a wakeup source for LIS3DH*/
+#else
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
+#endif
+
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
 
 	/* Disable GPIOs clock */
@@ -181,6 +190,9 @@ void	GPIOs__AnalogConfig( void )
 
 #ifdef STM32F401xx
 	RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOA | RCC_AHB1Periph_GPIOB | RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOD | RCC_AHB1Periph_GPIOE | RCC_AHB1Periph_GPIOH, DISABLE );
+#ifdef Sensor_LIS3DH_Enable /*Don't disable GPIOA since we use PA7 be a wakeup source for LIS3DH*/
+	RCC_AHB1PeriphClockCmd( RCC_AHB1Periph_GPIOB | RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOD | RCC_AHB1Periph_GPIOE | RCC_AHB1Periph_GPIOH, DISABLE );
+#endif
 #endif
 }
 
