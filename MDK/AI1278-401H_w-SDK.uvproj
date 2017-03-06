@@ -10,16 +10,16 @@
       <TargetName>AI1278-401H</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>5060061::V5.06 update 1 (build 61)::ARMCC</pCCUsed>
+      <pCCUsed>5060422::V5.06 update 4 (build 422)::ARMCC</pCCUsed>
       <TargetOption>
         <TargetCommonOption>
-          <Device>STM32F401CB</Device>
+          <Device>STM32F401CC</Device>
           <Vendor>STMicroelectronics</Vendor>
-          <Cpu>IRAM(0x20000000-0x2000FFFF) IROM(0x08000000-0x0801FFFF) CLOCK(25000000) CPUTYPE("Cortex-M4") FPU2</Cpu>
+          <Cpu>IRAM(0x20000000-0x2000FFFF) IROM(0x08000000-0x0803FFFF) CLOCK(25000000) CPUTYPE("Cortex-M4") FPU2</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile>"Startup\ST\STM32F4xx\startup_stm32f401xx.s" ("STM32F401xx Startup Code")</StartupFile>
-          <FlashDriverDll>UL2CM3(-O207 -S0 -C0 -FO7 -FD20000000 -FC800 -FN1 -FF0STM32F4xx_128 -FS08000000 -FL020000)</FlashDriverDll>
-          <DeviceId>7379</DeviceId>
+          <FlashDriverDll>UL2CM3(-O207 -S0 -C0 -FO7 -FD20000000 -FC800 -FN1 -FF0STM32F4xx_256 -FS08000000 -FL040000)</FlashDriverDll>
+          <DeviceId>7382</DeviceId>
           <RegisterFile>stm32f4xx.h</RegisterFile>
           <MemoryEnv></MemoryEnv>
           <Cmp></Cmp>
@@ -148,7 +148,7 @@
             <RestoreSysVw>1</RestoreSysVw>
           </Target>
           <RunDebugAfterBuild>0</RunDebugAfterBuild>
-          <TargetSelection>11</TargetSelection>
+          <TargetSelection>5</TargetSelection>
           <SimDlls>
             <CpuDll></CpuDll>
             <CpuDllArguments></CpuDllArguments>
@@ -174,9 +174,9 @@
             <Capability>1</Capability>
             <DriverSelection>4103</DriverSelection>
           </Flash1>
-          <bUseTDR>0</bUseTDR>
+          <bUseTDR>1</bUseTDR>
           <Flash2>STLink\ST-LINKIII-KEIL_SWO.dll</Flash2>
-          <Flash3>"" ()</Flash3>
+          <Flash3></Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -287,7 +287,7 @@
               <IROM>
                 <Type>1</Type>
                 <StartAddress>0x8000000</StartAddress>
-                <Size>0x20000</Size>
+                <Size>0x40000</Size>
               </IROM>
               <XRAM>
                 <Type>0</Type>
@@ -311,8 +311,8 @@
               </OCR_RVCT3>
               <OCR_RVCT4>
                 <Type>1</Type>
-                <StartAddress>0x800c000</StartAddress>
-                <Size>0x14000</Size>
+                <StartAddress>0x8000000</StartAddress>
+                <Size>0x40000</Size>
               </OCR_RVCT4>
               <OCR_RVCT5>
                 <Type>1</Type>
@@ -367,6 +367,9 @@
             <v6LangP>0</v6LangP>
             <vShortEn>0</vShortEn>
             <vShortWch>0</vShortWch>
+            <v6Lto>0</v6Lto>
+            <v6WtE>0</v6WtE>
+            <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls>--gnu</MiscControls>
               <Define>USE_STDPERIPH_DRIVER STM32F401xx USE_STM32F401 USE_LORA_SX1278 PLATFORM=Bleeper</Define>
@@ -384,6 +387,7 @@
             <NoWarn>0</NoWarn>
             <uSurpInc>0</uSurpInc>
             <useXO>0</useXO>
+            <uClangAs>0</uClangAs>
             <VariousControls>
               <MiscControls></MiscControls>
               <Define></Define>
@@ -451,6 +455,9 @@
                 <v6LangP>0</v6LangP>
                 <vShortEn>0</vShortEn>
                 <vShortWch>0</vShortWch>
+                <v6Lto>2</v6Lto>
+                <v6WtE>2</v6WtE>
+                <v6Rtti>2</v6Rtti>
                 <VariousControls>
                   <MiscControls></MiscControls>
                   <Define></Define>
@@ -468,6 +475,7 @@
                 <NoWarn>2</NoWarn>
                 <uSurpInc>2</uSurpInc>
                 <useXO>2</useXO>
+                <uClangAs>2</uClangAs>
                 <VariousControls>
                   <MiscControls></MiscControls>
                   <Define></Define>
@@ -775,6 +783,9 @@
                     <v6LangP>0</v6LangP>
                     <vShortEn>0</vShortEn>
                     <vShortWch>0</vShortWch>
+                    <v6Lto>2</v6Lto>
+                    <v6WtE>2</v6WtE>
+                    <v6Rtti>2</v6Rtti>
                     <VariousControls>
                       <MiscControls></MiscControls>
                       <Define></Define>
@@ -899,6 +910,21 @@
               <FileName>Base_Driver__UART1.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\STM32F401VCx\Base_Driver__UART1.c</FilePath>
+            </File>
+            <File>
+              <FileName>Base_Driver__ADC1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\STM32F401VCx\Base_Driver__ADC1.c</FilePath>
+            </File>
+            <File>
+              <FileName>i2c1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\i2c1.c</FilePath>
+            </File>
+            <File>
+              <FileName>lis3dh_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\lis3dh_driver.c</FilePath>
             </File>
           </Files>
         </Group>

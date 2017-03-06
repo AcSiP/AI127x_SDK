@@ -32,18 +32,13 @@
 #include "spi.h"
 #include "board.h"
 
+#include "config.h"
+
+#include "Base_Driver__ADC1.h"
+
+
 // System tick (1ms)
 volatile uint32_t	TickCounter = 0;
-
-
-#ifdef STM32F401xx
-#define ADC1_DR_ADDRESS		((uint32_t)0x4001204C)
-
-__IO uint16_t		ADC1ConvertedValue = 0;
-
-static void		ADC1_CH8_DMA_Config(void);
-#endif
-
 
 void	BoardInit( void )
 {
@@ -60,12 +55,19 @@ void	BoardInit( void )
 	// Initialize SPI
 	SpiInit( );
 
-#ifdef STM32F401xx
-	// Init. ADC1
-//	ADC1_CH8_DMA_Config();
 
+	ADC1__Configure_w_DMA(	ADC_IDX___ADC0 |
+				ADC_IDX___ADC1 |
+				ADC_IDX___ADC4 |
+				ADC_IDX___VBat );
+
+#ifdef STM32F401xx
 	// Start ADC1 Software Conversion
-//	ADC_SoftwareStartConv(ADC1);
+	ADC_SoftwareStartConv( ADC1 );
+#endif
+
+#ifdef STM32F072
+	ADC_StartOfConversion( ADC1 );
 #endif
 }
 
@@ -79,75 +81,6 @@ void	Board_DeInit( void )
 
 	SPI_De_Init();
 }
-
-#ifdef STM32F401xx
-static void	ADC1_CH8_DMA_Config(void)
-{
-	ADC_InitTypeDef		ADC_InitStructure;
-	ADC_CommonInitTypeDef	ADC_CommonInitStructure;
-	DMA_InitTypeDef		DMA_InitStructure;
-	GPIO_InitTypeDef	GPIO_InitStructure;
-
-	/* Enable ADC3, DMA2 and GPIO clocks ****************************************/
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2 | RCC_AHB1Periph_GPIOB, ENABLE);		// 0x00400000 | 0x00000004, AHB1 up to 84MHz
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);		// 0x00000100, APB2 up to 84Mhz
-
-	/* DMA2 Stream0 channel0 configuration **************************************/
-	DMA_InitStructure.DMA_Channel = DMA_Channel_0;
-	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)ADC1_DR_ADDRESS;
-	DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)&ADC1ConvertedValue;
-	DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
-	DMA_InitStructure.DMA_BufferSize = 1;
-	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Disable;
-	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
-	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
-	DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-	DMA_InitStructure.DMA_Priority = DMA_Priority_High;
-	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable;
-	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_HalfFull;
-	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
-	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
-	DMA_Init(DMA2_Stream0, &DMA_InitStructure);
-	DMA_Cmd(DMA2_Stream0, ENABLE);
-
-	/* Configure ADC1 Channel12 pin as analog input ******************************/
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
-
-	/* ADC Common Init **********************************************************/
-	ADC_CommonInitStructure.ADC_Mode = ADC_Mode_Independent;
-	ADC_CommonInitStructure.ADC_Prescaler = ADC_Prescaler_Div2;
-	ADC_CommonInitStructure.ADC_DMAAccessMode = ADC_DMAAccessMode_Disabled;
-	ADC_CommonInitStructure.ADC_TwoSamplingDelay = ADC_TwoSamplingDelay_5Cycles;
-	ADC_CommonInit(&ADC_CommonInitStructure);
-
-	/* ADC1 Init ****************************************************************/
-	ADC_InitStructure.ADC_Resolution = ADC_Resolution_8b;		// ADC_Resolution_12b;
-	ADC_InitStructure.ADC_ScanConvMode = DISABLE;
-	ADC_InitStructure.ADC_ContinuousConvMode = ENABLE;
-	ADC_InitStructure.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None;
-	ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T1_CC1;
-	ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
-	ADC_InitStructure.ADC_NbrOfConversion = 1;
-	ADC_Init(ADC1, &ADC_InitStructure);
-
-	/* ADC1 regular channel12 configuration *************************************/
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_8, 1, ADC_SampleTime_144Cycles);
-
-	/* Enable DMA request after last transfer (Single-ADC mode) */
-	ADC_DMARequestAfterLastTransferCmd(ADC1, ENABLE);
-
-	/* Enable ADC1 DMA */
-	ADC_DMACmd(ADC1, ENABLE);
-
-	/* Enable ADC1 */
-	ADC_Cmd(ADC1, ENABLE);
-}
-#endif
-
 
 void	Delay( uint32_t delay )
 {

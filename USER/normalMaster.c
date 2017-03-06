@@ -123,6 +123,10 @@ uint8_t		NormalMaster(__IO tLoraRunningEvent *Event)
 
 #ifdef Board__A22_Tracker
 				Console_Output_String( " EVT=GPS " );
+#else
+				Console_Output_String( " EVT=Poll " );
+#endif
+
 				snprintf( (char *)str, sizeof(str), "%d", DeviceNodeSensor[Event->RunNodeNumber]->GPS_Latitude );
 				Console_Output_String( (const char *)str );
 				Console_Output_String( " " );
@@ -135,9 +139,6 @@ uint8_t		NormalMaster(__IO tLoraRunningEvent *Event)
 				snprintf( (char *)str, sizeof(str), "%u", DeviceNodeSensor[Event->RunNodeNumber]->Battery );
 				Console_Output_String( (const char *)str );
 				Console_Output_String( " " );
-#else
-				Console_Output_String( " EVT=Poll " );
-#endif
 
 				snprintf( (char *)str, sizeof(str), "%3.2f", DeviceNodeSensor[Event->RunNodeNumber]->RSSI );
 				Console_Output_String( (const char *)str );
