@@ -1,3 +1,15 @@
+## Porting with LIS3DH ##
+1.Use I2C interface.<br />
+2.Let PA7(Pin 11) to be a Interrupt,GPIOA need enable while system go to sleep.<br />
+3.Configure MEMS output interrupt signal is Single-Click.<br />
+4.You can modify the threshold level of detection according user-trial on different scenario.<br />
+
+5.More information,please reference<br />
+[adafruit lis3dh](https://learn.adafruit.com/adafruit-lis3dh-triple-axis-accelerometer-breakout/wiring-and-test)<br />
+[ST lis3dh](http://www.st.com/content/ccc/resource/technical/document/application_note/77/ed/e7/e1/28/5a/45/d6/CD00290365.pdf/files/CD00290365.pdf/jcr:content/translations/en.CD00290365.pdf)<br />
+
+
+
 # AI127x_SDK
 Software development kit with Private LoRa protocol for AI127x module
 ![Module Picture](https://github.com/AcSiP/AI127x_SDK/blob/master/Readme/AI1276-401H.jpg)
