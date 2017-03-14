@@ -11,6 +11,15 @@
 <BR>
 
 
+- <B>FactoryReset</B>
+<TABLE>
+<TR align="Left" valign="center"><TD><B>Parameter(s)</B></TD>		<TD> N/A </TD></TR>
+<TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Reset all parameter to default value and soft reboot the system. </TD></TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD><I>FactoryReset</I></TD></TR>
+</TABLE>
+<BR>
+
+
 - <B>LoraSystemMode</B>
 <TABLE>
 <TR align="Left" valign="center">
