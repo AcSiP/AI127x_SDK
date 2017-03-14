@@ -321,7 +321,7 @@ static void	RTC__Process_ISR( void )
 		if ( isInSleep ) Sleep_TimeCount++;
 	}
 
-	if( ( ! EnableMaster ) && ( ! LoraGateWay ) ) {		// SLAVE & Joined the Acsip-LoraNet
+	if( ! EnableMaster && LoraGateWay ) {		// SLAVE & Joined the Acsip-LoraNet
 		if( isInSleep == false ) {		// MCU running
 			Running_TimeCount++;
 			SLAVE_LoraPollEventInterval++;

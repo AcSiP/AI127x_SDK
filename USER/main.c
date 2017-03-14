@@ -349,7 +349,7 @@ int	main( void )
 #endif
 
 					OnSlaveForNormal();
-					if(LoraGateWay != NULL) SLEEP_SlaveSleepAandRandomHopChannelProcedure(&LoraGateWay->Interval);
+					if( LoraGateWay ) SLEEP_SlaveSleepAandRandomHopChannelProcedure( & LoraGateWay->Interval );
 				}
 				break;
 
