@@ -39,8 +39,9 @@
 #define DIO4		SX1276ReadDio4( )
 #define DIO5		SX1276ReadDio5( )
 
+
 // RXTX pin control see errata note
-//#define RXTX( txEnable )	SX1276WriteRxTx( txEnable );
+#define RXTX( txEnable )	SX1276WriteRxTx( txEnable );
 
 #define GET_TICK_COUNT( )	( TickCounter )
 #define TICK_RATE_MS( ms )	( ms )
@@ -165,6 +166,6 @@ inline uint8_t	SX1276ReadDio5( void );
  *
  * \param [IN] txEnable [1: Tx, 0: Rx]
  */
-//inline void	SX1276WriteRxTx( uint8_t txEnable );
+inline void	SX1276WriteRxTx( uint8_t txEnable );
 
 #endif //__SX1276_HAL_H__

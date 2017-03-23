@@ -21,6 +21,17 @@
 #include <stdint.h>
 #include <stdbool.h> 
 
+#include "config.h"
+
+
+#if defined( Board__A22_Tracker )
+	#undef   LoRa_RXTX_Switch
+#else
+	#define  LoRa_RXTX_Switch
+#endif
+
+
+
 #include "platform.h"
 
 #if defined( USE_SX1276_RADIO )
@@ -53,12 +64,15 @@
 
 	#define DIO5_IOPORT		GPIOC  
 	#define DIO5_PIN		GPIO_Pin_13
+  
+	#define RXTX_IOPORT		GPIOB
+	#define RXTX_PIN		GPIO_Pin_2
 #else
 	#error "Missing define MCU type (STM32F072 or STM32F401xx)"
 #endif
 
-#define RXTX_IOPORT
-#define RXTX_PIN			FEM_CTX_PIN
+//#define RXTX_IOPORT
+//#define RXTX_PIN			FEM_CTX_PIN
 
 void		SX127x_Init_NSS( void )
 {
@@ -122,6 +136,12 @@ void		SX1276InitIo( void )
 	GPIO_Init( NSS_IOPORT, &GPIO_InitStructure );
 
 	GPIO_WriteBit( NSS_IOPORT, NSS_PIN, Bit_SET );
+  
+#if defined( LoRa_RXTX_Switch )
+	// Configure RF Switch(PB2) as output
+	GPIO_InitStructure.GPIO_Pin =  RXTX_PIN;
+	GPIO_Init( RXTX_IOPORT, &GPIO_InitStructure );
+#endif
 
 	// Configure radio DIO as inputs
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
@@ -266,32 +286,16 @@ inline uint8_t	SX1276ReadDio5( void )
 #endif
 }
 
-/*
 inline void	SX1276WriteRxTx( uint8_t txEnable )
 {
-#if defined( STM32F072 )
-
-	if( txEnable != 0 ){
-		GPIO_WriteBit( RX_IOPORT, RX_PIN, Bit_RESET );
-		GPIO_WriteBit( TX_IOPORT, TX_PIN, Bit_SET );
+#if defined( LoRa_RXTX_Switch )
+	if( txEnable != 0 ) { //TX
+		GPIO_WriteBit( RXTX_IOPORT, RXTX_PIN, Bit_RESET );
+	} else {              //RX
+		GPIO_WriteBit( RXTX_IOPORT, RXTX_PIN, Bit_SET );
 	}
-	else{
-		GPIO_WriteBit( RX_IOPORT, RX_PIN, Bit_SET );
-		GPIO_WriteBit( TX_IOPORT, TX_PIN, Bit_RESET );
-	}
-
-#else
-
-	if( txEnable != 0 ){
-		IoePinOn( FEM_CTX_PIN );
-	}
-	else{
-		IoePinOff( FEM_CTX_PIN );
-	}
-
 #endif
 }
-*/
 
 #endif // USE_SX1276_RADIO
 
