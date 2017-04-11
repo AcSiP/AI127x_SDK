@@ -137,6 +137,13 @@ void SX1276GetRxPacket( void *buffer, uint16_t *size );
  */
 void SX1276SetTxPacket( const void *buffer, uint16_t size );
 
+// 20170123 add by JC
+/*!
+ * \brief Sets the radio in CAD mode.
+ */
+void	SX1276StartCAD( void );
+// 20170123 add finish by JC
+
 /*!
  * \brief Gets the current RFState
  *

@@ -917,6 +917,13 @@ void SX1276LoRaGetRxPacket( void *buffer, uint16_t *size );
  */
 void SX1276LoRaSetTxPacket( const void *buffer, uint16_t size );
 
+// 20170123 add by JC
+/*!
+ * \brief Sets the radio in CAD mode.
+ */
+void		SX1276LoRaStartCAD( void );
+// 20170123 add finish by JC
+
 /*!
  * \brief Gets the current RFState
  *

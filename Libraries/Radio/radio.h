@@ -107,6 +107,9 @@ typedef struct sRadioDriver
 	void		( *StartRx )( void );
 	void		( *GetRxPacket )( void *buffer, uint16_t *size );
 	void		( *SetTxPacket )( const void *buffer, uint16_t size );
+  // 20170123 add by JC
+  void		( *StartCAD )( void );
+  // 20170123 add finish by JC
 	uint32_t	( *Process )( void );
 } tRadioDriver;
 
