@@ -117,8 +117,10 @@ void	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara(void)
 
 		memset((void *)&MyLoraPara.MyPara, 0, sizeof(tLoRaSettings));
 		memcpy(( void * )&MyLoraPara.MyPara, ( void * )&LoRaSettings, sizeof(tLoRaSettings));
-		MyLoraPara.MyPara.RFFrequency = Lora_RFFrequency;
-		MyLoraPara.MyPara.HopPeriod = Lora_RFHoppingPeriod;
+		if( MyLoraPara.MyPara.FreqHopOn ) {
+			MyLoraPara.MyPara.RFFrequency = Lora_RFFrequency;
+			MyLoraPara.MyPara.HopPeriod = Lora_RFHoppingPeriod;
+		}
 		FLASH_WriteByte( MyWorkParaAddr + 4, MyLoraPara.Value, sizeof(MyLoraPara.Value));
 
 		if(EnableMaster == true) {
@@ -195,8 +197,11 @@ void	SaveRecord_ReadOutMyselfPara(void)
 
 		memset((void *)&MyLoraPara.MyPara, 0, sizeof(tLoRaSettings));
 		FLASH_ReadByte( MyWorkParaAddr + 4, MyLoraPara.Value, sizeof(MyLoraPara.Value));
-		MyLoraPara.MyPara.RFFrequency = Lora_RFFrequency;
-		MyLoraPara.MyPara.HopPeriod = Lora_RFHoppingPeriod;
+
+		if( MyLoraPara.MyPara.FreqHopOn ) {
+			MyLoraPara.MyPara.RFFrequency = Lora_RFFrequency;
+			MyLoraPara.MyPara.HopPeriod = Lora_RFHoppingPeriod;
+		}
 		memcpy(( void * )&LoRaSettings, ( void * )&MyLoraPara.MyPara, sizeof(tLoRaSettings));
 	}
 }

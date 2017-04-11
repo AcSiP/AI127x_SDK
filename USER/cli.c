@@ -1731,7 +1731,7 @@ int	CLI_ShellCmd_LoraJoinNode_in_Force( shell_cmd_args *args )
 	Addr[1] = (uint8_t)((addr & 0x0000FF00) >> 8);
 	Addr[2] = (uint8_t)((addr & 0x00FF0000) >> 16);
 
-//	if( LoraLinkListEvent_BuildLoraEvent(LoraEventPriority1, 0, Master_AcsipProtocol_Join, Addr, NULL, NULL) == false ) return SHELL_PROCESS_ERR_CMD_UNKN;
+// 	if( LoraLinkListEvent_BuildLoraEvent(LoraEventPriority1, 0, Master_AcsipProtocol_Join, Addr, NULL, NULL) == false ) return SHELL_PROCESS_ERR_CMD_UNKN;
 	ret = AcsipProtocol__Add_Node( Addr );
 	if( ret != AcsipProtocol_OK ) {
 		snprintf( cb, sizeof( cb ), "Error %d\r\n", ret );
@@ -1805,7 +1805,7 @@ int	CLI_ShellCmd_LoraLeaveNode_in_Force( shell_cmd_args *args )
 		return SHELL_PROCESS_ERR_CMD_UNKN;
 	}
 
-	if( strlen(args->args[0].val) != 6 ){
+	if( strlen(args->args[0].val) != 6 ) {
 		Console_Output_String( "Addr format error.\r\n" );
 		return SHELL_PROCESS_ERR_CMD_UNKN;
 	}
@@ -1821,7 +1821,7 @@ int	CLI_ShellCmd_LoraLeaveNode_in_Force( shell_cmd_args *args )
 	Addr[1] = (uint8_t)((addr & 0x0000FF00) >> 8);
 	Addr[2] = (uint8_t)((addr & 0x00FF0000) >> 16);
 
-	if( ! AcsipProtocol__Del_Node( (uint8_t *) Addr ) ){
+	if( ! AcsipProtocol__Del_Node( (uint8_t *) Addr ) ) {
 		Console_Output_String( "This node NOT in AcSipLoraNet.\r\n" );
 		return SHELL_PROCESS_ERR_CMD_UNKN;
 	}
@@ -3343,8 +3343,18 @@ int	CLI_ShellCmd_LoraFreq( shell_cmd_args *args )
 
 	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
 	SX1276LoRaSetRFFrequency(freq);
+	LoRaSettings.RFFrequency = freq;
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
+
+#ifdef STM32F401xx
+	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
+#endif
+#ifdef STM32F072
+	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
+#endif
+	SaveRecord_WriteInLoraMode();
+
 	return SHELL_PROCESS_OK;
 }
 
@@ -3362,8 +3372,18 @@ int	CLI_ShellCmd_LoraBW( shell_cmd_args *args )
 
 	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
 	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
+	LoRaSettings.SignalBw = bw;
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
+
+#ifdef STM32F401xx
+	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
+#endif
+#ifdef STM32F072
+	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
+#endif
+	SaveRecord_WriteInLoraMode();
+
 	return SHELL_PROCESS_OK;
 }
 
@@ -3385,8 +3405,17 @@ int	CLI_ShellCmd_LoraSF( shell_cmd_args *args )
 	SX1276LoRaSetSpreadingFactor(sf);
 	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
 	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
+	LoRaSettings.SpreadingFactor = sf;
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
+
+#ifdef STM32F401xx
+	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
+#endif
+#ifdef STM32F072
+	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
+#endif
+	SaveRecord_WriteInLoraMode();
 
 	return SHELL_PROCESS_OK;
 }
@@ -3409,8 +3438,17 @@ int	CLI_ShellCmd_LoraErrorCoding( shell_cmd_args *args )
 	SX1276LoRaSetErrorCoding(coding);
 	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
 	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
+	LoRaSettings.ErrorCoding = coding;
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
+
+#ifdef STM32F401xx
+	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
+#endif
+#ifdef STM32F072
+	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
+#endif
+	SaveRecord_WriteInLoraMode();
 
 	return SHELL_PROCESS_OK;
 }
@@ -3423,9 +3461,11 @@ int	CLI_ShellCmd_LoraFreqHop( shell_cmd_args *args )
 	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
 	if(strcmp(args->args[0].val, "ON") == 0) {
 		SX1276LoRaSetFreqHopOn(true);
+		LoRaSettings.FreqHopOn = true;
 	} else {
 		if(strcmp(args->args[0].val, "OFF") == 0) {
 			SX1276LoRaSetFreqHopOn(false);
+			LoRaSettings.FreqHopOn = false;
 		} else {
 			return SHELL_PROCESS_ERR_CMD_UNKN;
 		}
@@ -3460,12 +3500,16 @@ int	CLI_ShellCmd_LoraFreqHopOn( shell_cmd_args *args )
 	switch(hopperiod) {
 	case 0:
 		SX1276LoRaSetFreqHopOn(false);
+		LoRaSettings.FreqHopOn = false;
 		// SX1276LoRaSetHopPeriod(0);
 		break;
 
 	default:
 		SX1276LoRaSetFreqHopOn(true);
+		LoRaSettings.FreqHopOn = true;
+
 		SX1276LoRaSetHopPeriod(hopperiod);
+		LoRaSettings.HopPeriod = hopperiod;
 		break;
 	}
 
@@ -3474,6 +3518,15 @@ int	CLI_ShellCmd_LoraFreqHopOn( shell_cmd_args *args )
 
 	CLI_ClearHoppingRandomChannelNumber();
 	Radio->StartRx();
+
+#ifdef STM32F401xx
+	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
+#endif
+#ifdef STM32F072
+	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
+#endif
+	SaveRecord_WriteInLoraMode();
+
 	return SHELL_PROCESS_OK;
 }
 
@@ -3485,9 +3538,11 @@ int	CLI_ShellCmd_LoraImplicitHeader( shell_cmd_args *args )
 	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
 	if(strcmp(args->args[0].val, "ENABLE") == 0) {
 		SX1276LoRaSetImplicitHeaderOn(true);
+		LoRaSettings.ImplicitHeaderOn = true;
 	} else {
 		if(strcmp(args->args[0].val, "DISABLE") == 0) {
 			SX1276LoRaSetImplicitHeaderOn(false);
+			LoRaSettings.ImplicitHeaderOn = false;
 		} else {
 			return SHELL_PROCESS_ERR_CMD_UNKN;
 		}
@@ -3497,6 +3552,14 @@ int	CLI_ShellCmd_LoraImplicitHeader( shell_cmd_args *args )
 	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
+
+#ifdef STM32F401xx
+	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
+#endif
+#ifdef STM32F072
+	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
+#endif
+	SaveRecord_WriteInLoraMode();
 
 	return SHELL_PROCESS_OK;
 }
@@ -3509,9 +3572,11 @@ int	CLI_ShellCmd_LoraCRC( shell_cmd_args *args )
 	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
 	if(strcmp(args->args[0].val, "ENABLE") == 0) {
 		SX1276LoRaSetPacketCrcOn(true);
+		LoRaSettings.CrcOn = true;
 	} else {
 		if(strcmp(args->args[0].val, "DISABLE") == 0) {
 			SX1276LoRaSetPacketCrcOn(false);
+			LoRaSettings.CrcOn = false;
 		} else {
 			return SHELL_PROCESS_ERR_CMD_UNKN;
 		}
@@ -3521,6 +3586,14 @@ int	CLI_ShellCmd_LoraCRC( shell_cmd_args *args )
 	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
+
+#ifdef STM32F401xx
+	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
+#endif
+#ifdef STM32F072
+	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
+#endif
+	SaveRecord_WriteInLoraMode();
 
 	return SHELL_PROCESS_OK;
 }
@@ -3541,6 +3614,7 @@ int	CLI_ShellCmd_LoraPayloadLength( shell_cmd_args *args )
 	SX1276LoRaSetPayloadLength(payload);
 	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
 	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
+	LoRaSettings.PayloadLength = payload;
 
 #ifdef STM32F401xx
 	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
@@ -3548,6 +3622,7 @@ int	CLI_ShellCmd_LoraPayloadLength( shell_cmd_args *args )
 #ifdef STM32F072
 	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
 #endif
+	SaveRecord_WriteInLoraMode();
 
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
@@ -3570,6 +3645,7 @@ int	CLI_ShellCmd_MaxLoraPayloadLength( shell_cmd_args *args )
 	SX1276LoRaSetMaxPayloadLength( payload );
 	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
 	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
+	LoRaSettings.MaxPayloadLength = payload;
 
 #ifdef STM32F401xx
 	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
@@ -3577,6 +3653,7 @@ int	CLI_ShellCmd_MaxLoraPayloadLength( shell_cmd_args *args )
 #ifdef STM32F072
 	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
 #endif
+	SaveRecord_WriteInLoraMode();
 
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
@@ -3603,8 +3680,17 @@ int	CLI_ShellCmd_LoraPreambleLength( shell_cmd_args *args )
 	SX1276LoRaSetPreambleLength(preamble);
 	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
 	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
+	LoRaSettings.PreambleLength = preamble;
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
+
+#ifdef STM32F401xx
+	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
+#endif
+#ifdef STM32F072
+	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
+#endif
+	SaveRecord_WriteInLoraMode();
 
 	return SHELL_PROCESS_OK;
 }
@@ -3701,8 +3787,18 @@ int	CLI_ShellCmd_LoraPower( shell_cmd_args *args )
 	}
 
 	SX1276LoRaSetRFPower( power );
+	LoRaSettings.Power = power;
 	Radio->StartRx();
 	// 以上可能需加上 IC 工作模式切換後再去做暫存器的設定,再根據LoraStartWork狀態去進入相關狀態
+
+#ifdef STM32F401xx
+	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
+#endif
+#ifdef STM32F072
+	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
+#endif
+	SaveRecord_WriteInLoraMode();
+
 	return SHELL_PROCESS_OK;
 }
 
@@ -3783,7 +3879,7 @@ int	CLI_ShellCmd__System_Stop( shell_cmd_args *args )
 	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
 	duration_sec = atoi( args->args[0].val );
-//	SLEEP_SlaveSleep_STOP_Mode( & duration_sec );
+// 	SLEEP_SlaveSleep_STOP_Mode( & duration_sec );
 	SLEEP_SlaveSleep_Deep_STOP_Mode( & duration_sec );
 	return SHELL_PROCESS_OK;
 }

@@ -102,8 +102,10 @@ void	SaveRecord_WriteInMyselfParaAndLoraGateWayPara(void)
 	if(SystemOperMode == SystemInNormal) {
 		memset((void *)&MyLoraPara.MyPara, 0, sizeof(tLoRaSettings));
 		memcpy(( void * )&MyLoraPara.MyPara, ( void * )&LoRaSettings, sizeof(tLoRaSettings));
-		MyLoraPara.MyPara.RFFrequency = Lora_RFFrequency;
-		MyLoraPara.MyPara.HopPeriod = Lora_RFHoppingPeriod;
+		if( MyLoraPara.MyPara.FreqHopOn ) {
+			MyLoraPara.MyPara.RFFrequency = Lora_RFFrequency;
+			MyLoraPara.MyPara.HopPeriod = Lora_RFHoppingPeriod;
+		}
 
 		// 起始位址附近取值,因存值都從起始開始存,有值就表示被使用了
 		FLASH_ReadWord( MyWorkParaAddr + 4, &temp, 1 );
@@ -173,8 +175,10 @@ void	SaveRecord_ReadOutMyselfPara(void)
 
 		memset((void *)&MyLoraPara.MyPara, 0, sizeof(tLoRaSettings));
 		FLASH_ReadByte( MyWorkParaAddr + 4, MyLoraPara.Value, sizeof(MyLoraPara.Value));
-		MyLoraPara.MyPara.RFFrequency = Lora_RFFrequency;
-		MyLoraPara.MyPara.HopPeriod = Lora_RFHoppingPeriod;
+		if( MyLoraPara.MyPara.FreqHopOn ) {
+			MyLoraPara.MyPara.RFFrequency = Lora_RFFrequency;
+			MyLoraPara.MyPara.HopPeriod = Lora_RFHoppingPeriod;
+		}
 		memcpy(( void * )&LoRaSettings, ( void * )&MyLoraPara.MyPara, sizeof(tLoRaSettings));
 	}
 }
