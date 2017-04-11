@@ -12,6 +12,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "lbtafa.h"
 
 #include "Base_Driver__UART1.h"
 #include "UART_Console.h"
@@ -47,6 +48,9 @@ bool				LoraStartWork = 1;		// 1=start or 0=stop LORA
 bool				EnableMaster;			// 1=Master or 0=Slave selection
 bool				Flag__Init_RTC = false;
 uint32_t			Last_Measure_TickCounter = 0;
+
+
+
 
 ///////////////// for CmdUART & CLI ///////////////////////
 extern __IO bool		LoRaOn;
@@ -116,7 +120,10 @@ const uint8_t		PongMsg[] = "PONG";
 
 
 /* Private function prototypes -----------------------------------------------*/
+#ifdef	USBD_VCP_Console
 static void	RX_DataCopy(uint8_t *, const uint8_t *, uint16_t);
+#endif
+
 static bool	MasterLoraEvent_PROCESS(void);
 static void	OnMasterForNormal(void);
 static void	OnSlaveForNormal(void);
@@ -125,9 +132,21 @@ static void	ForFskProductVerification(void);
 static void	OnMasterForPingPongTest(void);
 static void	OnSlaveForPingPongTest(void);
 static void	RxTestOutput(void);
-static void	PacketOutput(uint8_t *, size_t);
+
 
 /* Private functions ---------------------------------------------------------*/
+void		Clear_LoRa_TX_Buffer( void )
+{
+	LoraTxPayloadSize = 0;
+	memset( (void *) LoraTxBuffer, 0, LoraBufferLength );
+}
+
+void		Clear_LoRa_RX_Buffer( void )
+{
+	LoraRxPayloadSize = 0;
+	memset( (void *) LoraRxBuffer, 0, LoraBufferLength );
+}
+
 
 /**
   * @brief  Main program.
@@ -177,10 +196,8 @@ int	main( void )
 	// SystemOperMode = SystemInPingPognTest;
 	// SystemOperMode = SystemInProductVerification;
 	LoraNeedTxData = false;
-	LoraTxPayloadSize = 0;
-	memset((void *)LoraTxBuffer, 0, LoraBufferLength);
-	LoraRxPayloadSize = 0;
-	memset((void *)LoraRxBuffer, 0, LoraBufferLength);
+	Clear_LoRa_TX_Buffer();
+	Clear_LoRa_RX_Buffer();
 
 // 	if( Flag__Init_RTC ){
 		RTC_TimerConfig();
@@ -197,12 +214,32 @@ int	main( void )
 #endif
 #endif
 
-	LoraPara_LoadAndConfiguration();
-	BoardInit();
 	CmdUART__Init();
+	enableGlobalInterrupts();
+
+#ifdef Board__A22_Tracker
+	Led_BootFlashLed();
+
+	BlueTooth_DA14580Run(ComPortBaudRate);
+	if(EnableMaster == false) {				// ┐
+		CmdUART__Open(ComPortBaudRate);		// ├暫時給 SLAVE 測試用,若不執行此,則 CMD UART 輸出會一直等待完成而使得無限等待
+		CmdTIMER_TimerConfig();				// ┘
+	}
+
+	if(EnableMaster == false) GPS_MT3333Run();
+#else
+	CmdUART__Open( ComPortBaudRate );
+	CmdTIMER_TimerConfig();
+#endif
+
+
+	BoardInit();
 	Radio = RadioDriverInit();
+
+	LoraPara_LoadAndConfiguration();
+
 	Radio->Init();
-	SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
+	SX1276LoRaSetHopPeriod( Lora_RFHoppingPeriod );
 	Radio->StartRx();
 
 	AcsipProtocol_SetMyAddress();
@@ -219,25 +256,8 @@ int	main( void )
 	Led_PinInitialization();
 #endif
 
+	LBT__Initialize( LBT__Option__Japan );
 
-	enableGlobalInterrupts();
-
-
-
-#ifdef Board__A22_Tracker
-	Led_BootFlashLed();
-
-	BlueTooth_DA14580Run(ComPortBaudRate);
-	if(EnableMaster == false) {				// ┐
-		CmdUART__Open(ComPortBaudRate);		// ├暫時給 SLAVE 測試用,若不執行此,則 CMD UART 輸出會一直等待完成而使得無限等待
-		CmdTIMER_TimerConfig();				// ┘
-	}
-
-	if(EnableMaster == false) GPS_MT3333Run();
-#else
-	CmdUART__Open( ComPortBaudRate );
-	CmdTIMER_TimerConfig();
-#endif
 	Console_Output_String( "\r\n" );
 
 
@@ -271,7 +291,7 @@ int	main( void )
 	// Console_Output_String( "wake up...\r\n" );			// for sleep test
 
 	while(1) {
-		//CmdUART__UartGet_String( uint8_t *buffer, uint16_t buf_sz, uint16_t *ret_length );
+		// CmdUART__UartGet_String( uint8_t *buffer, uint16_t buf_sz, uint16_t *ret_length );
 		if( CmdUART__UartGet_String( CLI_Buf, sizeof( CLI_Buf ), NULL ) ) {
 			goto CLI_PROCESS;		// CLI_Buf處理
 		}
@@ -279,14 +299,14 @@ int	main( void )
 #ifdef STM32F401xx
 #ifdef	USBD_VCP_Console
 		if(UsbDegugOn == true) {
-			if( isVCP_RX_Buf1Full == true ) {
+			if( isVCP_RX_Buf1Full ) {
 				memset( (void *) CLI_Buf, 0, VCP_RX_BufLength );
 				RX_DataCopy( CLI_Buf, (const uint8_t *) VCP_RX_Buf1, VCP_RX_Length );
 				memset( (void *) VCP_RX_Buf1, 0, VCP_RX_BufLength );
 				isVCP_RX_Buf1Full = false;
 				goto CLI_PROCESS;		// CLI_Buf處理
 			} else {
-				if( isVCP_RX_Buf2Full == true ) {
+				if( isVCP_RX_Buf2Full ) {
 					memset( (void *) CLI_Buf, 0, VCP_RX_BufLength );
 					RX_DataCopy( CLI_Buf, (const uint8_t *) VCP_RX_Buf2, VCP_RX_Length );
 					memset( (void *) VCP_RX_Buf2, 0, VCP_RX_Length );
@@ -300,12 +320,12 @@ int	main( void )
 
 
 #ifdef Board__A22_Tracker
-		if(PowerButton == true) {
+		if( PowerButton ) {
 			Button_PowerButtonAction();
 			PowerButton = false;
 		}
 
-		if(FactoryResetButton == true) {
+		if( FactoryResetButton ) {
 			totalDelay = 0;
 			while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_4) == 0) {					// PB4=0, to mean keep press button
 				delayTick = GET_TICK_COUNT();							// every 20ms, scan button
@@ -323,7 +343,7 @@ int	main( void )
 #endif
 
 
-		switch( SystemOperMode ){
+		switch( SystemOperMode ) {
 			case SystemInNormal:
 				if( ! LoraStartWork ) break;
 
@@ -331,10 +351,11 @@ int	main( void )
 					OnMasterForNormal();
 					SLEEP_MasterSleepProcedure();
 				} else {
-				// Show ADC values
-					if( Last_Measure_TickCounter < TickCounter ){
+					if( Last_Measure_TickCounter < TickCounter ) {
 						Last_Measure_TickCounter = TickCounter + 3000;
-						ADC1__Dump_Values();
+
+						// Show ADC values
+// 						ADC1__Dump_Values();
 
 						if(MySensor != NULL) {
 							MySensor->GPS_Latitude =	ADC1__Get_Converted_Value( ADC_IDX___ADC0 );
@@ -414,8 +435,6 @@ void	LoraPara_LoadAndConfiguration(void)
 	LoRaSettings.MaxPayloadLength = MaxPacketSize;
 	LoRaSettings.PreambleLength = 12;
 
-	SaveRecord_ReadOutMyselfPara();
-
 	LoRaSettings.RFFrequency = Lora_RFFrequency;
 	LoRaSettings.HopPeriod = Lora_RFHoppingPeriod;		// Hops every frequency hopping period symbols
 	LoRaSettings.ErrorCoding = 1;				// LORA [1: 4/5, 2: 4/6, 3: 4/7, 4: 4/8]
@@ -427,25 +446,27 @@ void	LoraPara_LoadAndConfiguration(void)
 	LoRaSettings.RxPacketTimeout = LoRaSettings.TxPacketTimeout;
 	// LoRaSettings.Oscillator = OscillatorTCXO;
 	LoRaSettings.Oscillator = OscillatorCrystal;
+	SaveRecord_ReadOutMyselfPara();
 }
 
 
-/***************************************************************************************************
- *  Function Name: RX_DataCopy
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
+#ifdef	USBD_VCP_Console
 void	RX_DataCopy( uint8_t *dst, const uint8_t *sou, uint16_t length)
 {
 	uint16_t	count;
 
 	for( count = 0 ; count < length ; count++ ) dst[count] = sou[count];
 }
+#endif
 
+void	Main__Configure_RX( void )
+{
+	if( LoRaSettings.FreqHopOn || LBT__Option_Mode == LBT__Option__None ) {
+		Radio->StartRx();
+	} else {
+		LBT__Configure_Receving();
+	}
+}
 
 /***************************************************************************************************
  *  Function Name: MasterLoraEvent_PROCESS
@@ -458,8 +479,6 @@ void	RX_DataCopy( uint8_t *dst, const uint8_t *sou, uint16_t length)
  **************************************************************************************************/
 static	bool	MasterLoraEvent_PROCESS( void )
 {
-	// int8_t	str[5];		//test output
-	static bool	temp;
 	static uint8_t	tx_size;
 
 	/* 目前寫到最後的想法是將 NodeCount 搬到上一層去做++與range判斷
@@ -469,78 +488,7 @@ static	bool	MasterLoraEvent_PROCESS( void )
 	/* 進到switch( Radio->Process( ) )後,須注意一件事,就是會有其他狀態,如busy,如此很在此NodeCount下可能就跳過
 	必須等待rx_timeout或rx_done等的狀況,所以須如實等待,也需防止無限的busy等當機狀態,(注意slave是否也須注意此情形)  */
 
-	temp = false;
-	if(LoraLinkListEvent_DispatcherLoraEvent() == true) {
-		// Console_Output_String( "DispatcherLoraEvent=true\r\n" );		// test output
-		switch(LoraRunningEvent.RunNodeEvent) {
-		case Master_AcsipProtocol_Broadcast:
-			// 增加廣播請求函式
-			// LoraTxPayloadSize = tx_size;
-			// temp = true;
-			break;
-
-		case Master_AcsipProtocol_Join:
-			AcsipProtocol_LoraJoinNetworkRequest(LoraRunningEvent.RunNodeAddr, &TxFrame, LoraTxBuffer, &tx_size);
-			LoraTxPayloadSize = tx_size;
-			temp = true;
-			break;
-
-		case Master_AcsipProtocol_Poll:
-			AcsipProtocol_LoraPollRequest(LoraNodeDevice[LoraRunningEvent.RunNodeNumber], &TxFrame, LoraTxBuffer, &tx_size);
-			LoraTxPayloadSize = tx_size;
-			// LoraPollEventCount--;
-			temp = true;
-			break;
-
-		case Master_AcsipProtocol_Data:
-			AcsipProtocol_LoraDataRequest(LoraNodeDevice[LoraRunningEvent.RunNodeNumber], LoraRunningEvent.RunNodeData, &LoraRunningEvent.RunNodeDataSize, &TxFrame, LoraTxBuffer, &tx_size);
-			LoraTxPayloadSize = tx_size;
-			temp = true;
-			break;
-
-		case Master_AcsipProtocol_Leave:
-			AcsipProtocol_LoraLeaveNetworkRequest(LoraNodeDevice[LoraRunningEvent.RunNodeNumber], &TxFrame, LoraTxBuffer, &tx_size);
-			LoraTxPayloadSize = tx_size;
-			temp = true;
-			break;
-
-		case Master_AcsipProtocol_Interval:
-			AcsipProtocol_LoraIntervalRequest(LoraNodeDevice[LoraRunningEvent.RunNodeNumber], &TxFrame, LoraTxBuffer, &tx_size);
-			LoraTxPayloadSize = tx_size;
-			temp = true;
-			// Console_Output_String( "LoraEvent_PROCESS_Interval\r\n" );		// test output
-			break;
-
-		default:
-			LoraTxPayloadSize = 0;
-			break;
-		}
-
-		if( LoraTxPayloadSize ) {
-			switch(LoraRunningEvent.RunNodeEvent) {
-			case Master_AcsipProtocol_Broadcast:
-			case Master_AcsipProtocol_Join:
-				RandomHopStartChannel_SetHoppingStartChannelFreq(0);		// 若有跳頻,廣播或 LoraJoinEvent 從跳頻隨機起始通道 0 開始
-				break;
-
-			case Master_AcsipProtocol_Poll:
-			case Master_AcsipProtocol_Data:
-			case Master_AcsipProtocol_Leave:
-			case Master_AcsipProtocol_Interval:
-				if(DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber] != NULL) {
-					RandomHopStartChannel_SetHoppingStartChannelFreq( DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraHoppingStartChannel );
-				}
-				break;
-
-			default:
-				break;
-			}
-
-// 			for(i = LoraTxPayloadSize ; i < MaxPacketSize ; i++) LoraTxBuffer[i] = i;
-// 			LoraTxPayloadSize = MaxPacketSize;
-			Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
-		}
-	} else {
+	if( ! LoraLinkListEvent_DispatcherLoraEvent() ) {
 		// Console_Output_String( "DispatcherLoraEvent=false\r\n" );			// test output
 		// snprintf( (char *)str, sizeof(str), "%02u", LoraEvent.NodeEvent );		// test output
 		// Console_Output_String( "LoraEvent=" );					// test output
@@ -551,14 +499,104 @@ static	bool	MasterLoraEvent_PROCESS( void )
 		// Console_Output_String( (const char *)str );					// test output
 		// Console_Output_String( "\r\n" );						// test output
 
-		if(LoraRunningEvent.RunNodeEvent == Master_AcsipProtocol_Poll) {
+		if( LoraRunningEvent.RunNodeEvent == Master_AcsipProtocol_Poll ) {
 			// Console_Output_String( "LoraEvent=Poll\r\n" );		// test output
 			if( Event_Count[2] > 0 ) Event_Count[2]--;
 		}
 		// Console_Output_String( "MemsetLoraEvent\r\n" );			// test output
-		memset((void *)&LoraRunningEvent, 0, sizeof(tLoraRunningEvent));
+		memset( (void *)&LoraRunningEvent, 0, sizeof(tLoraRunningEvent) );
+		return( false );
 	}
-	return temp;
+
+	// Console_Output_String( "DispatcherLoraEvent=true\r\n" );		// test output
+	switch( LoraRunningEvent.RunNodeEvent ) {
+	case Master_AcsipProtocol_Broadcast:
+		// 增加廣播請求函式
+		// LoraTxPayloadSize = tx_size;
+		return( false );
+
+	case Master_AcsipProtocol_Join:
+		AcsipProtocol_LoraJoinNetworkRequest( LoraRunningEvent.RunNodeAddr, &TxFrame, LoraTxBuffer, &tx_size );
+		LoraTxPayloadSize = tx_size;
+		break;
+
+	case Master_AcsipProtocol_Poll:
+		AcsipProtocol_LoraPollRequest( LoraNodeDevice[LoraRunningEvent.RunNodeNumber], &TxFrame, LoraTxBuffer, &tx_size );
+		LoraTxPayloadSize = tx_size;
+		// LoraPollEventCount--;
+		break;
+
+	case Master_AcsipProtocol_Data:
+		AcsipProtocol_LoraDataRequest( LoraNodeDevice[LoraRunningEvent.RunNodeNumber], LoraRunningEvent.RunNodeData, &LoraRunningEvent.RunNodeDataSize, &TxFrame, LoraTxBuffer, &tx_size );
+		LoraTxPayloadSize = tx_size;
+		break;
+
+	case Master_AcsipProtocol_Leave:
+		AcsipProtocol_LoraLeaveNetworkRequest( LoraNodeDevice[LoraRunningEvent.RunNodeNumber], &TxFrame, LoraTxBuffer, &tx_size );
+		LoraTxPayloadSize = tx_size;
+		break;
+
+	case Master_AcsipProtocol_Interval:
+		AcsipProtocol_LoraIntervalRequest( LoraNodeDevice[LoraRunningEvent.RunNodeNumber], &TxFrame, LoraTxBuffer, &tx_size );
+		LoraTxPayloadSize = tx_size;
+		// Console_Output_String( "LoraEvent_PROCESS_Interval\r\n" );		// test output
+		break;
+
+	default:
+		LoraTxPayloadSize = 0;
+	}
+
+	if( ! LoraTxPayloadSize ) return( false );
+
+	switch( LoraRunningEvent.RunNodeEvent ) {
+	case Master_AcsipProtocol_Broadcast:
+	case Master_AcsipProtocol_Join:
+		RandomHopStartChannel_SetHoppingStartChannelFreq(0);		// 若有跳頻,廣播或 LoraJoinEvent 從跳頻隨機起始通道 0 開始
+		break;
+
+	case Master_AcsipProtocol_Poll:
+	case Master_AcsipProtocol_Data:
+	case Master_AcsipProtocol_Leave:
+	case Master_AcsipProtocol_Interval:
+		if( DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber] ) {
+			RandomHopStartChannel_SetHoppingStartChannelFreq( DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraHoppingStartChannel );
+		}
+		break;
+
+	default:
+		break;
+	}
+
+
+	if( LoRaSettings.FreqHopOn || LBT__Option_Mode == LBT__Option__None ) {
+		Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
+		return( true );
+	}
+
+	switch( LBT__Option_Mode ) {
+	case LBT__Option__Japan:
+		if( LBT__Wait_RF_Channel_Clear( LoRaSettings.TxPacketTimeout ) ){
+			Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
+			return( true );
+		}
+		Console_Output_String( "Channel is not free for JP-LBT.\r\n" );
+		break;
+
+	case LBT__Option__Europe_w_AFA:
+		if ( LBTandAFA_TX() ) {
+			Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
+			return( true );
+		}
+		Console_Output_String( "Channel is not free for CE-LBT.\r\n" );
+		break;
+
+	default:
+		Console_Output_String( "CE-LBT or JP-LBT have problem.\r\n" );
+	}
+
+	Clear_LoRa_TX_Buffer();
+	memset( (void *) & TxFrame, 0, sizeof(tAcsipProtocolFrame) );
+	return( false );
 }
 
 
@@ -577,10 +615,21 @@ static void	OnMasterForNormal( void )
 	int8_t		count, str[10];
 
 	switch( Radio->Process() ) {
+	case RF_CHANNEL_EMPTY:
+//		Console_Output_String( "EMPTY\r\n" );
+		// CLI_LoraGetRFFrequency( );
+		if( LBTandAFA_RX() ){
+			// Keeping CAD
+			break;
+		}
+
+		// Try CAD too many times, Keep go to process by  RF_RX_TIMEOUT
+
+
 	case RF_RX_TIMEOUT:
 		// Console_Output_String( "RX_TIMEOUT\r\n" );		//test output
 
-		if((LoraRunningEvent.RunNodeEvent == Master_AcsipProtocol_Poll) && (LoraNodeDevice[LoraRunningEvent.RunNodeNumber] != NULL)) {
+		if( (LoraRunningEvent.RunNodeEvent == Master_AcsipProtocol_Poll) && (LoraNodeDevice[LoraRunningEvent.RunNodeNumber] ) ) {
 			Console_Output_String( "Node=" );
 			for(count = 2 ; count >= 0 ; count--) {
 				snprintf( (char *)str, sizeof(str), "%02x", LoraRunningEvent.RunNodeAddr[count]);
@@ -594,11 +643,11 @@ static void	OnMasterForNormal( void )
 #endif
 		}		// 用來通知上層(如藍芽、APP),SLAVE Node 沒有回應, 此時 SLAVE Node 可能睡覺或已離線
 
-		if((LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Broadcast) && (LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Join) && (LoraRunningEvent.RunNodeEvent != 0)) {
-			if(DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber] != NULL) {
+		if( (LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Broadcast) && (LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Join) && (LoraRunningEvent.RunNodeEvent != 0) ) {
+			if( DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber] ) {
 				DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraRxFailureTimes += 1;
-				if(DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->isLoraDisconnecting == false) {
-					if(DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraRxFailureTimes > (LoraReceptionFailureTimes + DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->DefineLoraRxFailureTimes)) {
+				if( ! DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->isLoraDisconnecting ) {
+					if( DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraRxFailureTimes > ( LoraReceptionFailureTimes + DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->DefineLoraRxFailureTimes ) ) {
 						Console_Output_String( "Node=" );
 						for(count = 2 ; count >= 0 ; count--) {
 							snprintf( (char *)str, sizeof(str), "%02x", LoraRunningEvent.RunNodeAddr[count] );
@@ -612,20 +661,22 @@ static void	OnMasterForNormal( void )
 			}		// 當沒有接收到 SLAVE Node 傳過來的訊息時,連續累積到一定次數後,只輸出一次裝置為斷線狀態,並把狀態標註起來
 		}		// ,更將針對此 Node 的跳頻隨機起始通道設定為 0。
 
-		if((LoraRunningEvent.RunNodeEvent == Master_AcsipProtocol_Interval) && (LoraNodeDevice[LoraRunningEvent.RunNodeNumber] != NULL)) LoraNodeDevice[LoraRunningEvent.RunNodeNumber]->Interval = 0;
+		if( (LoraRunningEvent.RunNodeEvent == Master_AcsipProtocol_Interval) && LoraNodeDevice[LoraRunningEvent.RunNodeNumber] ){
+			LoraNodeDevice[LoraRunningEvent.RunNodeNumber]->Interval = 0;
+		}
 		// 當 LoraEvent 為 Master_AcsipProtocol_Interval 時,表針對此 SLAVE Node 須設定其 Interval,
 		// 所以當 SLAVE Node 在此 LoraEvent 無回應時,就針對此 SLAVE Node 的 Interval 清除為 0。
 
-		if(MasterLoraEvent_PROCESS() == false) Radio->StartRx( );
+		if( ! MasterLoraEvent_PROCESS() ) Main__Configure_RX();
 		break;
 
 	case RF_RX_DONE:
 		// Console_Output_String( "RX_Done\r\n" );		// test output
 		Radio->GetRxPacket( (void *)LoraRxBuffer, ( uint16_t* )&LoraRxPayloadSize );
-		// PacketOutput(LoraRxBuffer, LoraRxPayloadSize);    //test output
+
 		// LoraRxPayloadSize = LoraRxBuffer[0] + 8;
 		LoraRxPayloadSize = LoraRxBuffer[0] + 9;
-		if(AcsipProtocol_PacketToFrameProcess(LoraRxBuffer, (uint8_t)LoraRxPayloadSize, &RxFrame) == true) {
+		if( AcsipProtocol_PacketToFrameProcess(LoraRxBuffer, (uint8_t)LoraRxPayloadSize, &RxFrame) ) {
 			if((LoraRunningEvent.RunNodeEvent != 0)) {
 				NormalMaster(&LoraRunningEvent);
 				// 上面的或下面有額外狀況需處理
@@ -639,10 +690,8 @@ static void	OnMasterForNormal( void )
 
 		memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
 		memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
-		memset((void *)LoraTxBuffer, 0, LoraBufferLength);
-		memset((void *)LoraRxBuffer, 0, LoraBufferLength);
-		LoraTxPayloadSize = 0;
-		LoraRxPayloadSize = 0;
+		Clear_LoRa_TX_Buffer();
+		Clear_LoRa_RX_Buffer();
 
 		if((LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Broadcast) && (LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Join) && (LoraRunningEvent.RunNodeEvent != 0)) {
 			if(DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber] != NULL) {
@@ -651,16 +700,16 @@ static void	OnMasterForNormal( void )
 			}
 		}		// 當有成功接收到相關訊息,則持續將 SLAVE Node 判定為連線狀態
 
-		if(MasterLoraEvent_PROCESS() == false) Radio->StartRx( );
+		if ( ! MasterLoraEvent_PROCESS() ) Main__Configure_RX();
 		break;
 
 	case RF_TX_DONE:
 		// Console_Output_String( "TX_Done\r\n" );		// test output
-		if(TxFrame.FrameFlag == FrameFlag_Broadcast) {
+		if( TxFrame.FrameFlag == FrameFlag_Broadcast ) {
 			memset((void *)LoraTxBuffer, 0, LoraBufferLength);
 			LoraTxPayloadSize = 0;
 		}
-		Radio->StartRx( );
+		Main__Configure_RX();
 		break;
 
 	case RF_TX_TIMEOUT:
@@ -669,7 +718,13 @@ static void	OnMasterForNormal( void )
 		LoraTxPayloadSize = 0;
 		memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
 
-		if(MasterLoraEvent_PROCESS() == false) Radio->StartRx( );
+		if ( ! MasterLoraEvent_PROCESS() ) Main__Configure_RX();
+		break;
+
+	case RF_CHANNEL_ACTIVITY_DETECTED:
+//		Console_Output_String( "DETECTED\r\n" );		// test output
+		// CLI_LoraGetRFFrequency( );				// test output
+		Radio->StartRx( );
 		break;
 
 	default:
@@ -698,68 +753,105 @@ static void	OnSlaveForNormal( void )
 	switch( Radio->Process( ) ) {
 	case RF_RX_TIMEOUT:
 		// Console_Output_String( "RX_TIMEOUT\r\n" );		// test output
-		Radio->StartRx( );
+		Main__Configure_RX();
 		break;
 
 	case RF_RX_DONE:
 		// Console_Output_String( "RX_Done\r\n" );		// test output
 		Radio->GetRxPacket( (void *)LoraRxBuffer, ( uint16_t* )&LoraRxPayloadSize );
-		// PacketOutput(LoraRxBuffer, LoraRxPayloadSize);		// test output
+
 		// LoraRxPayloadSize = LoraRxBuffer[0] + 8;
 		LoraRxPayloadSize = LoraRxBuffer[0] + 9;
-		if(AcsipProtocol_PacketToFrameProcess(LoraRxBuffer, (uint8_t)LoraRxPayloadSize, &RxFrame) == true) {
-			// Console_Output_String( "error5\r\n" );		// test output
-			if(NormalSlave() == AcsipProtocol_OK) {
-				// Console_Output_String( "error7\r\n" );		// test output
-// 				for(i = LoraTxPayloadSize ; i < MaxPacketSize ; i++) LoraTxBuffer[i] = i;
-// 				LoraTxPayloadSize = MaxPacketSize;
-				// PacketOutput(LoraTxBuffer, LoraTxPayloadSize);		// test output
-				Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
+		if( ! AcsipProtocol_PacketToFrameProcess( LoraRxBuffer, (uint8_t)LoraRxPayloadSize, &RxFrame ) ) break;
 
-				if((RxFrame.FrameFlag == FrameFlag_Data) && (RxFrame.MsgLength > 0)) {
-					memset((void *)base64_data, 0, ((MaxMsgDataSize/3)*4));
-					if(Base64_encode( base64_data, ((MaxMsgDataSize/3)*4), &dsize, (const uint8_t	*)RxFrame.MsgData, RxFrame.MsgLength ) == 0) {
-						Console_Output_String( "LoraGateWayAddr=" );
-						for( count = 2 ; count >= 0 ; count-- ) {
-							snprintf( (char *)str, sizeof(str), "%02x", LoraGateWay->NodeAddress[count] );
-							Console_Output_String( (const char *)str );
-						}
+		// Console_Output_String( "error5\r\n" );		// test output
+		if( NormalSlave() != AcsipProtocol_OK ) break;
 
-						Console_Output_String( "  DataLength=" );
-						snprintf( (char *)str, sizeof(str), "%u", dsize );
-						Console_Output_String( (const char *)str );
-						Console_Output_String( "  Data=" );
-						Console_Write( base64_data, dsize );
-						Console_Output_String( "\r\n" );
+		// Console_Output_String( "error7\r\n" );		// test output
+// 		for(i = LoraTxPayloadSize ; i < MaxPacketSize ; i++) LoraTxBuffer[i] = i;
+// 		LoraTxPayloadSize = MaxPacketSize;
 
-						// Console_Output_String( "  " );
-						// Console_Output_String( "DataLength=" );
-						// snprintf( (char *)str, sizeof(str), "%u", RxFrame.MsgLength );
-						// Console_Output_String( (const char *)str );
-						// Console_Output_String( "  " );
-						// Console_Output_String( "Data=" );
-						// Console_Write( (uint8_t *)RxFrame.MsgData, RxFrame.MsgLength );
-						// Console_Output_String( "\r\n" );
-						// 或是存下來或是透過藍芽傳出去
-					}
+		if( LoRaSettings.FreqHopOn || LBT__Option_Mode == LBT__Option__None ) {
+			Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
+		} else {
+			switch( LBT__Option_Mode ) {
+			case LBT__Option__Japan:
+				if( LBT__Wait_RF_Channel_Clear( LoRaSettings.TxPacketTimeout ) ){
+					Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
+				} else {
+					Console_Output_String( "Channel is not clear for JP-LBT.\r\n" );
+
+					Clear_LoRa_TX_Buffer();
+					Clear_LoRa_RX_Buffer();
+					memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
+					memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
+					LBT__Configure_Receving();
+				}
+				break;
+
+			case LBT__Option__Europe_w_AFA:
+				if ( LBTandAFA_TX() ) {
+					Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
+				} else {
+					Console_Output_String( "Channel is not clear for CE-LBT.\r\n" );
+
+					Clear_LoRa_TX_Buffer();
+					Clear_LoRa_RX_Buffer();
+					memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
+					memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
+					LBT__Configure_Receving();
+				}
+				break;
+
+			default:
+				Console_Output_String( "CE-LBT or JP-LBT have problem.\r\n" );		// output
+
+				Clear_LoRa_TX_Buffer();
+				Clear_LoRa_RX_Buffer();
+				memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
+				memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
+				LBT__Configure_Receving();
+			}
+		}
+
+		if( ( RxFrame.FrameFlag == FrameFlag_Data ) && ( RxFrame.MsgLength > 0 ) ) {
+			memset((void *)base64_data, 0, ((MaxMsgDataSize/3)*4));
+			if( Base64_encode( base64_data, ((MaxMsgDataSize/3)*4), &dsize, (const uint8_t	*)RxFrame.MsgData, RxFrame.MsgLength ) == 0 ) {
+				Console_Output_String( "LoraGateWayAddr=" );
+				for( count = 2 ; count >= 0 ; count-- ) {
+					snprintf( (char *)str, sizeof(str), "%02x", LoraGateWay->NodeAddress[count] );
+					Console_Output_String( (const char *)str );
 				}
 
-				if((RxFrame.FrameFlag == FrameFlag_Join) || (RxFrame.FrameFlag == FrameFlag_Leave) || (RxFrame.FrameFlag == FrameFlag_Interval)) {
+				Console_Output_String( "  DataLength=" );
+				snprintf( (char *)str, sizeof(str), "%u", dsize );
+				Console_Output_String( (const char *)str );
+				Console_Output_String( "  Data=" );
+				Console_Write( base64_data, dsize );
+				Console_Output_String( "\r\n" );
+
+				// Console_Output_String( "  " );
+				// Console_Output_String( "DataLength=" );
+				// snprintf( (char *)str, sizeof(str), "%u", RxFrame.MsgLength );
+				// Console_Output_String( (const char *)str );
+				// Console_Output_String( "  " );
+				// Console_Output_String( "Data=" );
+				// Console_Write( (uint8_t *)RxFrame.MsgData, RxFrame.MsgLength );
+				// Console_Output_String( "\r\n" );
+				// 或是存下來或是透過藍芽傳出去
+			}
+		}
+
+		if((RxFrame.FrameFlag == FrameFlag_Join) || (RxFrame.FrameFlag == FrameFlag_Leave) || (RxFrame.FrameFlag == FrameFlag_Interval)) {
 #ifdef STM32F401xx
-					SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
+			SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
 #endif
 
 #ifdef STM32F072
-					SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
+			SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
 #endif
-					SaveRecord_WriteInLoraMode();
-				}
-			}
+			SaveRecord_WriteInLoraMode();
 		}
-		// memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
-		// memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
-		// memset((void *)LoraRxBuffer, 0, LoraBufferLength);
-		// LoraRxPayloadSize = 0;
 		break;
 
 	case RF_TX_DONE:
@@ -787,11 +879,10 @@ static void	OnSlaveForNormal( void )
 		}
 		memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
 		memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
-		memset((void *)LoraTxBuffer, 0, LoraBufferLength);
-		memset((void *)LoraRxBuffer, 0, LoraBufferLength);
-		LoraTxPayloadSize = 0;
-		LoraRxPayloadSize = 0;
-		Radio->StartRx( );
+		Clear_LoRa_TX_Buffer();
+		Clear_LoRa_RX_Buffer();
+
+		Main__Configure_RX();
 		break;
 
 	case RF_TX_TIMEOUT:
@@ -799,7 +890,20 @@ static void	OnSlaveForNormal( void )
 		if(Slave_PollEvent == true) Slave_PollEvent = false;
 		memset((void *)LoraTxBuffer, 0, LoraBufferLength);
 		LoraTxPayloadSize = 0;
-		Radio->StartRx( );
+
+		Main__Configure_RX();
+		break;
+
+	case RF_CHANNEL_EMPTY:
+		// Console_Output_String( "EMPTY\r\n" );		// test output
+		// CLI_LoraGetRFFrequency( );				// test output
+		if( ! LBTandAFA_RX() ) Main__Configure_RX();
+		break;
+
+	case RF_CHANNEL_ACTIVITY_DETECTED:
+		// Console_Output_String( "DETECTED\r\n" );		// test output
+		// CLI_LoraGetRFFrequency( );				// test output
+		Radio->StartRx();
 		break;
 
 	default:
@@ -932,13 +1036,15 @@ void	OnMasterForPingPongTest( void )
 	switch( Radio->Process() ) {
 	case RF_RX_TIMEOUT:
 		Console_Output_String( "RF_RX_TIMEOUT\r\n" );
+
 		// Send the next PING frame
-		Buffer[0] = 'P';
-		Buffer[1] = 'I';
-		Buffer[2] = 'N';
-		Buffer[3] = 'G';
-		for( i = 4; i < BufferSize; i++ ) Buffer[i] = i - 4;
-		Radio->SetTxPacket( Buffer, BufferSize );
+		// Buffer[0] = 'P';
+		// Buffer[1] = 'I';
+		// Buffer[2] = 'N';
+		// Buffer[3] = 'G';
+		// for( i = 4; i < BufferSize; i++ ) Buffer[i] = i - 4;
+		// Radio->SetTxPacket( Buffer, BufferSize );
+		Radio->StartCAD();
 		break;
 
 	case RF_RX_DONE:
@@ -949,19 +1055,22 @@ void	OnMasterForPingPongTest( void )
 			if( strncmp( ( const char* )Buffer, ( const char* )PongMsg, 4 ) == 0 ) {
 				RX_COUNT++;
 				RxTestOutput();
+
 				// Send the next PING frame
-				Buffer[0] = 'P';
-				Buffer[1] = 'I';
-				Buffer[2] = 'N';
-				Buffer[3] = 'G';
+				// Buffer[0] = 'P';
+				// Buffer[1] = 'I';
+				// Buffer[2] = 'N';
+				// Buffer[3] = 'G';
 				// We fill the buffer with numbers for the payload
-				for( i = 4; i < BufferSize; i++ ) Buffer[i] = i - 4;
-				Radio->SetTxPacket( Buffer, BufferSize );
+				// for( i = 4; i < BufferSize; i++ ) Buffer[i] = i - 4;
+				// Radio->SetTxPacket( Buffer, BufferSize );
+				Radio->StartCAD();
 			} else {
 				if( strncmp( ( const char* )Buffer, ( const char* )PingMsg, 4 ) == 0 ) {
 					// A master already exists then become a slave
 					EnableMaster = false;
 				}
+				Radio->StartCAD();
 			}
 		}
 		break;
@@ -973,6 +1082,22 @@ void	OnMasterForPingPongTest( void )
 	case RF_TX_TIMEOUT:
 		Console_Output_String( "RF_TX_TIMEOUT\r\n" );
 		Radio->StartRx( );
+		break;
+
+	case RF_CHANNEL_EMPTY:
+		// Console_Output_String( "RF_CHANNEL_EMPTY\r\n" );
+		// Send the next PING frame
+		Buffer[0] = 'P';
+		Buffer[1] = 'I';
+		Buffer[2] = 'N';
+		Buffer[3] = 'G';
+		for( i = 4; i < BufferSize; i++ ) Buffer[i] = i - 4;
+		Radio->SetTxPacket( Buffer, BufferSize );
+		break;
+
+	case RF_CHANNEL_ACTIVITY_DETECTED:
+		Console_Output_String( "RF_CHANNEL_ACTIVITY_DETECTED\r\n" );
+		Radio->StartCAD();
 		break;
 
 	default:
@@ -1003,17 +1128,19 @@ void	OnSlaveForPingPongTest( void )
 			if( strncmp( ( const char* )Buffer, ( const char* )PingMsg, 4 ) == 0 ) {
 				RX_COUNT++;
 				RxTestOutput();
+
 				// Send the reply to the PONG string
-				Buffer[0] = 'P';
-				Buffer[1] = 'O';
-				Buffer[2] = 'N';
-				Buffer[3] = 'G';
+				// Buffer[0] = 'P';
+				// Buffer[1] = 'O';
+				// Buffer[2] = 'N';
+				// Buffer[3] = 'G';
 				// We fill the buffer with numbers for the payload
-				for( i = 4; i < BufferSize; i++ ) {
-					Buffer[i] = i - 4;
-				}
-				Radio->SetTxPacket( Buffer, BufferSize );
+				// for( i = 4; i < BufferSize; i++ ) {
+				// 	Buffer[i] = i - 4;
+				// }
+				// Radio->SetTxPacket( Buffer, BufferSize );
 			}
+			Radio->StartCAD();
 		}
 		break;
 
@@ -1029,6 +1156,22 @@ void	OnSlaveForPingPongTest( void )
 	case RF_RX_TIMEOUT:
 		Console_Output_String( "RF_RX_TIMEOUT\r\n" );
 		Radio->StartRx( );
+		break;
+
+	case RF_CHANNEL_EMPTY:
+		// Console_Output_String( "RF_CHANNEL_EMPTY\r\n" );
+		// Send the next PING frame
+		Buffer[0] = 'P';
+		Buffer[1] = 'O';
+		Buffer[2] = 'N';
+		Buffer[3] = 'G';
+		for( i = 4; i < BufferSize; i++ ) Buffer[i] = i - 4;
+		Radio->SetTxPacket( Buffer, BufferSize );
+		break;
+
+	case RF_CHANNEL_ACTIVITY_DETECTED:
+		Console_Output_String( "RF_CHANNEL_ACTIVITY_DETECTED\r\n" );
+		Radio->StartCAD();
 		break;
 
 	default:
@@ -1079,35 +1222,6 @@ void	RxTestOutput( void )
 	Console_Output_String( "\r\n" );
 }
 
-
-/***************************************************************************************************
- *  Function Name: PacketOutput
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
-static void	PacketOutput( uint8_t *array, size_t size )
-{
-	int8_t		str[10];		// test output
-	uint16_t	count;
-
-	Console_Output_String( "PacketSize=" );
-	snprintf( (char *)str, sizeof(str), "%u", size );
-	Console_Output_String( (const char *)str );
-	Console_Output_String( "  " );
-	Console_Output_String( "Packet=" );
-
-	for(count = 0 ; count < size ; count++) {
-		snprintf( (char *)str, sizeof(str), "%02x", array[count]);		// test output
-		Console_Output_String( (const char *)str );
-		Console_Output_String( "  " );
-	}
-
-	Console_Output_String( "\r\n" );
-}
 
 
 #ifdef  USE_FULL_ASSERT
