@@ -1,3 +1,15 @@
+
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2017(C) AcSiP Technology Inc.
+// 版權所有：群登科技股份有限公司
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
 /*
  * THE FOLLOWING FIRMWARE IS PROVIDED: (1) "AS IS" WITH NO WARRANTY; AND 
  * (2)TO ENABLE ACCESS TO CODING INFORMATION TO GUIDE AND FACILITATE CUSTOMER.
@@ -19,7 +31,7 @@
  * Last modified by Miguel Luis on Jun 19 2013
  */
 #include <stdint.h>
-#include <stdbool.h> 
+#include <stdbool.h>
 
 #include "config.h"
 
@@ -62,17 +74,14 @@
 	#define DIO4_IOPORT		GPIOB
 	#define DIO4_PIN		GPIO_Pin_1
 
-	#define DIO5_IOPORT		GPIOC  
+	#define DIO5_IOPORT		GPIOC
 	#define DIO5_PIN		GPIO_Pin_13
-  
+
 	#define RXTX_IOPORT		GPIOB
 	#define RXTX_PIN		GPIO_Pin_2
 #else
 	#error "Missing define MCU type (STM32F072 or STM32F401xx)"
 #endif
-
-//#define RXTX_IOPORT
-//#define RXTX_PIN			FEM_CTX_PIN
 
 void		SX127x_Init_NSS( void )
 {
@@ -136,7 +145,7 @@ void		SX1276InitIo( void )
 	GPIO_Init( NSS_IOPORT, &GPIO_InitStructure );
 
 	GPIO_WriteBit( NSS_IOPORT, NSS_PIN, Bit_SET );
-  
+
 #if defined( LoRa_RXTX_Switch )
 	// Configure RF Switch(PB2) as output
 	GPIO_InitStructure.GPIO_Pin =  RXTX_PIN;
@@ -147,7 +156,7 @@ void		SX1276InitIo( void )
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
 #if defined( STM32F401xx )
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-#elif defined( STM32F072 ) 
+#elif defined( STM32F072 )
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_Level_3;
 #endif
 
@@ -181,11 +190,10 @@ void		SX1276InitIo( void )
 
 void		SX1276SetReset( uint8_t state )
 {
-	if( state == RADIO_RESET_ON ){
+	if( state == RADIO_RESET_ON ) {
 		// Set RESET pin to 1
 		GPIO_WriteBit( RESET_IOPORT, RESET_PIN, Bit_SET );
-	}
-	else {
+	} else {
 		GPIO_WriteBit( RESET_IOPORT, RESET_PIN, Bit_RESET );
 	}
 }
@@ -205,15 +213,15 @@ void		SX1276WriteBuffer( uint8_t addr, uint8_t *buffer, uint8_t size )
 {
 	uint8_t		i;
 
-	//NSS = 0;
+	// NSS = 0;
 	GPIO_WriteBit( NSS_IOPORT, NSS_PIN, Bit_RESET );
 
 	SpiInOut( addr | 0x80 );
-	for( i = 0; i < size; i++ ){
+	for( i = 0; i < size; i++ ) {
 		SpiInOut( buffer[i] );
 	}
 
-	//NSS = 1;
+	// NSS = 1;
 	GPIO_WriteBit( NSS_IOPORT, NSS_PIN, Bit_SET );
 }
 
@@ -221,16 +229,16 @@ void		SX1276ReadBuffer( uint8_t addr, uint8_t *buffer, uint8_t size )
 {
 	uint8_t		i;
 
-	//NSS = 0;
+	// NSS = 0;
 	GPIO_WriteBit( NSS_IOPORT, NSS_PIN, Bit_RESET );
 
 	SpiInOut( addr & 0x7F );
 
-	for( i = 0; i < size; i++ ){
+	for( i = 0; i < size; i++ ) {
 		buffer[i] = SpiInOut( 0 );
 	}
 
-	//NSS = 1;
+	// NSS = 1;
 	GPIO_WriteBit( NSS_IOPORT, NSS_PIN, Bit_SET );
 }
 
@@ -289,14 +297,14 @@ inline uint8_t	SX1276ReadDio5( void )
 inline void	SX1276WriteRxTx( uint8_t txEnable )
 {
 #if defined( LoRa_RXTX_Switch )
-	if( txEnable != 0 ) { //TX
+	if( txEnable != 0 ) {		// TX
 		GPIO_WriteBit( RXTX_IOPORT, RXTX_PIN, Bit_RESET );
-	} else {              //RX
+	} else {		// RX
 		GPIO_WriteBit( RXTX_IOPORT, RXTX_PIN, Bit_SET );
 	}
 #endif
 }
 
-#endif // USE_SX1276_RADIO
+#endif		// USE_SX1276_RADIO
 
 /************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

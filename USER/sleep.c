@@ -126,12 +126,12 @@ void	SLEEP_SlaveSleepVariableSet(void)
 void		SLEEP_SlaveSleep( uint16_t *SleepTime_sec )
 {
 	if( ! SleepTime_sec ) return;
-	if( *SleepTime_sec == 0 ){
+	if( *SleepTime_sec == 0 ) {
 		isInSleep = false;
 		return;
 	}
 
-	if( *SleepTime_sec > 10 ){
+	if( *SleepTime_sec > 10 ) {
 		*SleepTime_sec -= 5;
 		SLEEP_SlaveSleep_STANDBY_Mode( SleepTime_sec );
 		return;
@@ -343,7 +343,7 @@ void	SLEEP_SlaveSleep_Deep_STOP_Mode( uint16_t *SleepTime_sec )
 	SX127x_Init_NSS();
 
 	/* Disable SysTick ISR */
-//	SysTick->CTRL &= (~SysTick_CTRL_ENABLE_Msk);
+// 	SysTick->CTRL &= (~SysTick_CTRL_ENABLE_Msk);
 
 // 	RTC_ITConfig( RTC_IT_ALRA, DISABLE );
 
@@ -373,22 +373,22 @@ void	SLEEP_SlaveSleep_Deep_STOP_Mode( uint16_t *SleepTime_sec )
 	SLEEP_SYSCLKConfigFromSTOPMode();
 
 #ifdef Board__A22_Tracker
-//	Led_BootFlashLed();
+// 	Led_BootFlashLed();
 
-//	BlueTooth_DA14580Run(ComPortBaudRate);
-//	if(EnableMaster == false) {				// ┐
-//		CmdUART__Open(ComPortBaudRate);		// ├暫時給 SLAVE 測試用,若不執行此,則 CMD UART 輸出會一直等待完成而使得無限等待
-//		CmdTIMER_TimerConfig();				// ┘
-//	}
+// 	BlueTooth_DA14580Run(ComPortBaudRate);
+// 	if(EnableMaster == false) {				// ┐
+// 		CmdUART__Open(ComPortBaudRate);		// ├暫時給 SLAVE 測試用,若不執行此,則 CMD UART 輸出會一直等待完成而使得無限等待
+// 		CmdTIMER_TimerConfig();				// ┘
+// 	}
 
-//	if(EnableMaster == false) GPS_MT3333Run();
+// 	if(EnableMaster == false) GPS_MT3333Run();
 #else
 	CmdUART__Open( ComPortBaudRate );
-//	CmdTIMER_TimerConfig();
+// 	CmdTIMER_TimerConfig();
 #endif
 	Console_Output_String( "\r\nWake(STOP)\r\n" );
 
-//	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
+// 	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
 
 	BoardInit();
 	Console_Output_String( "Board Initialized.\r\n" );
@@ -455,7 +455,7 @@ void	SLEEP_SlaveSleep_STANDBY_Mode( uint16_t *SleepTime_sec )
 
 	/* Request to enter STANDBY mode (Wake Up flag is cleared in PWR_EnterSTANDBYMode function) */
 	PWR_EnterSTANDBYMode();
-  
+
 	/* Infinite loop */
 	while (1) {
 	}

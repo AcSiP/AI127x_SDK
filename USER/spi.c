@@ -192,11 +192,11 @@ void	SPI_De_Init( void )
 	GPIO_Init( SPI_PIN_MISO_PORT, & GPIO_InitStructure );
 
 
-//	GPIO_InitStructure.GPIO_Pin = SPI_PIN_NSS;
-//	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-//	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-//	GPIO_Init( SPI_PIN_NSS_PORT, & GPIO_InitStructure );
-//	GPIO_SetBits( SPI_PIN_NSS_PORT, SPI_PIN_NSS );
+// 	GPIO_InitStructure.GPIO_Pin = SPI_PIN_NSS;
+// 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+// 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+// 	GPIO_Init( SPI_PIN_NSS_PORT, & GPIO_InitStructure );
+// 	GPIO_SetBits( SPI_PIN_NSS_PORT, SPI_PIN_NSS );
 }
 
 uint8_t		SpiInOut( uint8_t outData )

@@ -77,18 +77,18 @@ void	Console_Dump_Binary( const uint8_t *buf, uint16_t length )
 
 	if( ! buf ) return;
 	Console_Output_String( "=========================================================================\r\n" );
-	for( dumped_sz = 0; dumped_sz < length;  ){
-		while( ! CmdUART__is_TX_Queue_Empty() ){
+	for ( dumped_sz = 0; dumped_sz < length; ) {
+		while( ! CmdUART__is_TX_Queue_Empty() ) {
 		}
 
-		for( k = 0; k < 16 && dumped_sz < length ; k++ ){
-			if( k == 0 ){
+		for( k = 0; k < 16 && dumped_sz < length ; k++ ) {
+			if( k == 0 ) {
 				snprintf( sbuf, sizeof(sbuf), "0x%08X  ", dumped_sz );
 				Console_Output_String( sbuf );
 			}
 			if( k == 4 || k == 12 ) Console_Output_String( " -" );
 			if( k == 8 )		Console_Output_String( " --" );
-			
+
 			snprintf( sbuf, sizeof(sbuf), " %02X", buf[ dumped_sz + k ] );
 			Console_Output_String( sbuf );
 		}
@@ -104,7 +104,7 @@ void	Console_Output_LoraMode( uint8_t mode )
 
 	snprintf( buf, sizeof(buf), "RegOPMode=0x%02X, Mode=", mode );
 	Console_Output_String( buf );
-	switch( mode & 0x07 ){
+	switch( mode & 0x07 ) {
 	case 0:
 		Console_Output_String( "Sleep\r\n" );
 		break;

@@ -10,11 +10,12 @@
 */
 //---------------------------------------------------------------------------
 
-#if defined( Console__Use_UART1 ) || defined( Console__Use_UART2 )
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef USER_UART_CONSOLE_H_
-#define USER_UART_CONSOLE_H_
+#ifndef		USER_UART_CONSOLE_H_
+#define		USER_UART_CONSOLE_H_
+
+#if defined( Console__Use_UART1 ) || defined( Console__Use_UART2 )
 
 /* Includes ------------------------------------------------------------------*/
 #include <stdbool.h>
@@ -41,8 +42,8 @@ bool	CmdUART__UartGet_String( uint8_t *buffer, uint16_t buf_sz, uint16_t *ret_le
 bool	CmdUART__is_TX_Queue_Empty( void );
 void	CmdUART__Clear_Buffer( void );
 
-#endif		// USER_UART_CONSOLE_H_
+#endif		// defined( Console__Use_UART1 ) || defined( Console__Use_UART2 )
 
-#endif
+#endif		// USER_UART_CONSOLE_H_
 
 /************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

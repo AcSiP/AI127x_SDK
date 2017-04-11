@@ -105,11 +105,11 @@ void		RTC_TimerConfig(void)
 
 #if LOCAL_USE_LSI
 	/* LSI used as RTC source clock */
-	/* The RTC Clock may varies due to LSI frequency dispersion. */   
-	/* Enable the LSI OSC */ 
+	/* The RTC Clock may varies due to LSI frequency dispersion. */
+	/* Enable the LSI OSC */
 	RCC_LSICmd(ENABLE);
 
-	/* Wait till LSI is ready */  
+	/* Wait till LSI is ready */
 	while(RCC_GetFlagStatus(RCC_FLAG_LSIRDY) == RESET) {
 	}
 
@@ -312,9 +312,6 @@ void		RTC_AlarmStop(void)
 
 static void	RTC__Process_ISR( void )
 {
-//	static uint8_t	LoraNum;
-//	uint8_t		status;
-
 	if( SystemOperMode != SystemInNormal ) return;
 
 	if ( ! EnableMaster ) {
@@ -329,38 +326,38 @@ static void	RTC__Process_ISR( void )
 		return;
 	}
 
-	if( ! EnableMaster ) return;	// SLAVE
+	if( ! EnableMaster ) return;		// SLAVE
 
 	// Check all events are done
 	uint16_t	i;
 	bool		flag_need_build_pool = true;
 
 	Running_TimeCount++;
-	for( i = 0; i < MAX_LoraNodeNum; i++ ){
-		if( LoraNodeDevice[i] && DeviceNodeSleepAndRandomHop[i] ){
-			if( DeviceNodeSleepAndRandomHop[i]->Event_Count[2] ){
+	for( i = 0; i < MAX_LoraNodeNum; i++ ) {
+		if( LoraNodeDevice[i] && DeviceNodeSleepAndRandomHop[i] ) {
+			if( DeviceNodeSleepAndRandomHop[i]->Event_Count[2] ) {
 				flag_need_build_pool = false;
 				break;
 			}
 		}
 	}
 
-//	char	cb[128];
-//	if( flag_need_build_pool ){
-//		snprintf( cb, sizeof( cb ), "%d, flag_need_build_pool = %d \r\n", __LINE__, (int) flag_need_build_pool );
-//		Console_Output_String( cb );
-//	}
+// 	char	cb[128];
+// 	if( flag_need_build_pool ){
+// 		snprintf( cb, sizeof( cb ), "%d, flag_need_build_pool = %d \r\n", __LINE__, (int) flag_need_build_pool );
+// 		Console_Output_String( cb );
+// 	}
 
-	for( i = 0; i < MAX_LoraNodeNum; i++ ){
-		if( LoraNodeDevice[i] && DeviceNodeSleepAndRandomHop[i] ){
-			if( Running_TimeCount >= DeviceNodeSleepAndRandomHop[i]->WakeUpTimePoint ){
+	for( i = 0; i < MAX_LoraNodeNum; i++ ) {
+		if( LoraNodeDevice[i] && DeviceNodeSleepAndRandomHop[i] ) {
+			if( Running_TimeCount >= DeviceNodeSleepAndRandomHop[i]->WakeUpTimePoint ) {
 				DeviceNodeSleepAndRandomHop[i]->isNowSleeping = false;
 				DeviceNodeSleepAndRandomHop[i]->WakeUpTimePoint = 0;
 			}
 
-			if( ! DeviceNodeSleepAndRandomHop[i]->isNowSleeping && flag_need_build_pool ){
-//				snprintf( cb, sizeof( cb ), "%d, RHop[%d]->P2 = %d \r\n", __LINE__, i, DeviceNodeSleepAndRandomHop[i]->Event_Head[ LoraEventPriority2 ] );
-//				Console_Output_String( cb );
+			if( ! DeviceNodeSleepAndRandomHop[i]->isNowSleeping && flag_need_build_pool ) {
+// 				snprintf( cb, sizeof( cb ), "%d, RHop[%d]->P2 = %d \r\n", __LINE__, i, DeviceNodeSleepAndRandomHop[i]->Event_Head[ LoraEventPriority2 ] );
+// 				Console_Output_String( cb );
 
 				LoraLinkListEvent_BuildLoraEvent( LoraEventPriority2, i, Master_AcsipProtocol_Poll, LoraNodeDevice[i]->NodeAddress, NULL, NULL );
 			}

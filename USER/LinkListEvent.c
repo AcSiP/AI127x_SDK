@@ -50,7 +50,7 @@ void		LoraLinkListEvent_Initialization( void )
 {
 	uint8_t		i;
 
-	for( i = 0; i < LoraEventPriorities; i++ ){
+	for( i = 0; i < LoraEventPriorities; i++ ) {
 		Event_Head[i] = NULL;
 		Event_Count[i] = 0;
 	}
@@ -65,7 +65,7 @@ tLoraNodeEvent *	LoraLinkListEvent__Get_Tail( tLoraNodeEvent *event_chain )
 	if( ! event_chain ) return( NULL );
 
 	ret = event_chain;
-	while( ret->Next ){
+	while( ret->Next ) {
 		tmp = ret->Next;
 		ret = tmp;
 	}
@@ -84,7 +84,7 @@ uint16_t		LoraLinkListEvent__Count_Events( tLoraNodeEvent *event_chain )
 
 	p = event_chain;
 	r = 1;
-	while( p->Next ){
+	while( p->Next ) {
 		r++;
 		tmp = p->Next;
 		p = tmp;
@@ -111,7 +111,7 @@ bool			LoraLinkListEvent__Append( tLoraNodeEvent *event_chain, tLoraNodeEvent *e
 
 void			LoraLinkListEvent__Free_Event( tLoraNodeEvent *event )
 {
-	if( event->NodeData ){
+	if( event->NodeData ) {
 		free( event->NodeData );
 		event->NodeData = NULL;
 	}
@@ -137,9 +137,9 @@ tLoraNodeEvent *	LoraLinkListEvent__Malloc_Event( uint8_t Num, uint8_t Event, co
 	temp->Next = NULL;
 	temp->Previous = NULL;
 
-	if( DataSize && Data ){
+	if( DataSize && Data ) {
 		temp->NodeData = (uint8_t *) malloc( DataSize );
-		if( ! temp->NodeData ){		// malloc for payload fail
+		if( ! temp->NodeData ) {		// malloc for payload fail
 			free( temp );
 			return( NULL );
 		}
@@ -163,11 +163,11 @@ bool		LoraLinkListEvent_CreateEvent( uint8_t priority, uint8_t Num, uint8_t Even
 	pEvent_Count = & Event_Count[ priority ];
 
 	n = LoraLinkListEvent__Count_Events( *pEvent_Head );
-	if( ( n + 1 ) < MAX_LoraEventCount ){
+	if( ( n + 1 ) < MAX_LoraEventCount ) {
 		temp = LoraLinkListEvent__Malloc_Event( Num, Event, Addr, Data, *DataSize );
 		if( ! temp ) return( false );
 
-		if( ! LoraLinkListEvent__Append( *pEvent_Head, temp ) ){
+		if( ! LoraLinkListEvent__Append( *pEvent_Head, temp ) ) {
 			*pEvent_Head = temp;
 			*pEvent_Count = 1;
 			return( true );
@@ -191,7 +191,7 @@ void		LoraLinkListEvent_DestroyHeadEvent( uint8_t priority )
 
 	if( *pEvent_Count == 0 ) return;
 
-	if( *pEvent_Count == 1 ){
+	if( *pEvent_Count == 1 ) {
 		temp = *pEvent_Head;
 		*pEvent_Head = NULL;
 		*pEvent_Count = 0;
@@ -238,7 +238,7 @@ bool		LoraLinkListEvent_BuildLoraEvent( uint8_t Priority, uint8_t Num, uint8_t E
 	case Master_AcsipProtocol_Data:
 	case Master_AcsipProtocol_Leave:
 	case Master_AcsipProtocol_Interval:
-		if( DeviceNodeSleepAndRandomHop[Num] ){
+		if( DeviceNodeSleepAndRandomHop[Num] ) {
 			result = LoraLinkListEvent_CreateNodeEvent(Priority, Num, Event, Data, DataSize);
 		}
 		break;
@@ -262,8 +262,8 @@ void		Copy_NodeEvent_2_RunningEvent( const tLoraNodeEvent *event )
 	LoraRunningEvent.RunNodeAddr[2] = event->NodeAddr[2];
 
 	LoraRunningEvent.RunNodeDataSize = 0;
-	if( event->NodeData ){
-		for( i = 0 ; i < event->NodeDataSize && i < MaxMsgDataSize ; i++ ){
+	if( event->NodeData ) {
+		for( i = 0 ; i < event->NodeDataSize && i < MaxMsgDataSize ; i++ ) {
 			LoraRunningEvent.RunNodeData[i] = event->NodeData[i];
 		}
 		LoraRunningEvent.RunNodeDataSize = i;
@@ -275,32 +275,32 @@ bool		Dispatch__Lora_Event( uint8_t priority )
 {
 	tLoraNodeEvent *	pHead;
 	uint8_t			i;
-//	char			cs[64];
+// 	char			cs[64];
 
 	// Check Non group node event
 	pHead = Event_Head[ priority ];
-	if( pHead ){
+	if( pHead ) {
 		Copy_NodeEvent_2_RunningEvent( pHead );
 		LoraLinkListEvent_DestroyHeadEvent( priority );
 
-//		snprintf( cs, sizeof(cs), "%d, p=%d \r\n", __LINE__, priority );
-//		Console_Output_String( cs );
+// 		snprintf( cs, sizeof(cs), "%d, p=%d \r\n", __LINE__, priority );
+// 		Console_Output_String( cs );
 		return( true );
 	}
 
 	// Check group node event
-	for( i = 0; i < MAX_LoraNodeNum; i++ ){
+	for( i = 0; i < MAX_LoraNodeNum; i++ ) {
 		if( ! DeviceNodeSleepAndRandomHop[i] ) continue;			// Slave is not exist
 		if( DeviceNodeSleepAndRandomHop[i]->isNowSleeping ) continue;		// Slave is sleeping
 
 		pHead = DeviceNodeSleepAndRandomHop[i]->Event_Head[ priority ];
-		if( pHead ){
+		if( pHead ) {
 			Copy_NodeEvent_2_RunningEvent( pHead );
 			LoraLinkListEvent_DestroyNodeHeadEvent( priority, i );
 
-//			if( i == 0 ) Console_Output_String( "\r\n" );
-//			snprintf( cs, sizeof(cs), "%d, p=%d, i=%d \r\n", __LINE__, priority, i );
-//			Console_Output_String( cs );
+// 			if( i == 0 ) Console_Output_String( "\r\n" );
+// 			snprintf( cs, sizeof(cs), "%d, p=%d, i=%d \r\n", __LINE__, priority, i );
+// 			Console_Output_String( cs );
 			return( true );
 		}
 	}
@@ -343,10 +343,10 @@ void		LoraLinkListEvent_LoraEventDelete( uint8_t Priority, const uint8_t *Addr )
 		return;
 	}
 
-	while( temp ){
+	while( temp ) {
 		PreTemp = temp->Previous;
 		NxtTemp = temp->Next;
-		if( temp->NodeAddr[0] == Addr[0] && temp->NodeAddr[1] == Addr[1] && temp->NodeAddr[2] == Addr[2] ){
+		if( temp->NodeAddr[0] == Addr[0] && temp->NodeAddr[1] == Addr[1] && temp->NodeAddr[2] == Addr[2] ) {
 			if( PreTemp ) PreTemp->Next = NxtTemp;
 			if( NxtTemp ) NxtTemp->Previous = PreTemp;
 
@@ -418,7 +418,7 @@ bool		LoraLinkListEvent_CreateNodeEvent( uint8_t Priority, uint8_t Num, uint8_t 
 	tLoraNodeEvent *	temp;
 	char			cs[48];
 
-	switch( Priority ){
+	switch( Priority ) {
 	case LoraEventPriority0:
 		EventHead = &DeviceNodeSleepAndRandomHop[Num]->Event_Head[0];
 		EventCount = &DeviceNodeSleepAndRandomHop[Num]->Event_Count[0];
@@ -439,13 +439,13 @@ bool		LoraLinkListEvent_CreateNodeEvent( uint8_t Priority, uint8_t Num, uint8_t 
 	}
 
 	temp = LoraLinkListEvent__Malloc_Event( Num, Event, LoraNodeDevice[Num]->NodeAddress, Data, *DataSize );
-	if( ! temp ){
+	if( ! temp ) {
 		snprintf( cs, sizeof(cs), "%d, %s() \r\n", __LINE__, __FUNCTION__ );
 		Console_Output_String( cs );
 		return( false );
 	}
 
-	if( LoraLinkListEvent__Append( *EventHead, temp ) ){
+	if( LoraLinkListEvent__Append( *EventHead, temp ) ) {
 		*EventCount += 1;
 	} else {
 		*EventHead = temp;
@@ -467,7 +467,7 @@ void		LoraLinkListEvent_DestroyNodeHeadEvent( uint8_t priority, uint8_t num )
 
 	if( *EventCount == 0 ) return;
 
-	if( *EventCount == 1 ){
+	if( *EventCount == 1 ) {
 		temp = *EventHead;
 		*EventHead = NULL;
 		*EventCount = 0;

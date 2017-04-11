@@ -1,3 +1,15 @@
+
+//---------------------------------------------------------------------------
+/*
+//==========================================
+// Author : JC<jc@acsip.com.tw>
+// Copyright 2017(C) AcSiP Technology Inc.
+// 版權所有：群登科技股份有限公司
+// http://www.acsip.com.tw
+//==========================================
+*/
+//---------------------------------------------------------------------------
+
 /*
  * THE FOLLOWING FIRMWARE IS PROVIDED: (1) "AS IS" WITH NO WARRANTY; AND 
  * (2)TO ENABLE ACCESS TO CODING INFORMATION TO GUIDE AND FACILITATE CUSTOMER.
@@ -18,8 +30,8 @@
  *
  * Last modified by Miguel Luis on Jun 19 2013
  */
-#ifndef __SX1276_HAL_H__
-#define __SX1276_HAL_H__
+#ifndef		USER_SX1276_HAL_H_
+#define		USER_SX1276_HAL_H_
 
 #ifdef STM32F072
 	#include "stm32f0xx.h"
@@ -168,4 +180,6 @@ inline uint8_t	SX1276ReadDio5( void );
  */
 inline void	SX1276WriteRxTx( uint8_t txEnable );
 
-#endif //__SX1276_HAL_H__
+#endif		// USER_SX1276_HAL_H_
+
+/************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

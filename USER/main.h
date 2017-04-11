@@ -42,7 +42,6 @@
 #include "RandomHopStartChannel.h"
 #include "sleep.h"
 
-//#include "usart1.h"
 #include "UART_Console.h"
 #include "Console_Timer.h"
 

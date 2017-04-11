@@ -47,15 +47,13 @@
 
 #include "usbd_cdc_core.h"
 #include "usbd_conf.h"
-//#include "UART_Console.h"
 
 
 /* Exported typef ------------------------------------------------------------*/
 /* The following structures groups all needed parameters to be configured for the 
    ComPort. These parameters can modified on the fly by the host through CDC class
    command class requests. */
-typedef struct
-{
+typedef struct {
 	uint32_t	bitrate;
 	uint8_t		format;
 	uint8_t		paritytype;
