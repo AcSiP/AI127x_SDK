@@ -29,7 +29,7 @@
 
 
 /* Exported define -----------------------------------------------------------*/
-#define FirmwareVersion				("1.5.2017.0320")
+#define FirmwareVersion				("1.6.2017.0411")
 #define ComPortBaudRate				(38400)
 #define GPSnoLocated_RunningTime		(60)		// Unit:s
 #define	DEF_Allowed_LoRa_Rx_Failure_Times_Times	(5)		// Unit: polling round
@@ -37,10 +37,8 @@
 
 
 #ifdef STM32F401xx
-//	#define		TIM4CCR1_DelayForCMD		(3)		// second
-//	#define		TIM9CCR1_DelayForCMD		(TIM4CCR1_DelayForCMD)		// second
- 	#define		USBD_VCP_Console		(1)
- 	#undef		USBD_VCP_Console
+// 	#define		USBD_VCP_Console		(1)
+	#undef		USBD_VCP_Console
 #endif
 
 #define		unkownCMD		("\r\nUNKNOW\r\n")
