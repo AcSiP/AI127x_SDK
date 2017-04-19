@@ -42,6 +42,8 @@ extern uint8_t				LoraNodeCount;						// for MASTER
 extern tLoraDeviceNode *		LoraGateWay;						// for SLAVE
 extern tDeviceNodeSensor *		MySensor;						// for SLAVE
 
+extern __IO uint8_t			Running_HoppingStartChannel;
+
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 static void	NormalMaster_RecordNodeRandomHoppingChannel(__IO uint8_t *, __IO uint8_t *);
@@ -62,7 +64,7 @@ uint8_t		NormalMaster(__IO tLoraRunningEvent *Event)
 	static uint8_t	base64_data[((MaxMsgDataSize/3)*4)];
 	size_t		dsize;
 	uint8_t		result;
-	int8_t		str[10];
+	int8_t		str[64];
 	int8_t		count;
 
 	result = AcsipProtocol_NoAction;
@@ -140,7 +142,18 @@ uint8_t		NormalMaster(__IO tLoraRunningEvent *Event)
 				Console_Output_String( (const char *)str );
 				Console_Output_String( " " );
 
-				snprintf( (char *)str, sizeof(str), "%3.2f", DeviceNodeSensor[Event->RunNodeNumber]->RSSI );
+				if( LoRaSettings.FreqHopOn ){
+					snprintf( (char *)str, sizeof(str), ", Freq= %d ", LoRaSettings.Channel_List[Running_HoppingStartChannel] / 1000 );
+					Console_Output_String( (const char *)str );
+				} else {
+					snprintf( (char *)str, sizeof(str), ", Freq= %d ", LoRaSettings.RFFrequency / 1000 );
+					Console_Output_String( (const char *)str );
+				}
+
+				snprintf( (char *)str, sizeof(str), ", SNR= %d ", DeviceNodeSensor[Event->RunNodeNumber]->Packet_SNR );
+				Console_Output_String( (const char *)str );
+
+				snprintf( (char *)str, sizeof(str), ", RSSI= %3.1f ", DeviceNodeSensor[Event->RunNodeNumber]->RSSI );
 				Console_Output_String( (const char *)str );
 				Console_Output_String( "\r\n" );
 				// 或是存下來或是透過藍芽傳出去
