@@ -95,6 +95,7 @@ typedef struct sLoraDeviceNode {
 	uint8_t		PacketSN;
 	uint8_t		Aliases[AliasesSize];
 	uint16_t	Interval;
+	int8_t		Packet_SNR;
 	double		RSSI;		// MASTER與SLAVE都會用到
 } tLoraDeviceNode;
 
@@ -103,6 +104,7 @@ typedef struct sDeviceNodeSensor {
 	int32_t		GPS_Longitude;
 	time_t		UTC;
 	uint8_t		Battery;
+	int8_t		Packet_SNR;
 	double		RSSI;		// 給MASTER用,只用來記錄收到的感測資料封包的RSSI值
 }tDeviceNodeSensor;
 
