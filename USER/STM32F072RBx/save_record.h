@@ -56,7 +56,7 @@
 /* Exported types ------------------------------------------------------------*/
 typedef union {
 	tLoRaSettings		MyPara;
-	uint8_t			Value[32];
+	uint8_t			Value[292];		// 32 + 65 * 4 = 292
 }SaveRecordMyPara_t;
 
 typedef struct sSaveRecordLoraDeviceNode {

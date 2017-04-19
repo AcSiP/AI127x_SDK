@@ -33,14 +33,6 @@
 #ifndef LIBRARIES_RADIO_SX1276_LORA_H_
 #define LIBRARIES_RADIO_SX1276_LORA_H_
 
-#include <stdbool.h>
-#ifdef STM32F072
-	#include "stm32f0xx.h"
-#endif
-
-#ifdef STM32F401xx
-	#include "stm32f4xx.h"
-#endif
 
 /*!
  * SX1276 LoRa General parameters definition
@@ -67,11 +59,14 @@ typedef struct	sLoRaSettings
 	uint16_t	PreambleLength;
 	bool		LowDataRateOptimize;		// [0: OFF, 1: ON] ON=Enabled; mandated for when the symbol length exceeds 16ms
 	uint8_t		Oscillator;
+
+	uint32_t	Channel_List[64];		// Frequency List in KHz
+	uint8_t		Channel_Lists;			// Frequency List used items
 } tLoRaSettings;
 
 typedef enum {
 	OscillatorCrystal,
-	OscillatorTCXO,
+	OscillatorTCXO
 } tOscillatorManner;
 // 20160307 add end
 
@@ -96,7 +91,7 @@ typedef enum {
 	RFLR_STATE_TX_DONE,
 	RFLR_STATE_TX_TIMEOUT,
 	RFLR_STATE_CAD_INIT,
-	RFLR_STATE_CAD_RUNNING,
+	RFLR_STATE_CAD_RUNNING
 } tRFLRStates;
 
 /*!
