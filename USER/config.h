@@ -29,7 +29,7 @@
 
 
 /* Exported define -----------------------------------------------------------*/
-#define FirmwareVersion				("1.6.2017.0411")
+#define FirmwareVersion				("1.7.2017.0419")
 #define ComPortBaudRate				(38400)
 #define GPSnoLocated_RunningTime		(60)		// Unit:s
 #define	DEF_Allowed_LoRa_Rx_Failure_Times_Times	(5)		// Unit: polling round
@@ -59,6 +59,8 @@
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
+#define		MAX_HOPPING_CHANNELS	64
+
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 
