@@ -148,6 +148,11 @@ int		CLI_ShellCmd__System_Stop( shell_cmd_args *args );
 int		CLI_LoraReInit( shell_cmd_args *args );
 int		CLI_ShellCmd__Dump_SX127x_Regs( shell_cmd_args *args );
 int		CLI_ShellCmd__Read_Device_Info( shell_cmd_args *args );
+
+int		CLI_ShellCmd__List_Hop_Channel_List( shell_cmd_args *args );
+int		CLI_ShellCmd__Clear_Hop_Channel_List( shell_cmd_args *args );
+int		CLI_ShellCmd__Append_Hop_Channel( shell_cmd_args *args );
+
 int		CLI_ShellCmd_testPrint1(shell_cmd_args *);
 int		CLI_ShellCmd_testPrint2(shell_cmd_args *);
 
