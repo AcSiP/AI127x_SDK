@@ -201,6 +201,56 @@
 </TABLE>
 <BR>
 
+
+- <B>ListHopChannelList</B>
+<TABLE>
+<TR align="Left" valign="center"><TD><B>Parameter(s)</B></TD>		<TD> N/A </TD></TR>
+<TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> List frequencies of all hopping channels. </TD></TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>
+	<TD>
+		Command:<BR>
+		&nbsp; &nbsp;	<I>ListHopChannelList</I><BR>
+		Response:<BR>
+		&nbsp; &nbsp;	<I>Channel[0] = 915000 KHz</I><BR>
+		&nbsp; &nbsp;	<I>Channel[n-1] = ...... </I><BR>
+		&nbsp; &nbsp;	<I>Channel[n] = ...... KHz</I><BR>
+		&nbsp; &nbsp;	<I>Total FHSS Channels = n+1 </I>
+	</TD>
+</TR>
+</TABLE>
+<BR>
+
+
+- <B>ClearHopChannelList</B>
+<TABLE>
+<TR align="Left" valign="center"><TD><B>Parameter(s)</B></TD>		<TD> N/A </TD></TR>
+<TR align="Left" valign="center"><TD><B>Description</B></TD>		<TD> Clear all hopping channels. </TD></TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD><I>ClearHopChannelList</I></TD></TR>
+</TABLE>
+<BR>
+
+
+- <B>AppendHopChannel</B>
+<TABLE>
+<TR align="Left" valign="center">
+	<TD><B>Parameter(s)</B></TD>
+	<TD>
+		The Carrier frequency in Hz for new hopping channel.
+	</TD>
+</TR>
+<TR align="Left" valign="center"><TD><B>Description</B></TD>
+	<TD>
+		Configure RF carrier frequency in Hz.<BR>
+		For SX1276, Range is 847 MHz ~ 930 MHz<BR>
+		For SX1278, Range is 430 MHz ~ 510 MHz
+	</TD>
+</TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD><I>AppendHopChannel  915265000</I></TD></TR>
+</TABLE>
+<BR>
+
+
+
 <BR>
 
 [Back to Index](CLI__Command_List__Index.md)
