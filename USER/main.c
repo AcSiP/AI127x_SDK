@@ -100,6 +100,8 @@ extern __IO bool		Slave_PollEvent;				// for SLAVE
 extern __IO bool		Slave_PollEvent_UTCnotZero;			// for SLAVE
 extern __IO uint8_t		SLAVE_LoraHoppingStartChannel;			// for SLAVE
 
+extern __IO uint8_t		Running_HoppingStartChannel;
+
 
 ///////////////// for Product Verification /////////////////
 __IO uint32_t		LoraPV_RxCount;
@@ -207,7 +209,7 @@ int	main( void )
 
 #ifdef STM32F401xx
 #ifdef	USBD_VCP_Console
-	if(UsbDegugOn == true) {
+	if( UsbDegugOn ) {
 		USBD_Init( &USB_OTG_dev, USB_OTG_FS_CORE_ID, &USR_desc,  &USBD_CDC_cb,  &USR_cb );
 		TIM9_TimerConfig();
 	}
@@ -221,12 +223,12 @@ int	main( void )
 	Led_BootFlashLed();
 
 	BlueTooth_DA14580Run(ComPortBaudRate);
-	if(EnableMaster == false) {				// ┐
+	if( ! EnableMaster ) {				// ┐
 		CmdUART__Open(ComPortBaudRate);		// ├暫時給 SLAVE 測試用,若不執行此,則 CMD UART 輸出會一直等待完成而使得無限等待
-		CmdTIMER_TimerConfig();				// ┘
+		CmdTIMER_TimerConfig();			// ┘
 	}
 
-	if(EnableMaster == false) GPS_MT3333Run();
+	if( ! EnableMaster ) GPS_MT3333Run();
 #else
 	CmdUART__Open( ComPortBaudRate );
 	CmdTIMER_TimerConfig();
@@ -425,6 +427,8 @@ CLI_PROCESS:		// (可考慮把此部分寫成一個函式)
  **************************************************************************************************/
 void	LoraPara_LoadAndConfiguration(void)
 {
+	Load_Default_FHSS_Channel_List();
+
 	EnableMaster = 0;				// 1=Master or 0=Slave selection
 	LoRaSettings.Power = 20;
 	LoRaSettings.SignalBw = 7;			// LORA [0: 7.8 kHz, 1: 10.4 kHz, 2: 15.6 kHz, 3: 20.8 kHz, 4: 31.2 kHz,
@@ -612,7 +616,7 @@ static	bool	MasterLoraEvent_PROCESS( void )
  **************************************************************************************************/
 static void	OnMasterForNormal( void )
 {
-	int8_t		count, str[10];
+	int8_t		count, str[64];
 
 	switch( Radio->Process() ) {
 	case RF_CHANNEL_EMPTY:
@@ -639,7 +643,33 @@ static void	OnMasterForNormal( void )
 #ifdef Board__A22_Tracker
 			Console_Output_String( " EVT=GPS 0 0 0 0 0.0\r\n" );
 #else
-			Console_Output_String( " EVT=Poll 0.0\r\n" );
+//			Console_Output_String( " EVT=Poll 0.0\r\n" );
+
+			Console_Output_String( " EVT=Poll " );
+
+			Console_Output_String( "1111 " );
+			Console_Output_String( "2222 " );
+			Console_Output_String( "3333 " );
+			Console_Output_String( "444 " );
+
+			if( LoRaSettings.FreqHopOn ){
+				snprintf( (char *)str, sizeof(str), ", Freq= %d ", LoRaSettings.Channel_List[Running_HoppingStartChannel] / 1000 );
+				Console_Output_String( (const char *)str );
+				Console_Output_String( " " );
+			} else {
+				snprintf( (char *)str, sizeof(str), ", Freq= %d ", LoRaSettings.RFFrequency / 1000 );
+				Console_Output_String( (const char *)str );
+				Console_Output_String( " " );
+			}
+
+			snprintf( (char *)str, sizeof(str), ", SNR= %d ", (-99) );
+			Console_Output_String( (const char *)str );
+			Console_Output_String( " " );
+
+			snprintf( (char *)str, sizeof(str), ", RSSI= %3.1f ", (-140.0) );
+			Console_Output_String( (const char *)str );
+			Console_Output_String( "\r\n" );
+
 #endif
 		}		// 用來通知上層(如藍芽、APP),SLAVE Node 沒有回應, 此時 SLAVE Node 可能睡覺或已離線
 
