@@ -49,32 +49,28 @@ There are several pre-defined sensitivity mode
 	</TR>
 	<TR align="center" valign="center"><TD> -120 </TD>	<TD> 7 </TD>	<TD> 250 </TD> </TR>
 	<TR align="center" valign="center"><TD> -123 </TD>	<TD> 7 </TD>	<TD> 250 </TD> </TR>
-
 	<TR align="center" valign="center"><TD> -120 </TD>	<TD> 8 </TD>	<TD> 500 </TD> </TR>
 	<TR align="center" valign="center"><TD> -123 </TD>	<TD> 8 </TD>	<TD> 250 </TD> </TR>
 	<TR align="center" valign="center"><TD> -126 </TD>	<TD> 8 </TD>	<TD> 125 </TD> </TR>
-
 	<TR align="center" valign="center"><TD> -123 </TD>	<TD> 9 </TD>	<TD> 500 </TD> </TR>
 	<TR align="center" valign="center"><TD> -126 </TD>	<TD> 9 </TD>	<TD> 250 </TD> </TR>
 	<TR align="center" valign="center"><TD> -129 </TD>	<TD> 9 </TD>	<TD> 125 </TD> </TR>
-
 	<TR align="center" valign="center"><TD> -126 </TD>	<TD> 10 </TD>	<TD> 500 </TD> </TR>
 	<TR align="center" valign="center"><TD> -129 </TD>	<TD> 10 </TD>	<TD> 250 </TD> </TR>
 	<TR align="center" valign="center"><TD> -132 </TD>	<TD> 10 </TD>	<TD> 125 </TD> </TR>
-
 	<TR align="center" valign="center"><TD> -132 </TD>	<TD> 11 </TD>	<TD> 250 </TD> </TR>
 	<TR align="center" valign="center"><TD> -135 </TD>	<TD> 11 </TD>	<TD> 125 </TD> </TR>
-
 	<TR align="center" valign="center"><TD> -134 </TD>	<TD> 12 </TD>	<TD> 250 </TD> </TR>
 	<TR align="center" valign="center"><TD> -137 </TD>	<TD> 12 </TD>	<TD> 125 </TD> </TR>
 	</TABLE>
 	
 </TD>
 </TR>
-<TR align="Left" valign="center"><TD><B>Example</B></TD>		<TD><I>LoraSF10BW125RS132    HopOn</I></TD></TR>
+<TR align="Left" valign="center"><TD><B>Example</B></TD>	<TD><I>LoraSF10BW125RS132    HopOn</I></TD></TR>
 </TABLE>
 <BR>
 
 <BR>
 <BR>
+
 [Back to Index](CLI__Command_List__Index.md)
