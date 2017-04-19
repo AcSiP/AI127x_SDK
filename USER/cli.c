@@ -112,584 +112,144 @@ const uint16_t		PortC_Pin[] = {GPIO_Pin_13, GPIO_Pin_14, GPIO_Pin_15};
 const uint16_t		PortOther_Pin[] = {GPIO_Pin_0, GPIO_Pin_1};		// PortOther = PortH
 #endif
 
-shell_cmds		LORA_shell_cmds = {
-#ifdef Board__A22_Tracker
-	.count = 93,
-#else
-	.count = 89,
-#endif
-	.cmds = {
-		{
-			.cmd	= "GetBatteryADC",
-			.desc	= "Get Conversion Value and Conversion Voltage",
-			.func	= CLI_ShellCmd_GetBatteryADC,
-		},
+shell_cmd		CLI__Shell_Command[] = {
+	{	.cmd	= "GetBatteryADC",		.func	= CLI_ShellCmd_GetBatteryADC,		.desc	= "Get Conversion Value and Conversion Voltage"		},
+	{	.cmd	= "SystemReset",		.func	= CLI_ShellCmd_SystemReset,		.desc	= "Device System Reset"					},
+	{	.cmd	= "GPIO_Set",			.func	= CLI_ShellCmd_GPIO_Set,		.desc	= "GPIO Set for PV"					},
+	{	.cmd	= "GPIO_Write",			.func	= CLI_ShellCmd_GPIO_Write,		.desc	= "GPIO Write for PV"					},
+	{	.cmd	= "GPIO_Read",			.func	= CLI_ShellCmd_GPIO_Read,		.desc	= "GPIO Read for PV"					},
 
-		{
-			.cmd	= "SystemReset",
-			.desc	= "Device System Reset",
-			.func	= CLI_ShellCmd_SystemReset,
-		},
+	{	.cmd	= "CmdPortOff",			.func	= CLI_ShellCmd_CmdPortOff,		.desc	= "Close Command USART Port"				},
+	{	.cmd	= "FskPV_TXstart",		.func	= CLI_ShellCmd_FskPV_TXstart,		.desc	= "sx1276/78 FSK TX Product Verification"		},
+	{	.cmd	= "FskPV_TXstop",		.func	= CLI_ShellCmd_FskPV_TXstop,		.desc	= "sx1276/78 FSK TX Product Verification"		},
+	{	.cmd	= "FskPV_Freq",			.func	= CLI_ShellCmd_FskPV_Freq,		.desc	= "sx1276/78 FSK TX Product Verification"		},
 
-		{
-			.cmd	= "GPIO_Set",
-			.desc	= "GPIO Set for PV",
-			.func	= CLI_ShellCmd_GPIO_Set,
-		},
+	{	.cmd	= "LoraPV_TXresult",		.func	= CLI_ShellCmd_LoraPV_TXresult,		.desc	= "sx1276/78 LORA TX Product Verification (ask result)"	},
+	{	.cmd	= "LoraPV_TXstart",		.func	= CLI_ShellCmd_LoraPV_TXstart,		.desc	= "sx1276/78 LORA TX Product Verification"		},
+	{	.cmd	= "LoraPV_RXresult",		.func	= CLI_ShellCmd_LoraPV_RXresult,		.desc	= "sx1276/78 LORA RX Product Verification (ask result)"	},
+	{	.cmd	= "LoraPV_RXstart",		.func	= CLI_ShellCmd_LoraPV_RXstart,		.desc	= "sx1276/78 LORA RX Product Verification"		},
+	{	.cmd	= "LoraJoinNode",		.func	= CLI_ShellCmd_LoraJoinNode,		.desc	= "Acsip Protocol LORA base Join LoraNet"		},
 
-		{
-			.cmd	= "GPIO_Write",
-			.desc	= "GPIO Write for PV",
-			.func	= CLI_ShellCmd_GPIO_Write,
-		},
+	{	.cmd	= "LoraForceJoinNode",		.func	= CLI_ShellCmd_LoraJoinNode_in_Force,	.desc	= "Acsip Protocol LORA base Join LoraNet in Force"	},
+	{	.cmd	= "LoraLeaveNode",		.func	= CLI_ShellCmd_LoraLeaveNode,		.desc	= "Acsip Protocol LORA base Leave LoraNet"		},
+	{	.cmd	= "LoraForceLeaveNode",		.func	= CLI_ShellCmd_LoraLeaveNode_in_Force,	.desc	= "Acsip Protocol LORA base Leave LoraNet"		},
+	{	.cmd	= "LoraSetNodePara",		.func	= CLI_ShellCmd_LoraSetNodePara,		.desc	= "Set Acsip Protocol LORA node parameter"		},
+	{	.cmd	= "LoraGetNodePara",		.func	= CLI_ShellCmd_LoraGetNodePara,		.desc	= "Get Acsip Protocol LORA node parameter"		},
 
-		{
-			.cmd	= "GPIO_Read",
-			.desc	= "GPIO Read for PV",
-			.func	= CLI_ShellCmd_GPIO_Read,
-		},
-
-		{
-			.cmd	= "CmdPortOff",
-			.desc	= "Close Command USART Port",
-			.func	= CLI_ShellCmd_CmdPortOff,
-		},
-
-		{
-			.cmd	= "FskPV_TXstart",
-			.desc	= "sx1276/78 FSK TX Product Verification",
-			.func	= CLI_ShellCmd_FskPV_TXstart,
-		},
-
-		{
-			.cmd	= "FskPV_TXstop",
-			.desc	= "sx1276/78 FSK TX Product Verification",
-			.func	= CLI_ShellCmd_FskPV_TXstop,
-		},
-
-		{
-			.cmd	= "FskPV_Freq",
-			.desc	= "sx1276/78 FSK TX Product Verification",
-			.func	= CLI_ShellCmd_FskPV_Freq,
-		},
-
-		{
-			.cmd	= "LoraPV_TXresult",
-			.desc	= "sx1276/78 LORA TX Product Verification (ask result)",
-			.func	= CLI_ShellCmd_LoraPV_TXresult,
-		},
-
-		{
-			.cmd	= "LoraPV_TXstart",
-			.desc	= "sx1276/78 LORA TX Product Verification",
-			.func	= CLI_ShellCmd_LoraPV_TXstart,
-		},
-
-		{
-			.cmd	= "LoraPV_RXresult",
-			.desc	= "sx1276/78 LORA RX Product Verification (ask result)",
-			.func	= CLI_ShellCmd_LoraPV_RXresult,
-		},
-
-		{
-			.cmd	= "LoraPV_RXstart",
-			.desc	= "sx1276/78 LORA RX Product Verification",
-			.func	= CLI_ShellCmd_LoraPV_RXstart,
-		},
-
-		{
-			.cmd	= "LoraJoinNode",
-			.desc	= "Acsip Protocol LORA base Join LoraNet",
-			.func	= CLI_ShellCmd_LoraJoinNode,
-		},
-
-		{
-			.cmd	= "LoraForceJoinNode",
-			.desc	= "Acsip Protocol LORA base Join LoraNet in Force",
-			.func	= CLI_ShellCmd_LoraJoinNode_in_Force,
-		},
-
-		{
-			.cmd	= "LoraLeaveNode",
-			.desc	= "Acsip Protocol LORA base Leave LoraNet",
-			.func	= CLI_ShellCmd_LoraLeaveNode,
-		},
-
-		{
-			.cmd	= "LoraForceLeaveNode",
-			.desc	= "Acsip Protocol LORA base Leave LoraNet",
-			.func	= CLI_ShellCmd_LoraLeaveNode_in_Force,
-		},
-
-		{
-			.cmd	= "LoraSetNodePara",
-			.desc	= "Set Acsip Protocol LORA node parameter",
-			.func	= CLI_ShellCmd_LoraSetNodePara,
-		},
-
-		{
-			.cmd	= "LoraGetNodePara",
-			.desc	= "Get Acsip Protocol LORA node parameter",
-			.func	= CLI_ShellCmd_LoraGetNodePara,
-		},
-
-		{
-			.cmd	= "LoraNodeData",
-			.desc	= "Acsip Protocol LORA base TX packet",
-			.func	= CLI_ShellCmd_LoraNodeData,
-		},
-
-		{
-			.cmd	= "LoraListNodes",
-			.desc	= "Acsip Protocol LORA base for All Node address",
-			.func	= CLI_ShellCmd_LoraGetAllNodeAddr,
-		},
-
-		{
-			.cmd	= "LoraGetGateWayAddr",
-			.desc	= "Acsip Protocol LORA base for GateWay address",
-			.func	= CLI_ShellCmd_LoraGetGateWayAddr,
-		},
-
-		{
-			.cmd	= "OutputTraceData",
-			.desc	= "Output All Trace Data",
-			.func	= CLI_ShellCmd_OutputTraceData,
-		},
-
-		{
-			.cmd	= "FormatTraceDataSpace",
-			.desc	= "Format Trace Data Space",
-			.func	= CLI_ShellCmd_FormatTraceDataSpace,
-		},
+	{	.cmd	= "LoraNodeData",		.func	= CLI_ShellCmd_LoraNodeData,		.desc	= "Acsip Protocol LORA base TX packet"			},
+	{	.cmd	= "LoraListNodes",		.func	= CLI_ShellCmd_LoraGetAllNodeAddr,	.desc	= "Acsip Protocol LORA base for All Node address"	},
+	{	.cmd	= "LoraGetGateWayAddr",		.func	= CLI_ShellCmd_LoraGetGateWayAddr,	.desc	= "Acsip Protocol LORA base for GateWay address"	},
+	{	.cmd	= "OutputTraceData",		.func	= CLI_ShellCmd_OutputTraceData,		.desc	= "Output All Trace Data"				},
+	{	.cmd	= "FormatTraceDataSpace",	.func	= CLI_ShellCmd_FormatTraceDataSpace,	.desc	= "Format Trace Data Space"				},
 
 #ifdef Board__A22_Tracker
-		{
-			.cmd	= "BleEnable",
-			.desc	= "Bluetooth Enable",
-			.func	= CLI_ShellCmd_BleEnable,
-		},
-
-		{
-			.cmd	= "BleDisable",
-			.desc	= "Bluetooth Disable",
-			.func	= CLI_ShellCmd_BleDisable,
-		},
-
-		{
-			.cmd	= "GpsEnable",
-			.desc	= "GPS Enable",
-			.func	= CLI_ShellCmd_GpsEnable,
-		},
-
-		{
-			.cmd	= "GpsDisable",
-			.desc	= "GPS Disable",
-			.func	= CLI_ShellCmd_GpsDisable,
-		},
+	{	.cmd	= "BleEnable",			.func	= CLI_ShellCmd_BleEnable,		.desc	= "Bluetooth Enable"					},
+	{	.cmd	= "BleDisable",			.func	= CLI_ShellCmd_BleDisable,		.desc	= "Bluetooth Disable"					},
+	{	.cmd	= "GpsEnable",			.func	= CLI_ShellCmd_GpsEnable,		.desc	= "GPS Enable"						},
+	{	.cmd	= "GpsDisable",			.func	= CLI_ShellCmd_GpsDisable,		.desc	= "GPS Disable"						},
 #endif
 
-		{
-			.cmd	= "LoraGetMyAddr",
-			.desc	= "Acsip Protocol LORA base for My address",
-			.func	= CLI_ShellCmd_LoraGetMyAddr,
-		},
-
-		{
-			.cmd	= "LoraGetMyInterval",
-			.desc	= "Sleep Interval",
-			.func	= CLI_ShellCmd_LoraGetMyInterval,
-		},
-
-		{
-			.cmd	= "GetUUID",
-			.desc	= "MCU module base for UUID",
-			.func	= CLI_ShellCmd_GetUUID,
-		},
-
-		{
-			.cmd	= "GetFWVersion",
-			.desc	= "MCU module base for Firmware Version",
-			.func	= CLI_ShellCmd_GetFWVersion,
-		},
-
-		{
-			.cmd	= "LoraGetSystemMode",
-			.desc	= "System Mode",
-			.func	= CLI_ShellCmd_LoraGetSystemMode,
-		},
-
-		{
-			.cmd	= "LoraGetMode",
-			.desc	= "sx1276/78 LORA Mode",
-			.func	= CLI_ShellCmd_LoraGetMode,
-		},
-
-		{
-			.cmd	= "LoraGetPara",
-			.desc	= "sx1276/78 LORA RF parameter",
-			.func	= CLI_ShellCmd_LoraGetPara,
-		},
-
-		{
-			.cmd	= "LoraGetRFOsc",
-			.desc	= "sx1276/78 LORA RF Oscillator",
-			.func	= CLI_ShellCmd_LoraGetRFOsc,
-		},
-
-		{
-			.cmd	= "LoraGetRFFrequency",
-			.desc	= "sx1276/78 LORA RF Frequency",
-			.func	= CLI_ShellCmd_LoraGetRFFrequency,
-		},
-
-		{
-			.cmd	= "LoraGetRxPacketTimeout",
-			.desc	= "sx1276/78 LORA Rx Packet Timeout",
-			.func	= CLI_ShellCmd_LoraGetRxPacketTimeout,
-		},
-
-		{
-			.cmd	= "LoraGetTxPacketTimeout",
-			.desc	= "sx1276/78 LORA Tx Packet Timeout",
-			.func	= CLI_ShellCmd_LoraGetTxPacketTimeout,
-		},
-
-		{
-			.cmd	= "LoraGetRFPower",
-			.desc	= "sx1276/78 LORA RF Power",
-			.func	= CLI_ShellCmd_LoraGetRFPower,
-		},
-
-		{
-			.cmd	= "LoraGetPreambleLength",
-			.desc	= "sx1276/78 LORA packet Preamble Length",
-			.func	= CLI_ShellCmd_LoraGetPreambleLength,
-		},
-
-		{
-			.cmd	= "LoraGetPayloadLength",
-			.desc	= "sx1276/78 LORA packet Payload Length",
-			.func	= CLI_ShellCmd_LoraGetPayloadLength,
-		},
-
-		{
-			.cmd	= "LoraGetCRC",
-			.desc	= "sx1276/78 LORA packet CRC",
-			.func	= CLI_ShellCmd_LoraGetCRC,
-		},
-
-		{
-			.cmd	= "LoraGetImplicitHeader",
-			.desc	= "sx1276/78 LORA packet Header Implicit",
-			.func	= CLI_ShellCmd_LoraGetImplicitHeader,
-		},
-
-		{
-			.cmd	= "LoraGetFreqHopOn",
-			.desc	= "sx1276/78 LORA Freq. Hop On",
-			.func	= CLI_ShellCmd_LoraGetFreqHopOn,
-		},
-
-		{
-			.cmd	= "LoraGetErrorCoding",
-			.desc	= "sx1276/78 LORA packet Error Coding",
-			.func	= CLI_ShellCmd_LoraGetErrorCoding,
-		},
-
-		{
-			.cmd	= "LoraGetSF",
-			.desc	= "sx1276/78 LORA Spreading Factor",
-			.func	= CLI_ShellCmd_LoraGetSF,
-		},
-
-		{
-			.cmd	= "LoraGetBW",
-			.desc	= "sx1276/78 RF band width",
-			.func	= CLI_ShellCmd_LoraGetBW,
-		},
-
-		{
-			.cmd	= "LoraGetRxGain",
-			.desc	= "sx1276/78 Rx Gain value",
-			.func	= CLI_ShellCmd_LoraGetRxGain,
-		},
-
-		{
-			.cmd	= "LoraGetSNR",
-			.desc	= "sx1276/78 SNR value",
-			.func	= CLI_ShellCmd_LoraGetSNR,
-		},
-
-		{
-			.cmd	= "LoraGetRSSI",
-			.desc	= "sx1276/78 RSSI value",
-			.func	= CLI_ShellCmd_LoraGetRSSI,
-		},
-
-		{
-			.cmd	= "FactoryReset",
-			.desc	= "System Factory Reset",
-			.func	= CLI_ShellCmd_FactoryReset,
-		},
-
-		{
-			.cmd	= "LoraSystemMode",
-			.desc	= "System operation mode",
-			.func	= CLI_ShellCmd_LoraSystemMode,
-		},
-
-		{
-			.cmd	= "LoraSF7BW250RS120",
-			.desc	= "sx1276/78 RX sensitivity = 120dBm",
-			.func	= CLI_ShellCmd_LoraSF7BW250RS120,
-		},
-
-		{
-			.cmd	= "LoraSF7BW125RS123",
-			.desc	= "sx1276/78 RX sensitivity = 123dBm",
-			.func	= CLI_ShellCmd_LoraSF7BW125RS123,
-		},
-
-		{
-			.cmd	= "LoraSF8BW500RS120",
-			.desc	= "sx1276/78 RX sensitivity = 120dBm",
-			.func	= CLI_ShellCmd_LoraSF8BW500RS120,
-		},
-
-		{
-			.cmd	= "LoraSF8BW250RS123",
-			.desc	= "sx1276/78 RX sensitivity = 123dBm",
-			.func	= CLI_ShellCmd_LoraSF8BW250RS123,
-		},
-
-		{
-			.cmd	= "LoraSF8BW125RS126",
-			.desc	= "sx1276/78 RX sensitivity = 126dBm",
-			.func	= CLI_ShellCmd_LoraSF8BW125RS126,
-		},
-
-		{
-			.cmd	= "LoraSF9BW500RS123",
-			.desc	= "sx1276/78 RX sensitivity = 123dBm",
-			.func	= CLI_ShellCmd_LoraSF9BW500RS123,
-		},
-
-		{
-			.cmd	= "LoraSF9BW250RS126",
-			.desc	= "sx1276/78 RX sensitivity = 126dBm",
-			.func	= CLI_ShellCmd_LoraSF9BW250RS126,
-		},
-
-		{
-			.cmd	= "LoraSF9BW125RS129",
-			.desc	= "sx1276/78 RX sensitivity = 129dBm",
-			.func	= CLI_ShellCmd_LoraSF9BW125RS129,
-		},
-
-		{
-			.cmd	= "LoraSF10BW500RS126",
-			.desc	= "sx1276/78 RX sensitivity = 126dBm",
-			.func	= CLI_ShellCmd_LoraSF10BW500RS126,
-		},
-
-		{
-			.cmd	= "LoraSF10BW250RS129",
-			.desc	= "sx1276/78 RX sensitivity = 129dBm",
-			.func	= CLI_ShellCmd_LoraSF10BW250RS129,
-		},
-
-		{
-			.cmd	= "LoraSF10BW125RS132",
-			.desc	= "sx1276/78 RX sensitivity = 132dBm",
-			.func	= CLI_ShellCmd_LoraSF10BW125RS132,
-		},
-
-		{
-			.cmd	= "LoraSF11BW250RS132",
-			.desc	= "sx1276/78 RX sensitivity = 132dBm",
-			.func	= CLI_ShellCmd_LoraSF11BW250RS132,
-		},
-
-		{
-			.cmd	= "LoraSF11BW125RS135",
-			.desc	= "sx1276/78 RX sensitivity = 135dBm",
-			.func	= CLI_ShellCmd_LoraSF11BW125RS135,
-		},
-
-		{
-			.cmd	= "LoraSF12BW250RS134",
-			.desc	= "sx1276/78 RX sensitivity = 134dBm",
-			.func	= CLI_ShellCmd_LoraSF12BW250RS134,
-		},
-
-		{
-			.cmd	= "LoraSF12BW125RS137",
-			.desc	= "sx1276/78 RX sensitivity = 137dBm",
-			.func	= CLI_ShellCmd_LoraSF12BW125RS137,
-		},
-
-		{
-			.cmd	= "LoraFreq",
-			.desc	= "sx1276/78 RF Frequency",
-			.func	= CLI_ShellCmd_LoraFreq,
-		},
-
-		{
-			.cmd	= "LoraBW",
-			.desc	= "sx1276/78 Band Width",
-			.func	= CLI_ShellCmd_LoraBW,
-		},
-
-		{
-			.cmd	= "LoraSF",
-			.desc	= "sx1276/78 Spreading Factor",
-			.func	= CLI_ShellCmd_LoraSF,
-		},
-
-		{
-			.cmd	= "LoraErrorCoding",
-			.desc	= "sx1276/78 Error Coding Rate",
-			.func	= CLI_ShellCmd_LoraErrorCoding,
-		},
-
-		{
-			.cmd	= "LoraFreqHop",
-			.desc	= "sx1276/78 freq hop on or off",
-			.func	= CLI_ShellCmd_LoraFreqHop,
-		},
-
-		{
-			.cmd	= "LoraFreqHopOn",
-			.desc	= "sx1276/78 freq hop on or off",
-			.func	= CLI_ShellCmd_LoraFreqHopOn,
-		},
-
-		{
-			.cmd	= "LoraImplicitHeader",
-			.desc	= "sx1276/78 packet Implicit header",
-			.func	= CLI_ShellCmd_LoraImplicitHeader,
-		},
-
-		{
-			.cmd	= "LoraCRC",
-			.desc	= "sx1276/78 packet crc on or off",
-			.func	= CLI_ShellCmd_LoraCRC,
-		},
-
-		{
-			.cmd	= "LoraPayloadLength",
-			.desc	= "sx1276/78 payload length",
-			.func	= CLI_ShellCmd_LoraPayloadLength,
-		},
-
-		{
-			.cmd	= "LoraMaxPayloadLength",
-			.desc	= "sx1276/78 max. payload length",
-			.func	= CLI_ShellCmd_MaxLoraPayloadLength,
-		},
-
-		{
-			.cmd	= "LoraPreambleLength",
-			.desc	= "sx1276/78 preamble length",
-			.func	= CLI_ShellCmd_LoraPreambleLength,
-		},
-
-		{
-			.cmd	= "LoraMode",
-			.desc	= "sx1276/78 operation mode",
-			.func	= CLI_ShellCmd_LoraMode,
-		},
-
-		{
-			.cmd	= "LoraStartWork",
-			.desc	= "sx1276/78 start work",
-			.func	= CLI_ShellCmd_LoraStartWork,
-		},
-
-		{
-			.cmd	= "LoraPower",
-			.desc	= "set LORA output power",
-			.func	= CLI_ShellCmd_LoraPower,
-		},
-
-		{
-			.cmd	= "UartEchoOn",
-			.desc	= "URAT echo on",
-			.func	= CLI_ShellCmd_UartEchoOn,
-		},
-
-		{
-			.cmd	= "UartEchoOff",
-			.desc	= "URAT echo off",
-			.func	= CLI_ShellCmd_UartEchoOff,
-		},
-
-		{
-			.cmd	= "SX127x_NRESET",
-			.desc	= "Manual control level of NRESET",
-			.func	= CLI_ShellCmd__SX127x_NRESET,
-		},
-
-		{
-			.cmd	= "LoraReset",
-			.desc	= "Manual ReInit SX127x",
-			.func	= CLI_LoraReInit,
-		},
-
-		{
-			.cmd	= "SX127x_OpMode",
-			.desc	= "Manual change SX127x mode",
-			.func	= CLI_ShellCmd__SX127x_OpMode,
-		},
-
-		{
-			.cmd	= "SleepStandby",
-			.desc	= "Manual sleep mode",
-			.func	= CLI_ShellCmd__System_Standby,
-		},
-
-		{
-			.cmd	= "SleepStop",
-			.desc	= "Manual sleep mode",
-			.func	= CLI_ShellCmd__System_Stop,
-		},
-
-		{
-			.cmd	= "GetDeviceInfo",
-			.desc	= "MCU module Info",
-			.func	= CLI_ShellCmd__Read_Device_Info,
-		},
-
-		{
-			.cmd	= "SX127x_DumpRegs",
-			.desc	= "Dump Registers of SX127x",
-			.func	= CLI_ShellCmd__Dump_SX127x_Regs,
-		},
-
-		{
-			.cmd	= "testPrint1",
-			.desc	= "Shell command for the test1",
-			.func	= CLI_ShellCmd_testPrint1,
-		},
-
-		{
-			.cmd	= "testPrint2",
-			.desc	= "Shell command for the test2",
-			.func	= CLI_ShellCmd_testPrint2,
-		},
-	},
+	{	.cmd	= "LoraGetMyAddr",		.func	= CLI_ShellCmd_LoraGetMyAddr,		.desc	= "Acsip Protocol LORA base for My address"		},
+	{	.cmd	= "LoraGetMyInterval",		.func	= CLI_ShellCmd_LoraGetMyInterval,	.desc	= "Sleep Interval"					},
+	{	.cmd	= "GetUUID",			.func	= CLI_ShellCmd_GetUUID,			.desc	= "MCU module base for UUID"				},
+	{	.cmd	= "GetFWVersion",		.func	= CLI_ShellCmd_GetFWVersion,		.desc	= "MCU module base for Firmware Version"		},
+	{	.cmd	= "LoraGetSystemMode",		.func	= CLI_ShellCmd_LoraGetSystemMode,	.desc	= "System Mode"						},
+
+	{	.cmd	= "LoraGetMode",		.func	= CLI_ShellCmd_LoraGetMode,		.desc	= "sx1276/78 LORA Mode"					},
+	{	.cmd	= "LoraGetPara",		.func	= CLI_ShellCmd_LoraGetPara,		.desc	= "sx1276/78 LORA RF parameter"				},
+
+	{	.cmd	= "LoraGetRFOsc",		.func	= CLI_ShellCmd_LoraGetRFOsc,		.desc	= "sx1276/78 LORA RF Oscillator"			},
+	{	.cmd	= "LoraGetRFFrequency",		.func	= CLI_ShellCmd_LoraGetRFFrequency,	.desc	= "sx1276/78 LORA RF Frequency"				},
+	{	.cmd	= "LoraGetRxPacketTimeout",	.func	= CLI_ShellCmd_LoraGetRxPacketTimeout,	.desc	= "sx1276/78 LORA Rx Packet Timeout"			},
+	{	.cmd	= "LoraGetTxPacketTimeout",	.func	= CLI_ShellCmd_LoraGetTxPacketTimeout,	.desc	= "sx1276/78 LORA Tx Packet Timeout"			},
+	{	.cmd	= "LoraGetRFPower",		.func	= CLI_ShellCmd_LoraGetRFPower,		.desc	= "sx1276/78 LORA RF Power"				},
+
+	{	.cmd	= "LoraGetPreambleLength",	.func	= CLI_ShellCmd_LoraGetPreambleLength,	.desc	= "sx1276/78 LORA packet Preamble Length"		},
+	{	.cmd	= "LoraGetPayloadLength",	.func	= CLI_ShellCmd_LoraGetPayloadLength,	.desc	= "sx1276/78 LORA packet Payload Length"		},
+	{	.cmd	= "LoraGetCRC",			.func	= CLI_ShellCmd_LoraGetCRC,		.desc	= "sx1276/78 LORA packet CRC"				},
+	{	.cmd	= "LoraGetImplicitHeader",	.func	= CLI_ShellCmd_LoraGetImplicitHeader,	.desc	= "sx1276/78 LORA packet Header Implicit"		},
+	{	.cmd	= "LoraGetFreqHopOn",		.func	= CLI_ShellCmd_LoraGetFreqHopOn,	.desc	= "sx1276/78 LORA Freq. Hop On"				},
+
+	{	.cmd	= "LoraGetErrorCoding",		.func	= CLI_ShellCmd_LoraGetErrorCoding,	.desc	= "sx1276/78 LORA packet Error Coding"			},
+	{	.cmd	= "LoraGetSF",			.func	= CLI_ShellCmd_LoraGetSF,		.desc	= "sx1276/78 LORA Spreading Factor"			},
+	{	.cmd	= "LoraGetBW",			.func	= CLI_ShellCmd_LoraGetBW,		.desc	= "sx1276/78 RF band width"				},
+	{	.cmd	= "LoraGetRxGain",		.func	= CLI_ShellCmd_LoraGetRxGain,		.desc	= "sx1276/78 Rx Gain value"				},
+	{	.cmd	= "LoraGetSNR",			.func	= CLI_ShellCmd_LoraGetSNR,		.desc	= "sx1276/78 SNR value"					},
+
+	{	.cmd	= "LoraGetRSSI",		.func	= CLI_ShellCmd_LoraGetRSSI,		.desc	= "sx1276/78 RSSI value"				},
+	{	.cmd	= "FactoryReset",		.func	= CLI_ShellCmd_FactoryReset,		.desc	= "System Factory Reset"				},
+	{	.cmd	= "LoraSystemMode",		.func	= CLI_ShellCmd_LoraSystemMode,		.desc	= "System operation mode"				},
+
+	{	.cmd	= "LoraSF7BW250RS120",		.func	= CLI_ShellCmd_LoraSF7BW250RS120,	.desc	= "sx1276/78 RX sensitivity = 120dBm"			},
+	{	.cmd	= "LoraSF7BW125RS123",		.func	= CLI_ShellCmd_LoraSF7BW125RS123,	.desc	= "sx1276/78 RX sensitivity = 123dBm"			},
+	{	.cmd	= "LoraSF8BW500RS120",		.func	= CLI_ShellCmd_LoraSF8BW500RS120,	.desc	= "sx1276/78 RX sensitivity = 120dBm"			},
+	{	.cmd	= "LoraSF8BW250RS123",		.func	= CLI_ShellCmd_LoraSF8BW250RS123,	.desc	= "sx1276/78 RX sensitivity = 123dBm"			},
+	{	.cmd	= "LoraSF8BW125RS126",		.func	= CLI_ShellCmd_LoraSF8BW125RS126,	.desc	= "sx1276/78 RX sensitivity = 126dBm"			},
+
+	{	.cmd	= "LoraSF9BW500RS123",		.func	= CLI_ShellCmd_LoraSF9BW500RS123,	.desc	= "sx1276/78 RX sensitivity = 123dBm"			},
+	{	.cmd	= "LoraSF9BW250RS126",		.func	= CLI_ShellCmd_LoraSF9BW250RS126,	.desc	= "sx1276/78 RX sensitivity = 126dBm"			},
+	{	.cmd	= "LoraSF9BW125RS129",		.func	= CLI_ShellCmd_LoraSF9BW125RS129,	.desc	= "sx1276/78 RX sensitivity = 129dBm"			},
+	{	.cmd	= "LoraSF10BW500RS126",		.func	= CLI_ShellCmd_LoraSF10BW500RS126,	.desc	= "sx1276/78 RX sensitivity = 126dBm"			},
+	{	.cmd	= "LoraSF10BW250RS129",		.func	= CLI_ShellCmd_LoraSF10BW250RS129,	.desc	= "sx1276/78 RX sensitivity = 129dBm"			},
+	{	.cmd	= "LoraSF10BW125RS132",		.func	= CLI_ShellCmd_LoraSF10BW125RS132,	.desc	= "sx1276/78 RX sensitivity = 132dBm"			},
+
+	{	.cmd	= "LoraSF11BW250RS132",		.func	= CLI_ShellCmd_LoraSF11BW250RS132,	.desc	= "sx1276/78 RX sensitivity = 132dBm"			},
+	{	.cmd	= "LoraSF11BW125RS135",		.func	= CLI_ShellCmd_LoraSF11BW125RS135,	.desc	= "sx1276/78 RX sensitivity = 135dBm"			},
+	{	.cmd	= "LoraSF12BW250RS134",		.func	= CLI_ShellCmd_LoraSF12BW250RS134,	.desc	= "sx1276/78 RX sensitivity = 134dBm"			},
+	{	.cmd	= "LoraSF12BW125RS137",		.func	= CLI_ShellCmd_LoraSF12BW125RS137,	.desc	= "sx1276/78 RX sensitivity = 137dBm"			},
+
+	{	.cmd	= "LoraFreq",			.func	= CLI_ShellCmd_LoraFreq,		.desc	= "sx1276/78 RF Frequency"				},
+	{	.cmd	= "LoraBW",			.func	= CLI_ShellCmd_LoraBW,			.desc	= "sx1276/78 Band Width"				},
+	{	.cmd	= "LoraSF",			.func	= CLI_ShellCmd_LoraSF,			.desc	= "sx1276/78 Spreading Factor"				},
+	{	.cmd	= "LoraErrorCoding",		.func	= CLI_ShellCmd_LoraErrorCoding,		.desc	= "sx1276/78 Error Coding Rate"				},
+	{	.cmd	= "LoraFreqHop",		.func	= CLI_ShellCmd_LoraFreqHop,		.desc	= "sx1276/78 freq hop on or off"			},
+
+	{	.cmd	= "LoraFreqHopOn",		.func	= CLI_ShellCmd_LoraFreqHopOn,		.desc	= "sx1276/78 freq hop on or off"			},
+	{	.cmd	= "LoraImplicitHeader",		.func	= CLI_ShellCmd_LoraImplicitHeader,	.desc	= "sx1276/78 packet Implicit header"			},
+	{	.cmd	= "LoraCRC",			.func	= CLI_ShellCmd_LoraCRC,			.desc	= "sx1276/78 packet crc on or off"			},
+
+	{	.cmd	= "ListHopChannelList",		.func	= CLI_ShellCmd__List_Hop_Channel_List,	.desc	= "List FHSS channel list"				},
+	{	.cmd	= "ClearHopChannelList",	.func	= CLI_ShellCmd__Clear_Hop_Channel_List,	.desc	= "Clear all FHSS channels"				},
+	{	.cmd	= "AppendHopChannel",		.func	= CLI_ShellCmd__Append_Hop_Channel,	.desc	= "Append a FHSS channel into list"			},
+
+	{	.cmd	= "LoraPayloadLength",		.func	= CLI_ShellCmd_LoraPayloadLength,	.desc	= "sx1276/78 payload length"				},
+	{	.cmd	= "LoraMaxPayloadLength",	.func	= CLI_ShellCmd_MaxLoraPayloadLength,	.desc	= "sx1276/78 max. payload length"			},
+	{	.cmd	= "LoraPreambleLength",		.func	= CLI_ShellCmd_LoraPreambleLength,	.desc	= "sx1276/78 preamble length"				},
+	{	.cmd	= "LoraMode",			.func	= CLI_ShellCmd_LoraMode,		.desc	= "sx1276/78 operation mode"				},
+	{	.cmd	= "LoraStartWork",		.func	= CLI_ShellCmd_LoraStartWork,		.desc	= "sx1276/78 start work"				},
+
+	{	.cmd	= "LoraPower",			.func	= CLI_ShellCmd_LoraPower,		.desc	= "set LORA output power"				},
+	{	.cmd	= "UartEchoOn",			.func	= CLI_ShellCmd_UartEchoOn,		.desc	= "URAT echo on"					},
+	{	.cmd	= "UartEchoOff",		.func	= CLI_ShellCmd_UartEchoOff,		.desc	= "URAT echo off"					},
+	{	.cmd	= "SX127x_NRESET",		.func	= CLI_ShellCmd__SX127x_NRESET,		.desc	= "Manual control level of NRESET"			},
+	{	.cmd	= "LoraReset",			.func	= CLI_LoraReInit,			.desc	= "Manual ReInit SX127x"				},
+
+	{	.cmd	= "SX127x_OpMode",		.func	= CLI_ShellCmd__SX127x_OpMode,		.desc	= "Manual change SX127x mode"				},
+	{	.cmd	= "SleepStandby",		.func	= CLI_ShellCmd__System_Standby,		.desc	= "Manual sleep mode"					},
+	{	.cmd	= "SleepStop",			.func	= CLI_ShellCmd__System_Stop,		.desc	= "Manual sleep mode"					},
+	{	.cmd	= "GetDeviceInfo",		.func	= CLI_ShellCmd__Read_Device_Info,	.desc	= "MCU module Info"					},
+	{	.cmd	= "SX127x_DumpRegs",		.func	= CLI_ShellCmd__Dump_SX127x_Regs,	.desc	= "Dump Registers of SX127x"				},
+
+	{	.cmd	= "testPrint1",			.func	= CLI_ShellCmd_testPrint1,		.desc	= "Shell command for the test1"				},
+	{	.cmd	= "testPrint2",			.func	= CLI_ShellCmd_testPrint2,		.desc	= "Shell command for the test2"				}
 };
 
 /* Private function prototypes -----------------------------------------------*/
+void	CLI__Save_LoRa_Configure_into_Flash( void );
+void	CLI__Console_Output_Node_Address( const uint8_t *addr );
+
 /* Private functions ---------------------------------------------------------*/
 
 
 int	CLI_process( char *cmd_line )
 {
-	int	ret = shell_process_cmds( & LORA_shell_cmds, cmd_line );
+	uint8_t		n = sizeof( CLI__Shell_Command ) / sizeof( shell_cmd );
+	int		ret;
 
-	switch(ret) {
+	Console_Output_String( "\r\n" );
+
+	ret = shell_process_cmds( CLI__Shell_Command, n, cmd_line );
+	switch( ret ) {
 	case SHELL_PROCESS_OK:
 		// is OK
 		Console_Output_String( okCMD );
@@ -726,63 +286,32 @@ uint32_t	CLI_LoraTimeOutCalculate( tLoRaSettings *loraSettings )
 	uint8_t		crc, ih, de;
 
 	switch( loraSettings->SignalBw ) {
-	case 0:
-		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 7800);
-		break;
-
-	case 1:
-		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 10400);
-		break;
-
-	case 2:
-		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 15600);
-		break;
-
-	case 3:
-		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 20800);
-		break;
-
-	case 4:
-		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 31250);
-		break;
-
-	case 5:
-		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 41700);
-		break;
-
-	case 6:
-		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 62500);
-		break;
-
-	case 7:
-		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 125000);
-		break;
-
-	case 8:
-		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 250000);
-		break;
-
-	case 9:
-		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 500000);
-		break;
-
-	default:
-		break;
+		case 0:		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 7800);		break;
+		case 1:		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 10400);		break;
+		case 2:		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 15600);		break;
+		case 3:		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 20800);		break;
+		case 4:		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 31250);		break;
+		case 5:		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 41700);		break;
+		case 6:		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 62500);		break;
+		case 7:		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 125000);		break;
+		case 8:		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 250000);		break;
+		case 9:		Ts = (double)(pow(2, loraSettings->SpreadingFactor) / 500000);		break;
+		default:	break;
 	}
 
-	if( loraSettings->CrcOn == true ) {
+	if( loraSettings->CrcOn ) {
 		crc = 1;
 	} else {
 		crc = 0;
 	}
 
-	if( loraSettings->ImplicitHeaderOn == true ) {
+	if( loraSettings->ImplicitHeaderOn ) {
 		ih = 1;
 	} else {
 		ih = 0;
 	}
 
-	if( loraSettings->LowDataRateOptimize == true ) {
+	if( loraSettings->LowDataRateOptimize ) {
 		de = 1;
 	} else {
 		de = 0;
@@ -878,13 +407,13 @@ void	CLI_DeleteAllLoraNodeMemorySpace(void)
 
 void	CLI_DeleteLoraGateWayMemorySpace(void)
 {
-	if(LoraGateWay != NULL) {
-		free(LoraGateWay);
+	if( LoraGateWay ) {
+		free( LoraGateWay );
 		LoraGateWay = NULL;
 	}
 
-	if(MySensor != NULL) {
-		free(MySensor);
+	if( MySensor ) {
+		free( MySensor );
 		MySensor = NULL;
 	}
 }
@@ -914,245 +443,33 @@ void	CLI_LoraPV_TXresult( void )
 	LoraPV_TxTest = false;
 }
 
-
-void	CLI_LoraOP_SF7BW250RS120(bool enable)
+bool	CLI__Lora_Operation_Mode__Configure( uint8_t mode, uint8_t sf, uint8_t bw, const char *hopping_arg )
 {
-	LoraOperationMode = 1;
-	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
-	SX1276LoRaSetSpreadingFactor(7);
-	SX1276LoRaSetSignalBandwidth(8);
-	SX1276LoRaSetFreqHopOn(enable);
-	SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
+	bool	hop_en;
 
-	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
+	if( strcmp( hopping_arg, "HopOn") == 0 ) {
+		hop_en = true;
+	} else {
+		if( strcmp( hopping_arg, "HopOff") == 0 ) {
+			hop_en = false;
+		} else {
+			return( false );
+		}
+	}
+
+	LoraOperationMode = mode;
+	SX1276LoRaSetOpMode( RFLR_OPMODE_STANDBY );
+	SX1276LoRaSetSpreadingFactor( sf );
+	SX1276LoRaSetSignalBandwidth( bw );
+	SX1276LoRaSetFreqHopOn( hop_en );
+	SX1276LoRaSetHopPeriod( Lora_RFHoppingPeriod );
+
+	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate( & LoRaSettings );
 	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
-	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
+	SX1276LoRaSetRFFrequency( LoRaSettings.RFFrequency );
 	Radio->StartRx();
-}
 
-
-void	CLI_LoraOP_SF7BW125RS123(bool enable)
-{
-	LoraOperationMode = 2;
-	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
-	SX1276LoRaSetSpreadingFactor(7);
-	SX1276LoRaSetSignalBandwidth(7);
-	SX1276LoRaSetFreqHopOn(enable);
-	SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
-
-	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
-	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
-	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
-	Radio->StartRx();
-}
-
-
-void	CLI_LoraOP_SF8BW500RS120(bool enable)
-{
-	LoraOperationMode = 3;
-	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
-	SX1276LoRaSetSpreadingFactor(8);
-	SX1276LoRaSetSignalBandwidth(9);
-	SX1276LoRaSetFreqHopOn(enable);
-	SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
-
-	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
-	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
-	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
-	Radio->StartRx();
-}
-
-
-void	CLI_LoraOP_SF8BW250RS123(bool enable)
-{
-	LoraOperationMode = 4;
-	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
-	SX1276LoRaSetSpreadingFactor(8);
-	SX1276LoRaSetSignalBandwidth(8);
-	SX1276LoRaSetFreqHopOn(enable);
-	SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
-
-	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
-	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
-	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
-	Radio->StartRx();
-}
-
-
-void	CLI_LoraOP_SF8BW125RS126(bool enable)
-{
-	LoraOperationMode = 5;
-	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
-	SX1276LoRaSetSpreadingFactor(8);
-	SX1276LoRaSetSignalBandwidth(7);
-	SX1276LoRaSetFreqHopOn(enable);
-	SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
-
-	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
-	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
-	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
-	Radio->StartRx();
-}
-
-
-void	CLI_LoraOP_SF9BW500RS123(bool enable)
-{
-	LoraOperationMode = 6;
-	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
-	SX1276LoRaSetSpreadingFactor(9);
-	SX1276LoRaSetSignalBandwidth(9);
-	SX1276LoRaSetFreqHopOn(enable);
-	SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
-
-	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
-	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
-	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
-	Radio->StartRx();
-}
-
-
-void	CLI_LoraOP_SF9BW250RS126(bool enable)
-{
-	LoraOperationMode = 7;
-	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
-	SX1276LoRaSetSpreadingFactor(9);
-	SX1276LoRaSetSignalBandwidth(8);
-	SX1276LoRaSetFreqHopOn(enable);
-	SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
-
-	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
-	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
-	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
-	Radio->StartRx();
-}
-
-
-void	CLI_LoraOP_SF9BW125RS129(bool enable)
-{
-	LoraOperationMode = 8;
-	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
-	SX1276LoRaSetSpreadingFactor(9);
-	SX1276LoRaSetSignalBandwidth(7);
-	SX1276LoRaSetFreqHopOn(enable);
-	SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
-
-	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
-	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
-	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
-	Radio->StartRx();
-}
-
-
-void	CLI_LoraOP_SF10BW500RS126(bool enable)
-{
-	LoraOperationMode = 9;
-	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
-	SX1276LoRaSetSpreadingFactor(10);
-	SX1276LoRaSetSignalBandwidth(9);
-	SX1276LoRaSetFreqHopOn(enable);
-	SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
-
-	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
-	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
-	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
-	Radio->StartRx();
-}
-
-
-void	CLI_LoraOP_SF10BW250RS129(bool enable)
-{
-	LoraOperationMode = 10;
-	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
-	SX1276LoRaSetSpreadingFactor(10);
-	SX1276LoRaSetSignalBandwidth(8);
-	SX1276LoRaSetFreqHopOn(enable);
-	SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
-
-	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
-	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
-	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
-	Radio->StartRx();
-}
-
-
-void	CLI_LoraOP_SF10BW125RS132(bool enable)
-{
-	LoraOperationMode = 11;
-	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
-	SX1276LoRaSetSpreadingFactor(10);
-	SX1276LoRaSetSignalBandwidth(7);
-	SX1276LoRaSetFreqHopOn(enable);
-	SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
-
-	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
-	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
-	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
-	Radio->StartRx();
-}
-
-
-void	CLI_LoraOP_SF11BW250RS132(bool enable)
-{
-	LoraOperationMode = 12;
-	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
-	SX1276LoRaSetSpreadingFactor(11);
-	SX1276LoRaSetSignalBandwidth(8);
-	SX1276LoRaSetFreqHopOn(enable);
-	SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
-
-	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
-	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
-	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
-	Radio->StartRx();
-}
-
-
-void	CLI_LoraOP_SF11BW125RS135(bool enable)
-{
-	LoraOperationMode = 13;
-	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
-	SX1276LoRaSetSpreadingFactor(11);
-	SX1276LoRaSetSignalBandwidth(7);
-	SX1276LoRaSetFreqHopOn(enable);
-	SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
-
-	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
-	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
-
-	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
-	Radio->StartRx();
-}
-
-
-void	CLI_LoraOP_SF12BW250RS134(bool enable)
-{
-	LoraOperationMode = 14;
-	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
-	SX1276LoRaSetSpreadingFactor(12);
-	SX1276LoRaSetSignalBandwidth(8);
-	SX1276LoRaSetFreqHopOn(enable);
-	SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
-
-	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
-	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
-	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
-	Radio->StartRx();
-}
-
-
-void	CLI_LoraOP_SF12BW125RS137(bool enable)
-{
-	LoraOperationMode = 15;
-	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
-	SX1276LoRaSetSpreadingFactor(12);
-	SX1276LoRaSetSignalBandwidth(7);
-	SX1276LoRaSetFreqHopOn(enable);
-	SX1276LoRaSetHopPeriod(Lora_RFHoppingPeriod);
-
-	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate(&LoRaSettings);
-	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
-	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
-	Radio->StartRx();
+	return( true );
 }
 
 
@@ -1739,15 +1056,7 @@ int	CLI_ShellCmd_LoraJoinNode_in_Force( shell_cmd_args *args )
 		return SHELL_PROCESS_ERR_CMD_UNKN;
 	}
 
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -1826,15 +1135,7 @@ int	CLI_ShellCmd_LoraLeaveNode_in_Force( shell_cmd_args *args )
 		return SHELL_PROCESS_ERR_CMD_UNKN;
 	}
 
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-
-	SaveRecord_WriteInLoraMode();
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -2136,98 +1437,59 @@ int	CLI_ShellCmd_LoraNodeData(shell_cmd_args *args)
 	}
 }
 
+void	CLI__Console_Output_Node_Address( const uint8_t *addr )
+{
+	char	cs[8];
+	int8_t	i;
+
+	for( i = 2 ; i >= 0 ; i-- ) {
+		snprintf( cs, sizeof( cs ), "%02x", addr[i] );
+		Console_Output_String( cs );
+	}
+}
 
 int	CLI_ShellCmd_LoraGetAllNodeAddr( shell_cmd_args *args )
 {
-	int8_t		i;
 	uint8_t		count, temp = 0;
-	int8_t		str[5];
+	char		str[8];
 
-	if( args->count != 0 ) return SHELL_PROCESS_ERR_CMD_UNKN;
-
-	if( (SystemOperMode != SystemInNormal) || (EnableMaster != true) ) return SHELL_PROCESS_ERR_CMD_UNKN;
-	/*
-	for( count = 0 ; count < MAX_LoraNodeNum ; count++ ){
-		if( LoraNodeDevice[count] != NULL ){
-			temp++;
-			sprintf((char *)out, "%d", temp);
-			strcat((char *)out, "NodeAddr=");
-			Console_Output_String( (const char *)out );
-			for(i = 3 ; i > 0 ; i--) {
-				sprintf((char *)str, "%02x", LoraNodeDevice[count]->NodeAddress[i - 1]);
-				Console_Output_String( (const char *)str );
-			}
-			Console_Output_String( "  " );
-		}
-	}
-
-	sprintf((char *)str, "%d", temp);
-	Console_Output_String( ",Total Connecting Node Num=" );
-	Console_Output_String( (const char *)str );
-	Console_Output_String( "\r\n" );
-	*/
+	if( args->count ) return SHELL_PROCESS_ERR_CMD_UNKN;
+	if( SystemOperMode != SystemInNormal || ! EnableMaster ) return SHELL_PROCESS_ERR_CMD_UNKN;
 
 	for( count = 0 ; count < MAX_LoraNodeNum ; count++ ) {
-		if( LoraNodeDevice[count] != NULL ) {
-			temp++;
-		}
+		if( LoraNodeDevice[count] ) temp++;
 	}
 	Console_Output_String( "Nodes=" );
-	snprintf( (char *)str, sizeof(str), "%u", temp );
-	Console_Output_String( (const char *)str );
-	Console_Output_String( " " );
+	snprintf( str, sizeof( str ), "%u ", temp );
+	Console_Output_String( str );
 
-	if(temp != 0) {
+	if( temp ) {
 		for( count = 0 ; count < MAX_LoraNodeNum ; count++ ) {
-			if( LoraNodeDevice[count] != NULL ) {
-				for(i = 2 ; i >= 0 ; i--) {
-					snprintf( (char *)str, sizeof(str), "%02x", LoraNodeDevice[count]->NodeAddress[i] );
-					Console_Output_String( (const char *)str );
-				}
+			if( LoraNodeDevice[count] ) {
+				CLI__Console_Output_Node_Address( LoraNodeDevice[count]->NodeAddress );
 				Console_Output_String( " " );
 			}
 		}
 	}
 	Console_Output_String( "\r\n" );
-
 	return SHELL_PROCESS_OK;
 }
 
 
-int	CLI_ShellCmd_LoraGetGateWayAddr(shell_cmd_args *args)
+int	CLI_ShellCmd_LoraGetGateWayAddr( shell_cmd_args *args )
 {
-	int8_t		count;
-	// uint8_t	*LoraAddress;
-	int8_t		str[5];
-	// uint32_t	addr;
-
 	if( args->count != 0 ) return SHELL_PROCESS_ERR_CMD_UNKN;
 	if( (SystemOperMode != SystemInNormal) || (EnableMaster == true) ) return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	if( LoraGateWay == NULL ) {
+	if( ! LoraGateWay ) {
 		Console_Output_String( "LoraGateWayAddr=NULL" );
 		Console_Output_String( "\r\n" );
 		return SHELL_PROCESS_OK;
 	}
 
 	Console_Output_String( "LoraGateWayAddr=" );
-	for(count = 3 ; count > 0 ; count--) {
-		snprintf( (char *)str, sizeof(str), "%02x", LoraGateWay->NodeAddress[count - 1] );
-		Console_Output_String( (const char *)str );
-	}
+	CLI__Console_Output_Node_Address( LoraGateWay->NodeAddress );
 	Console_Output_String( "\r\n" );
-
-	/*
-	LoraAddress = LoraGateWay->NodeAddress;
-	addr = (((uint32_t)LoraAddress[2]) << 16) & 0x00FF0000;
-	addr |= (((uint32_t)LoraAddress[1]) << 8) & 0x0000FF00;
-	addr |= ((uint32_t)LoraAddress[0]) & 0x000000FF;
-	sprintf((char *)str, "%x", addr);
-	Console_Output_String( "LoraGateWayAddr=" );
-	Console_Output_String( (const char *)str );
-	Console_Output_String( "\r\n" );
-	*/
-
 	return SHELL_PROCESS_OK;
 }
 
@@ -2306,32 +1568,15 @@ int	CLI_ShellCmd_GpsDisable( shell_cmd_args *args )
 
 int	CLI_ShellCmd_LoraGetMyAddr( shell_cmd_args *args )
 {
-	int8_t		count;
 	uint8_t		*LoraAddress;
-	int8_t		str[5];
-	// uint32_t	addr;
 
 	if( args->count != 0 ) return SHELL_PROCESS_ERR_CMD_UNKN;
 
 	LoraAddress = AcsipProtocol_ReadMyAddress();
 
 	Console_Output_String( "LoraMyAddr=" );
-	for(count = 3 ; count > 0 ; count--) {
-		snprintf( (char *)str, sizeof(str), "%02x", LoraAddress[count - 1] );
-		Console_Output_String( (const char *)str );
-	}
+	CLI__Console_Output_Node_Address( LoraAddress );
 	Console_Output_String( "\r\n" );
-
-	/*
-	addr = (((uint32_t)LoraAddress[2]) << 16) & 0x00FF0000;
-	addr |= (((uint32_t)LoraAddress[1]) << 8) & 0x0000FF00;
-	addr |= ((uint32_t)LoraAddress[0]) & 0x000000FF;
-	sprintf((char *)str, "%x", addr);
-	Console_Output_String( "LoraMyAddr=" );
-	Console_Output_String( (const char *)str );
-	Console_Output_String( "\r\n" );
-	*/
-
 	return SHELL_PROCESS_OK;
 }
 
@@ -2395,22 +1640,22 @@ int	CLI_ShellCmd_LoraGetSystemMode( shell_cmd_args *args )
 {
 	if( args->count != 0 ) return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	if(SystemOperMode == SystemInNormal) {
+	if( SystemOperMode == SystemInNormal ) {
 		Console_Output_String( "SystemOperationMode=InNormal\r\n" );
 		return SHELL_PROCESS_OK;
 	}
 
-	if(SystemOperMode == SystemInProductVerification) {
+	if( SystemOperMode == SystemInProductVerification ) {
 		Console_Output_String( "SystemOperationMode=InProductVerification\r\n" );
 		return SHELL_PROCESS_OK;
 	}
 
-	if(SystemOperMode == SystemInPingPognTest) {
+	if( SystemOperMode == SystemInPingPognTest ) {
 		Console_Output_String( "SystemOperationMode=InPingPognTest\r\n" );
 		return SHELL_PROCESS_OK;
 	}
 
-	if(SystemOperMode == SystemInIdle) {
+	if( SystemOperMode == SystemInIdle ) {
 		Console_Output_String( "SystemOperationMode=InIdle\r\n" );
 		return SHELL_PROCESS_OK;
 	}
@@ -2423,7 +1668,7 @@ int	CLI_ShellCmd_LoraGetMode( shell_cmd_args *args )
 {
 	if( args->count != 0 ) return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	if(EnableMaster == true) {
+	if( EnableMaster ) {
 		Console_Output_String( "LoraMode=MASTER\r\n" );
 	} else {
 		Console_Output_String( "LoraMode=SLAVE\r\n" );
@@ -2941,21 +2186,8 @@ Go_Out:
 	return SHELL_PROCESS_OK;
 }
 
-
-int	CLI_ShellCmd_LoraSF7BW250RS120( shell_cmd_args *args )
+void	CLI__Save_LoRa_Configure_into_Flash( void )
 {
-	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
-
-	if(strcmp(args->args[0].val, "HopOn") == 0) {
-		CLI_LoraOP_SF7BW250RS120(true);
-	} else {
-		if(strcmp(args->args[0].val, "HopOff") == 0) {
-			CLI_LoraOP_SF7BW250RS120(false);
-		} else {
-			return SHELL_PROCESS_ERR_CMD_UNKN;
-		}
-	}
-
 #ifdef STM32F401xx
 	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
 #endif
@@ -2963,7 +2195,14 @@ int	CLI_ShellCmd_LoraSF7BW250RS120( shell_cmd_args *args )
 	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
 #endif
 	SaveRecord_WriteInLoraMode();
+}
 
+int	CLI_ShellCmd_LoraSF7BW250RS120( shell_cmd_args *args )
+{
+	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
+
+	if( ! CLI__Lora_Operation_Mode__Configure( 1, 7, 8, args->args[0].val ) ) return( SHELL_PROCESS_ERR_CMD_UNKN );
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -2972,24 +2211,8 @@ int	CLI_ShellCmd_LoraSF7BW125RS123( shell_cmd_args *args )
 {
 	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	if(strcmp(args->args[0].val, "HopOn") == 0)  {
-		CLI_LoraOP_SF7BW125RS123(true);
-	} else {
-		if(strcmp(args->args[0].val, "HopOff") == 0) {
-			CLI_LoraOP_SF7BW125RS123(false);
-		} else {
-			return SHELL_PROCESS_ERR_CMD_UNKN;
-		}
-	}
-
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	if( ! CLI__Lora_Operation_Mode__Configure( 2, 7, 7, args->args[0].val ) ) return( SHELL_PROCESS_ERR_CMD_UNKN );
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -2998,24 +2221,8 @@ int	CLI_ShellCmd_LoraSF8BW500RS120( shell_cmd_args *args )
 {
 	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	if(strcmp(args->args[0].val, "HopOn") == 0)  {
-		CLI_LoraOP_SF8BW500RS120(true);
-	} else {
-		if(strcmp(args->args[0].val, "HopOff") == 0) {
-			CLI_LoraOP_SF8BW500RS120(false);
-		} else {
-			return SHELL_PROCESS_ERR_CMD_UNKN;
-		}
-	}
-
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	if( ! CLI__Lora_Operation_Mode__Configure( 3, 8, 9, args->args[0].val ) ) return( SHELL_PROCESS_ERR_CMD_UNKN );
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3024,24 +2231,8 @@ int	CLI_ShellCmd_LoraSF8BW250RS123( shell_cmd_args *args )
 {
 	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	if(strcmp(args->args[0].val, "HopOn") == 0)  {
-		CLI_LoraOP_SF8BW250RS123(true);
-	} else {
-		if(strcmp(args->args[0].val, "HopOff") == 0) {
-			CLI_LoraOP_SF8BW250RS123(false);
-		} else {
-			return SHELL_PROCESS_ERR_CMD_UNKN;
-		}
-	}
-
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	if( ! CLI__Lora_Operation_Mode__Configure( 4, 8, 8, args->args[0].val ) ) return( SHELL_PROCESS_ERR_CMD_UNKN );
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3050,24 +2241,8 @@ int	CLI_ShellCmd_LoraSF8BW125RS126( shell_cmd_args *args )
 {
 	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	if(strcmp(args->args[0].val, "HopOn") == 0) {
-		CLI_LoraOP_SF8BW125RS126(true);
-	} else {
-		if(strcmp(args->args[0].val, "HopOff") == 0) {
-			CLI_LoraOP_SF8BW125RS126(false);
-		} else {
-			return SHELL_PROCESS_ERR_CMD_UNKN;
-		}
-	}
-
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-
-	SaveRecord_WriteInLoraMode();
+	if( ! CLI__Lora_Operation_Mode__Configure( 5, 8, 7, args->args[0].val ) ) return( SHELL_PROCESS_ERR_CMD_UNKN );
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3076,24 +2251,8 @@ int	CLI_ShellCmd_LoraSF9BW500RS123( shell_cmd_args *args )
 {
 	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	if(strcmp(args->args[0].val, "HopOn") == 0)  {
-		CLI_LoraOP_SF9BW500RS123(true);
-	} else {
-		if(strcmp(args->args[0].val, "HopOff") == 0) {
-			CLI_LoraOP_SF9BW500RS123(false);
-		} else {
-			return SHELL_PROCESS_ERR_CMD_UNKN;
-		}
-	}
-
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	if( ! CLI__Lora_Operation_Mode__Configure( 6, 9, 9, args->args[0].val ) ) return( SHELL_PROCESS_ERR_CMD_UNKN );
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3102,24 +2261,8 @@ int	CLI_ShellCmd_LoraSF9BW250RS126( shell_cmd_args *args )
 {
 	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	if(strcmp(args->args[0].val, "HopOn") == 0) {
-		CLI_LoraOP_SF9BW250RS126(true);
-	} else {
-		if(strcmp(args->args[0].val, "HopOff") == 0) {
-			CLI_LoraOP_SF9BW250RS126(false);
-		} else {
-			return SHELL_PROCESS_ERR_CMD_UNKN;
-		}
-	}
-
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	if( ! CLI__Lora_Operation_Mode__Configure( 7, 9, 8, args->args[0].val ) ) return( SHELL_PROCESS_ERR_CMD_UNKN );
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3128,24 +2271,8 @@ int	CLI_ShellCmd_LoraSF9BW125RS129( shell_cmd_args *args )
 {
 	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	if(strcmp(args->args[0].val, "HopOn") == 0) {
-		CLI_LoraOP_SF9BW125RS129(true);
-	} else {
-		if(strcmp(args->args[0].val, "HopOff") == 0) {
-			CLI_LoraOP_SF9BW125RS129(false);
-		} else {
-			return SHELL_PROCESS_ERR_CMD_UNKN;
-		}
-	}
-
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	if( ! CLI__Lora_Operation_Mode__Configure( 8, 9, 7, args->args[0].val ) ) return( SHELL_PROCESS_ERR_CMD_UNKN );
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3154,24 +2281,8 @@ int	CLI_ShellCmd_LoraSF10BW500RS126( shell_cmd_args *args )
 {
 	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	if(strcmp(args->args[0].val, "HopOn") == 0)  {
-		CLI_LoraOP_SF10BW500RS126(true);
-	} else {
-		if(strcmp(args->args[0].val, "HopOff") == 0) {
-			CLI_LoraOP_SF10BW500RS126(false);
-		} else {
-			return SHELL_PROCESS_ERR_CMD_UNKN;
-		}
-	}
-
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	if( ! CLI__Lora_Operation_Mode__Configure( 9, 10, 9, args->args[0].val ) ) return( SHELL_PROCESS_ERR_CMD_UNKN );
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3180,24 +2291,8 @@ int	CLI_ShellCmd_LoraSF10BW250RS129( shell_cmd_args *args )
 {
 	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	if(strcmp(args->args[0].val, "HopOn") == 0)  {
-		CLI_LoraOP_SF10BW250RS129(true);
-	} else {
-		if(strcmp(args->args[0].val, "HopOff") == 0) {
-			CLI_LoraOP_SF10BW250RS129(false);
-		} else {
-			return SHELL_PROCESS_ERR_CMD_UNKN;
-		}
-	}
-
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	if( ! CLI__Lora_Operation_Mode__Configure( 10, 10, 8, args->args[0].val ) ) return( SHELL_PROCESS_ERR_CMD_UNKN );
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3206,24 +2301,8 @@ int	CLI_ShellCmd_LoraSF10BW125RS132( shell_cmd_args *args )
 {
 	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	if(strcmp(args->args[0].val, "HopOn") == 0)  {
-		CLI_LoraOP_SF10BW125RS132(true);
-	} else {
-		if(strcmp(args->args[0].val, "HopOff") == 0) {
-			CLI_LoraOP_SF10BW125RS132(false);
-		} else {
-			return SHELL_PROCESS_ERR_CMD_UNKN;
-		}
-	}
-
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	if( ! CLI__Lora_Operation_Mode__Configure( 11, 10, 7, args->args[0].val ) ) return( SHELL_PROCESS_ERR_CMD_UNKN );
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3232,24 +2311,8 @@ int	CLI_ShellCmd_LoraSF11BW250RS132( shell_cmd_args *args )
 {
 	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	if(strcmp(args->args[0].val, "HopOn") == 0)  {
-		CLI_LoraOP_SF11BW250RS132(true);
-	} else {
-		if(strcmp(args->args[0].val, "HopOff") == 0) {
-			CLI_LoraOP_SF11BW250RS132(false);
-		} else {
-			return SHELL_PROCESS_ERR_CMD_UNKN;
-		}
-	}
-
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	if( ! CLI__Lora_Operation_Mode__Configure( 12, 11, 8, args->args[0].val ) ) return( SHELL_PROCESS_ERR_CMD_UNKN );
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3258,23 +2321,8 @@ int	CLI_ShellCmd_LoraSF11BW125RS135( shell_cmd_args *args )
 {
 	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	if(strcmp(args->args[0].val, "HopOn") == 0)  {
-		CLI_LoraOP_SF11BW125RS135(true);
-	} else {
-		if(strcmp(args->args[0].val, "HopOff") == 0) {
-			CLI_LoraOP_SF11BW125RS135(false);
-		} else {
-			return SHELL_PROCESS_ERR_CMD_UNKN;
-		}
-	}
-
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
+	if( ! CLI__Lora_Operation_Mode__Configure( 13, 11, 7, args->args[0].val ) ) return( SHELL_PROCESS_ERR_CMD_UNKN );
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3283,24 +2331,8 @@ int	CLI_ShellCmd_LoraSF12BW250RS134( shell_cmd_args *args )
 {
 	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	if(strcmp(args->args[0].val, "HopOn") == 0)  {
-		CLI_LoraOP_SF12BW250RS134(true);
-	} else {
-		if(strcmp(args->args[0].val, "HopOff") == 0) {
-			CLI_LoraOP_SF12BW250RS134(false);
-		} else {
-			return SHELL_PROCESS_ERR_CMD_UNKN;
-		}
-	}
-
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	if( ! CLI__Lora_Operation_Mode__Configure( 14, 12, 8, args->args[0].val ) ) return( SHELL_PROCESS_ERR_CMD_UNKN );
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3309,24 +2341,8 @@ int	CLI_ShellCmd_LoraSF12BW125RS137( shell_cmd_args *args )
 {
 	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	if(strcmp(args->args[0].val, "HopOn") == 0)  {
-		CLI_LoraOP_SF12BW125RS137(true);
-	} else {
-		if(strcmp(args->args[0].val, "HopOff") == 0) {
-			CLI_LoraOP_SF12BW125RS137(false);
-		} else {
-			return SHELL_PROCESS_ERR_CMD_UNKN;
-		}
-	}
-
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	if( ! CLI__Lora_Operation_Mode__Configure( 15, 12, 7, args->args[0].val ) ) return( SHELL_PROCESS_ERR_CMD_UNKN );
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3347,14 +2363,7 @@ int	CLI_ShellCmd_LoraFreq( shell_cmd_args *args )
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
 
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3376,14 +2385,7 @@ int	CLI_ShellCmd_LoraBW( shell_cmd_args *args )
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
 
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3409,14 +2411,7 @@ int	CLI_ShellCmd_LoraSF( shell_cmd_args *args )
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
 
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3442,14 +2437,7 @@ int	CLI_ShellCmd_LoraErrorCoding( shell_cmd_args *args )
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
 
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3471,16 +2459,10 @@ int	CLI_ShellCmd_LoraFreqHop( shell_cmd_args *args )
 		}
 	}
 
-	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
+	SX1276LoRaSetRFFrequency( Lora_RFFrequency );
 	CLI_ClearHoppingRandomChannelNumber();
 
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
+	CLI__Save_LoRa_Configure_into_Flash();
 
 	Radio->StartRx();
 	return SHELL_PROCESS_OK;
@@ -3519,14 +2501,7 @@ int	CLI_ShellCmd_LoraFreqHopOn( shell_cmd_args *args )
 	CLI_ClearHoppingRandomChannelNumber();
 	Radio->StartRx();
 
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3553,14 +2528,7 @@ int	CLI_ShellCmd_LoraImplicitHeader( shell_cmd_args *args )
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
 
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3587,14 +2555,7 @@ int	CLI_ShellCmd_LoraCRC( shell_cmd_args *args )
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
 
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3616,14 +2577,7 @@ int	CLI_ShellCmd_LoraPayloadLength( shell_cmd_args *args )
 	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
 	LoRaSettings.PayloadLength = payload;
 
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	CLI__Save_LoRa_Configure_into_Flash();
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
 
@@ -3647,13 +2601,7 @@ int	CLI_ShellCmd_MaxLoraPayloadLength( shell_cmd_args *args )
 	LoRaSettings.TxPacketTimeout = LoRaSettings.RxPacketTimeout;
 	LoRaSettings.MaxPayloadLength = payload;
 
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
+	CLI__Save_LoRa_Configure_into_Flash();
 
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
@@ -3684,14 +2632,7 @@ int	CLI_ShellCmd_LoraPreambleLength( shell_cmd_args *args )
 	Radio->StartRx();
 	// 此處設定1276模式,設定好preamble後,重算timeout時間與設定,並回到原本狀態
 
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3791,14 +2732,7 @@ int	CLI_ShellCmd_LoraPower( shell_cmd_args *args )
 	Radio->StartRx();
 	// 以上可能需加上 IC 工作模式切換後再去做暫存器的設定,再根據LoraStartWork狀態去進入相關狀態
 
-#ifdef STM32F401xx
-	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara();
-#endif
-#ifdef STM32F072
-	SaveRecord_WriteInMyselfParaAndLoraGateWayPara();
-#endif
-	SaveRecord_WriteInLoraMode();
-
+	CLI__Save_LoRa_Configure_into_Flash();
 	return SHELL_PROCESS_OK;
 }
 
@@ -3819,11 +2753,42 @@ int	CLI_ShellCmd_UartEchoOff( shell_cmd_args *args )
 	return SHELL_PROCESS_OK;
 }
 
+int	CLI_ShellCmd__List_Hop_Channel_List( shell_cmd_args *args )
+{
+	List_FHSS_Channel_List();
+	return SHELL_PROCESS_OK;
+}
+
+int	CLI_ShellCmd__Clear_Hop_Channel_List( shell_cmd_args *args )
+{
+	if( args->count != 0 )	return SHELL_PROCESS_ERR_CMD_UNKN;
+
+	Clear_FHSS_Channel_List();
+	return SHELL_PROCESS_OK;
+}
+
+int	CLI_ShellCmd__Append_Hop_Channel( shell_cmd_args *args )
+{
+	uint32_t	freq;
+
+	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
+
+	freq = (uint32_t) atoi( args->args[0].val );
+	if( freq < MIN_RF_Freq || freq > MAX_RF_Freq ) return SHELL_PROCESS_ERR_CMD_UNKN;
+
+	if( ! Append_FHSS_Channel_into_List( freq ) ) return SHELL_PROCESS_ERR_CMD_UNKN;
+
+	CLI__Save_LoRa_Configure_into_Flash();
+	return SHELL_PROCESS_OK;
+}
 
 int	CLI_ShellCmd_testPrint1( shell_cmd_args *args )
 {
 	Console_Output_String( "\r\ntestPrint1\r\n" );
-	LoraPara_LoadAndConfiguration();
+	Load_Default_FHSS_Channel_List();
+	CLI__Save_LoRa_Configure_into_Flash();
+//	LoraPara_LoadAndConfiguration();
+//	List_FHSS_Channel_List();
 	return SHELL_PROCESS_OK;
 }
 
