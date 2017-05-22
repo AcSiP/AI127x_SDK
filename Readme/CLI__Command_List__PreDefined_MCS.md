@@ -49,22 +49,17 @@ There are several pre-defined sensitivity mode
 	</TR>
 	<TR align="center" valign="center"><TD> -120 </TD>	<TD> 7 </TD>	<TD> 250 </TD> </TR>
 	<TR align="center" valign="center"><TD> -123 </TD>	<TD> 7 </TD>	<TD> 250 </TD> </TR>
-
 	<TR align="center" valign="center"><TD> -120 </TD>	<TD> 8 </TD>	<TD> 500 </TD> </TR>
 	<TR align="center" valign="center"><TD> -123 </TD>	<TD> 8 </TD>	<TD> 250 </TD> </TR>
 	<TR align="center" valign="center"><TD> -126 </TD>	<TD> 8 </TD>	<TD> 125 </TD> </TR>
-
 	<TR align="center" valign="center"><TD> -123 </TD>	<TD> 9 </TD>	<TD> 500 </TD> </TR>
 	<TR align="center" valign="center"><TD> -126 </TD>	<TD> 9 </TD>	<TD> 250 </TD> </TR>
 	<TR align="center" valign="center"><TD> -129 </TD>	<TD> 9 </TD>	<TD> 125 </TD> </TR>
-
 	<TR align="center" valign="center"><TD> -126 </TD>	<TD> 10 </TD>	<TD> 500 </TD> </TR>
 	<TR align="center" valign="center"><TD> -129 </TD>	<TD> 10 </TD>	<TD> 250 </TD> </TR>
 	<TR align="center" valign="center"><TD> -132 </TD>	<TD> 10 </TD>	<TD> 125 </TD> </TR>
-
 	<TR align="center" valign="center"><TD> -132 </TD>	<TD> 11 </TD>	<TD> 250 </TD> </TR>
 	<TR align="center" valign="center"><TD> -135 </TD>	<TD> 11 </TD>	<TD> 125 </TD> </TR>
-
 	<TR align="center" valign="center"><TD> -134 </TD>	<TD> 12 </TD>	<TD> 250 </TD> </TR>
 	<TR align="center" valign="center"><TD> -137 </TD>	<TD> 12 </TD>	<TD> 125 </TD> </TR>
 	</TABLE>
