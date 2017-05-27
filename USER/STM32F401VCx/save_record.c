@@ -416,10 +416,10 @@ void	SaveRecord_ReadOutTraceData(void)
 			snprintf( (char *)str, sizeof(str), "%d", temp.TraceData.NodeSensorData.GPS_Longitude );
 			Console_Output_String( (const char *)str );
 			Console_Output_String( " " );
-			Console_Output_String( "UTC-Time=" );
-			snprintf( (char *)str, sizeof(str), "%u", temp.TraceData.NodeSensorData.UTC );
-			Console_Output_String( (const char *)str );
-			Console_Output_String( " " );
+//			Console_Output_String( "UTC-Time=" );
+//			snprintf( (char *)str, sizeof(str), "%u", temp.TraceData.NodeSensorData.UTC );
+//			Console_Output_String( (const char *)str );
+//			Console_Output_String( " " );
 			Console_Output_String( "Battery=" );
 			snprintf( (char *)str, sizeof(str), "%u", temp.TraceData.NodeSensorData.Battery );
 			Console_Output_String( (const char *)str );

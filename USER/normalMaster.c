@@ -135,9 +135,9 @@ uint8_t		NormalMaster(__IO tLoraRunningEvent *Event)
 				snprintf( (char *)str, sizeof(str), "%d", DeviceNodeSensor[Event->RunNodeNumber]->GPS_Longitude );
 				Console_Output_String( (const char *)str );
 				Console_Output_String( " " );
-				snprintf( (char *)str, sizeof(str), "%u", DeviceNodeSensor[Event->RunNodeNumber]->UTC );
-				Console_Output_String( (const char *)str );
-				Console_Output_String( " " );
+//				snprintf( (char *)str, sizeof(str), "%u", DeviceNodeSensor[Event->RunNodeNumber]->UTC );
+//				Console_Output_String( (const char *)str );
+//				Console_Output_String( " " );
 				snprintf( (char *)str, sizeof(str), "%u", DeviceNodeSensor[Event->RunNodeNumber]->Battery );
 				Console_Output_String( (const char *)str );
 				Console_Output_String( " " );

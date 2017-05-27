@@ -13,6 +13,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "lbtafa.h"
+#include "flash.h"
 
 #include "Base_Driver__UART1.h"
 #include "UART_Console.h"
@@ -75,6 +76,8 @@ __IO uint8_t			LoraTxBuffer[LoraBufferLength];
 __IO uint8_t			LoraRxBuffer[LoraBufferLength];
 tRadioDriver *			Radio = NULL;
 uint8_t				LoraOperationMode;
+int16_t				RF__CW_Offset = 0;
+
 
 ///////////////// for Acsip Protocol //////////////////////
 __IO tAcsipProtocolFrame	TxFrame;
@@ -240,6 +243,7 @@ int	main( void )
 
 	LoraPara_LoadAndConfiguration();
 
+	RF__CW_Offset = Flash_Read__CW_Offset();
 	Radio->Init();
 	SX1276LoRaSetHopPeriod( Lora_RFHoppingPeriod );
 	Radio->StartRx();
@@ -278,6 +282,9 @@ int	main( void )
 
 	RTC_AlarmConfig();
 	RTC_AlarmRun();
+
+	// Show Carrier offset value
+	CLI_ShellCmd__Read_CW_Offset( NULL );
 
 	Console_Output_String( "FirmwareVersion=" );
 	Console_Output_String( FirmwareVersion );
@@ -362,7 +369,7 @@ int	main( void )
 						if(MySensor != NULL) {
 							MySensor->GPS_Latitude =	ADC1__Get_Converted_Value( ADC_IDX___ADC0 );
 							MySensor->GPS_Longitude =	ADC1__Get_Converted_Value( ADC_IDX___ADC1 );
-							MySensor->UTC =			ADC1__Get_Converted_Value( ADC_IDX___ADC4 );
+//							MySensor->UTC =			ADC1__Get_Converted_Value( ADC_IDX___ADC4 );
 							MySensor->Battery =		ADC1__Get_Converted_Value( ADC_IDX___VBat );
 						}
 					}
@@ -649,7 +656,7 @@ static void	OnMasterForNormal( void )
 
 			Console_Output_String( "1111 " );
 			Console_Output_String( "2222 " );
-			Console_Output_String( "3333 " );
+//			Console_Output_String( "3333 " );
 			Console_Output_String( "444 " );
 
 			if( LoRaSettings.FreqHopOn ){

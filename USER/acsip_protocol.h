@@ -58,8 +58,8 @@
 #define AcsipProtocol_MemorySpaceError		(0x55)
 #define AcsipProtocol_HoppingChannelError	(0x60)
 // Max message data size
-#define MaxPacketSize				(255)
-#define MaxMsgDataSize				(244)		// 32(Total Size = MaxPacketSize) - 9(Length:1、Flag:1、SN:1、NodeAdd:3、NextHoppingChannel:1、CRC:2) - 3(MyAdd) = 20
+#define MaxPacketSize				(19)
+#define MaxMsgDataSize				(8)		// 32(Total Size = MaxPacketSize) - 9(Length:1、Flag:1、SN:1、NodeAdd:3、NextHoppingChannel:1、CRC:2) - 3(MyAdd) = 20
 								// 在預設的一個訊框 32bytes 長度,一個 LoraNodeData 的訊框可以放進 24bytes 的 BASE64 的資料長度。
 #define AliasesSize				(32)
 #define AliasesDoubleSize			(AliasesSize * 2)
