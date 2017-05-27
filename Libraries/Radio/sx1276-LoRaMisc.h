@@ -167,21 +167,6 @@ void		SX1276LoRaSetRxSingleOn( bool enable );
 bool		SX1276LoRaGetRxSingleOn( void );
 
 /*!
- * \brief Enables/Disables the frequency hopping 
- *
- * \param [IN] enable [true, false]
- */
-
-void		SX1276LoRaSetFreqHopOn( bool enable );
-
-/*!
- * \brief Get the frequency hopping status 
- *
- * \param [IN] enable [true, false]
- */
-bool		SX1276LoRaGetFreqHopOn( void );
-
-/*!
  * \brief Set symbol period between frequency hops
  *
  * \param [IN] value
