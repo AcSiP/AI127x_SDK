@@ -101,7 +101,7 @@ int		CLI_ShellCmd_LoraGetPreambleLength(shell_cmd_args *);
 int		CLI_ShellCmd_LoraGetPayloadLength(shell_cmd_args *);
 int		CLI_ShellCmd_LoraGetCRC(shell_cmd_args *);
 int		CLI_ShellCmd_LoraGetImplicitHeader(shell_cmd_args *);
-int		CLI_ShellCmd_LoraGetFreqHopOn(shell_cmd_args *);
+//int		CLI_ShellCmd_LoraGetFreqHopOn(shell_cmd_args *);
 int		CLI_ShellCmd_LoraGetErrorCoding(shell_cmd_args *);
 int		CLI_ShellCmd_LoraGetSF(shell_cmd_args *);
 int		CLI_ShellCmd_LoraGetBW(shell_cmd_args *);
@@ -130,7 +130,7 @@ int		CLI_ShellCmd_LoraBW(shell_cmd_args *);
 int		CLI_ShellCmd_LoraSF(shell_cmd_args *);
 int		CLI_ShellCmd_LoraErrorCoding(shell_cmd_args *);
 int		CLI_ShellCmd_LoraFreqHop(shell_cmd_args *);
-int		CLI_ShellCmd_LoraFreqHopOn(shell_cmd_args *);
+//int		CLI_ShellCmd_LoraFreqHopOn(shell_cmd_args *);
 int		CLI_ShellCmd_LoraImplicitHeader(shell_cmd_args *);
 int		CLI_ShellCmd_LoraCRC(shell_cmd_args *);
 int		CLI_ShellCmd_LoraPayloadLength(shell_cmd_args *);
@@ -149,9 +149,14 @@ int		CLI_LoraReInit( shell_cmd_args *args );
 int		CLI_ShellCmd__Dump_SX127x_Regs( shell_cmd_args *args );
 int		CLI_ShellCmd__Read_Device_Info( shell_cmd_args *args );
 
+int		CLI_ShellCmd__Dump_STM32F401_OTP( shell_cmd_args *args );
+int		CLI_ShellCmd__Write_OTP( shell_cmd_args *args );
+
 int		CLI_ShellCmd__List_Hop_Channel_List( shell_cmd_args *args );
 int		CLI_ShellCmd__Clear_Hop_Channel_List( shell_cmd_args *args );
 int		CLI_ShellCmd__Append_Hop_Channel( shell_cmd_args *args );
+int		CLI_ShellCmd__Read_CW_Offset( shell_cmd_args *args );
+int		CLI_ShellCmd__Write_CW_Offset( shell_cmd_args *args );
 
 int		CLI_ShellCmd_testPrint1(shell_cmd_args *);
 int		CLI_ShellCmd_testPrint2(shell_cmd_args *);

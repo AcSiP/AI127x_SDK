@@ -46,6 +46,7 @@
 #include "UART_Console.h"
 #include "acsip_protocol.h"
 #include "Base_Driver__ADC1.h"
+#include "flash.h"
 
 #ifdef STM32F072
 	#include "stm32f0xx.h"
@@ -76,6 +77,8 @@ extern __IO bool			LoraPV_DefaultTxSet;
 extern __IO uint32_t			LoraPV_TxTimes;
 extern __IO bool			LoRaOn;
 extern __IO bool			GPS_HandmadeOff;
+extern int16_t				RF__CW_Offset;
+
 
 extern tLoraDeviceNode *		LoraNodeDevice[MAX_LoraNodeNum];			// for MASTER
 extern tDeviceNodeSleepAndRandomHop *	DeviceNodeSleepAndRandomHop[MAX_LoraNodeNum];		// for MASTER
@@ -168,7 +171,7 @@ shell_cmd		CLI__Shell_Command[] = {
 	{	.cmd	= "LoraGetPayloadLength",	.func	= CLI_ShellCmd_LoraGetPayloadLength,	.desc	= "sx1276/78 LORA packet Payload Length"		},
 	{	.cmd	= "LoraGetCRC",			.func	= CLI_ShellCmd_LoraGetCRC,		.desc	= "sx1276/78 LORA packet CRC"				},
 	{	.cmd	= "LoraGetImplicitHeader",	.func	= CLI_ShellCmd_LoraGetImplicitHeader,	.desc	= "sx1276/78 LORA packet Header Implicit"		},
-	{	.cmd	= "LoraGetFreqHopOn",		.func	= CLI_ShellCmd_LoraGetFreqHopOn,	.desc	= "sx1276/78 LORA Freq. Hop On"				},
+//	{	.cmd	= "LoraGetFreqHopOn",		.func	= CLI_ShellCmd_LoraGetFreqHopOn,	.desc	= "sx1276/78 LORA Freq. Hop On"				},
 
 	{	.cmd	= "LoraGetErrorCoding",		.func	= CLI_ShellCmd_LoraGetErrorCoding,	.desc	= "sx1276/78 LORA packet Error Coding"			},
 	{	.cmd	= "LoraGetSF",			.func	= CLI_ShellCmd_LoraGetSF,		.desc	= "sx1276/78 LORA Spreading Factor"			},
@@ -204,7 +207,7 @@ shell_cmd		CLI__Shell_Command[] = {
 	{	.cmd	= "LoraErrorCoding",		.func	= CLI_ShellCmd_LoraErrorCoding,		.desc	= "sx1276/78 Error Coding Rate"				},
 	{	.cmd	= "LoraFreqHop",		.func	= CLI_ShellCmd_LoraFreqHop,		.desc	= "sx1276/78 freq hop on or off"			},
 
-	{	.cmd	= "LoraFreqHopOn",		.func	= CLI_ShellCmd_LoraFreqHopOn,		.desc	= "sx1276/78 freq hop on or off"			},
+//	{	.cmd	= "LoraFreqHopOn",		.func	= CLI_ShellCmd_LoraFreqHopOn,		.desc	= "sx1276/78 freq hop on or off"			},
 	{	.cmd	= "LoraImplicitHeader",		.func	= CLI_ShellCmd_LoraImplicitHeader,	.desc	= "sx1276/78 packet Implicit header"			},
 	{	.cmd	= "LoraCRC",			.func	= CLI_ShellCmd_LoraCRC,			.desc	= "sx1276/78 packet crc on or off"			},
 
@@ -227,8 +230,15 @@ shell_cmd		CLI__Shell_Command[] = {
 	{	.cmd	= "SX127x_OpMode",		.func	= CLI_ShellCmd__SX127x_OpMode,		.desc	= "Manual change SX127x mode"				},
 	{	.cmd	= "SleepStandby",		.func	= CLI_ShellCmd__System_Standby,		.desc	= "Manual sleep mode"					},
 	{	.cmd	= "SleepStop",			.func	= CLI_ShellCmd__System_Stop,		.desc	= "Manual sleep mode"					},
+	{	.cmd	= "Read_CW_Offset",		.func	= CLI_ShellCmd__Read_CW_Offset,		.desc	= "Get calibrated offset of Carrier Wave"		},
+	{	.cmd	= "Write_CW_Offset",		.func	= CLI_ShellCmd__Write_CW_Offset,	.desc	= "Set calibrated offset of Carrier Wave"		},
+
+
 	{	.cmd	= "GetDeviceInfo",		.func	= CLI_ShellCmd__Read_Device_Info,	.desc	= "MCU module Info"					},
 	{	.cmd	= "SX127x_DumpRegs",		.func	= CLI_ShellCmd__Dump_SX127x_Regs,	.desc	= "Dump Registers of SX127x"				},
+
+	{	.cmd	= "Dump_OTP",			.func	= CLI_ShellCmd__Dump_STM32F401_OTP,	.desc	= "Dump OTP of STM32F401"				},
+	{	.cmd	= "Write_OTP",			.func	= CLI_ShellCmd__Write_OTP,		.desc	= "Write single byte into OTP on STM32F401"		},
 
 	{	.cmd	= "testPrint1",			.func	= CLI_ShellCmd_testPrint1,		.desc	= "Shell command for the test1"				},
 	{	.cmd	= "testPrint2",			.func	= CLI_ShellCmd_testPrint2,		.desc	= "Shell command for the test2"				}
@@ -461,7 +471,7 @@ bool	CLI__Lora_Operation_Mode__Configure( uint8_t mode, uint8_t sf, uint8_t bw, 
 	SX1276LoRaSetOpMode( RFLR_OPMODE_STANDBY );
 	SX1276LoRaSetSpreadingFactor( sf );
 	SX1276LoRaSetSignalBandwidth( bw );
-	SX1276LoRaSetFreqHopOn( hop_en );
+	LoRaSettings.FreqHopOn = hop_en;
 	SX1276LoRaSetHopPeriod( Lora_RFHoppingPeriod );
 
 	LoRaSettings.RxPacketTimeout = CLI_LoraTimeOutCalculate( & LoRaSettings );
@@ -1716,9 +1726,9 @@ int	CLI_ShellCmd_LoraGetPara( shell_cmd_args *args )
 	Console_Output_String( (const char *)str );
 	Console_Output_String( "  " );
 
-	hop = SX1276LoRaGetFreqHopOn();
+	hop = LoRaSettings.FreqHopOn;
 	Console_Output_String( "FreqHopOn=" );
-	if(hop == true) {
+	if( hop ) {
 		period = SX1276LoRaGetHopPeriod();
 		snprintf( (char *)str, sizeof(str), "%d", period );
 		Console_Output_String( "true" );
@@ -1942,29 +1952,29 @@ int	CLI_ShellCmd_LoraGetImplicitHeader( shell_cmd_args *args )
 }
 
 
-int	CLI_ShellCmd_LoraGetFreqHopOn( shell_cmd_args *args )
-{
-	bool		hop;
-	uint8_t		period;
-	int8_t		str[4];
+//int	CLI_ShellCmd_LoraGetFreqHopOn( shell_cmd_args *args )
+//{
+//	bool		hop;
+//	uint8_t		period;
+//	int8_t		str[4];
 
-	if( args->count != 0 )	return SHELL_PROCESS_ERR_CMD_UNKN;
+//	if( args->count != 0 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	hop = SX1276LoRaGetFreqHopOn();
-	Console_Output_String( "FreqHopOn=" );
+//	hop = LoRaSettings.FreqHopOn;
+//	Console_Output_String( "FreqHopOn=" );
 
-	if(hop == true) {
-		period = SX1276LoRaGetHopPeriod();
-		snprintf( (char *)str, sizeof(str), "%d", period );
-		Console_Output_String( "true" );
-		Console_Output_String( (const char *)str );
-	} else {
-		Console_Output_String( "false" );
-	}
+//	if( hop ) {
+//		period = SX1276LoRaGetHopPeriod();
+//		snprintf( (char *)str, sizeof(str), "%d", period );
+//		Console_Output_String( "true" );
+//		Console_Output_String( (const char *)str );
+//	} else {
+//		Console_Output_String( "false" );
+//	}
 
-	Console_Output_String( "\r\n" );
-	return SHELL_PROCESS_OK;
-}
+//	Console_Output_String( "\r\n" );
+//	return SHELL_PROCESS_OK;
+//}
 
 
 int	CLI_ShellCmd_LoraGetErrorCoding( shell_cmd_args *args )
@@ -2448,11 +2458,9 @@ int	CLI_ShellCmd_LoraFreqHop( shell_cmd_args *args )
 
 	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
 	if(strcmp(args->args[0].val, "ON") == 0) {
-		SX1276LoRaSetFreqHopOn(true);
 		LoRaSettings.FreqHopOn = true;
 	} else {
 		if(strcmp(args->args[0].val, "OFF") == 0) {
-			SX1276LoRaSetFreqHopOn(false);
 			LoRaSettings.FreqHopOn = false;
 		} else {
 			return SHELL_PROCESS_ERR_CMD_UNKN;
@@ -2469,41 +2477,35 @@ int	CLI_ShellCmd_LoraFreqHop( shell_cmd_args *args )
 }
 
 
-int	CLI_ShellCmd_LoraFreqHopOn( shell_cmd_args *args )
-{
-	uint16_t		hopperiod;
+//int	CLI_ShellCmd_LoraFreqHopOn( shell_cmd_args *args )
+//{
+//	uint16_t		hopperiod;
 
-	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
+//	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
 
-	hopperiod = atoi(args->args[0].val);
-	if(hopperiod >= 256) return SHELL_PROCESS_ERR_CMD_UNKN;
-	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
+//	hopperiod = atoi(args->args[0].val);
+//	if(hopperiod >= 256) return SHELL_PROCESS_ERR_CMD_UNKN;
+//	SX1276LoRaSetOpMode(RFLR_OPMODE_STANDBY);
 
-	switch(hopperiod) {
-	case 0:
-		SX1276LoRaSetFreqHopOn(false);
-		LoRaSettings.FreqHopOn = false;
-		// SX1276LoRaSetHopPeriod(0);
-		break;
+//	switch(hopperiod) {
+//	case 0:
+//		LoRaSettings.FreqHopOn = false;
+//		break;
 
-	default:
-		SX1276LoRaSetFreqHopOn(true);
-		LoRaSettings.FreqHopOn = true;
+//	default:
+//		LoRaSettings.FreqHopOn = true;
+//	}
 
-		SX1276LoRaSetHopPeriod(hopperiod);
-		LoRaSettings.HopPeriod = hopperiod;
-		break;
-	}
+//	SX1276LoRaSetHopPeriod(hopperiod);
+//	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
+//	// LoRaSettings.RFFrequency = Lora_RFFrequency;
 
-	SX1276LoRaSetRFFrequency(Lora_RFFrequency);
-	// LoRaSettings.RFFrequency = Lora_RFFrequency;
+//	CLI_ClearHoppingRandomChannelNumber();
+//	Radio->StartRx();
 
-	CLI_ClearHoppingRandomChannelNumber();
-	Radio->StartRx();
-
-	CLI__Save_LoRa_Configure_into_Flash();
-	return SHELL_PROCESS_OK;
-}
+//	CLI__Save_LoRa_Configure_into_Flash();
+//	return SHELL_PROCESS_OK;
+//}
 
 
 int	CLI_ShellCmd_LoraImplicitHeader( shell_cmd_args *args )
@@ -2782,13 +2784,43 @@ int	CLI_ShellCmd__Append_Hop_Channel( shell_cmd_args *args )
 	return SHELL_PROCESS_OK;
 }
 
+int	CLI_ShellCmd__Read_CW_Offset( shell_cmd_args *args )
+{
+	char		cs[32];
+
+	RF__CW_Offset = Flash_Read__CW_Offset();
+	snprintf( cs, sizeof(cs), "CW_Offset= %d\r\n", RF__CW_Offset );
+	Console_Output_String( cs );
+
+	return SHELL_PROCESS_OK;
+}
+
+int	CLI_ShellCmd__Write_CW_Offset( shell_cmd_args *args )
+{
+	char		cs[32];
+
+	if( args->count != 1 )	return SHELL_PROCESS_ERR_CMD_UNKN;
+
+	RF__CW_Offset = atoi( args->args[0].val );
+	if( Flash_Write__CW_Offset( RF__CW_Offset ) ) return( SHELL_PROCESS_OK );
+
+	snprintf( cs, sizeof(cs), "Save CW Offset= %d got fail!\r\n", RF__CW_Offset );
+	Console_Output_String( cs );
+	return SHELL_PROCESS_OK;
+}
+
+
 int	CLI_ShellCmd_testPrint1( shell_cmd_args *args )
 {
+	int16_t		offset;
+	char		cs[32];
+
 	Console_Output_String( "\r\ntestPrint1\r\n" );
-	Load_Default_FHSS_Channel_List();
-	CLI__Save_LoRa_Configure_into_Flash();
-//	LoraPara_LoadAndConfiguration();
-//	List_FHSS_Channel_List();
+
+	offset = Flash_Read__CW_Offset();
+	snprintf( cs, sizeof(cs), "XTAL Offset= %d", offset );
+	Console_Output_String(cs);
+
 	return SHELL_PROCESS_OK;
 }
 
@@ -2857,6 +2889,29 @@ int	CLI_ShellCmd__Dump_SX127x_Regs( shell_cmd_args *args )
 	SX1276ReadBuffer( 1, buf + 1, 0x70 - 1 );
 	Console_Output_String( "\r\n Dumping Lora Regsister\r\n" );
 	Console_Dump_Binary( buf, 0x70 );
+	return SHELL_PROCESS_OK;
+}
+
+int	CLI_ShellCmd__Dump_STM32F401_OTP( shell_cmd_args *args )
+{
+	uint8_t		buf[ 16 * ( 16 + 2 ) ];
+
+	FLASH_ReadByte( 0x1FFF7800, buf, 16 * 17 );
+	Console_Output_String( "\r\n Dumping OTP Buffer\r\n" );
+	Console_Dump_Binary( buf, 16*17 );
+	return SHELL_PROCESS_OK;
+}
+
+int	CLI_ShellCmd__Write_OTP( shell_cmd_args *args )
+{
+	uint8_t	addr, val;
+
+	if( args->count != 2 )	return SHELL_PROCESS_ERR_CMD_UNKN;
+
+	addr = atoi( args->args[0].val );
+	val = atoi( args->args[1].val );
+
+	FLASH_WriteByte( 0x1FFF7800 + addr, & val, 1 );
 	return SHELL_PROCESS_OK;
 }
 
