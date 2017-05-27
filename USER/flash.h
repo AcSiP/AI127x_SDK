@@ -138,6 +138,8 @@
 	#define ADDR_FLASH_SECTOR_5		((uint32_t)0x08020000)		/* Base @ of Sector 5, 128 Kbytes */
 	#define Record_WRITE_START_ADDR		((uint32_t)ADDR_FLASH_SECTOR_4)
 	#define Record_WRITE_END_ADDR		((uint32_t)0x0801FFFF)
+
+	#define Record__CW_Offset__Addr		((uint32_t)0x1FFF7800)		// OTP Block 0
 #endif
 
 /* Exported constants --------------------------------------------------------*/
@@ -153,16 +155,19 @@
 	void	FLASH_EraseRecordSector( uint32_t );
 #endif
 
-void	FLASH_WriteByte( uint32_t, uint8_t *, uint16_t );
-void	FLASH_WriteHalfWord( uint32_t, uint16_t *, uint16_t );
-void	FLASH_WriteWord( uint32_t, uint32_t *, uint16_t );
-void	FLASH_WriteDoubleWord( uint32_t, uint64_t *, uint16_t );
-void	FLASH_ReadByte( uint32_t, uint8_t *, uint16_t );
-void	FLASH_ReadHalfWord( uint32_t, uint16_t *, uint16_t );
-void	FLASH_ReadWord( uint32_t, uint32_t *, uint16_t );
-void	FLASH_ReadDoubleWord( uint32_t, uint64_t *, uint16_t );
-void	FLASH_WriteString( uint32_t, uint8_t *, uint16_t );
-void	FLASH_ReadString( uint32_t, uint8_t *, uint16_t );
+void		FLASH_WriteByte( uint32_t, uint8_t *, uint16_t );
+void		FLASH_WriteHalfWord( uint32_t StartAddr, const uint16_t * Data, uint16_t Num );
+void		FLASH_WriteWord( uint32_t, uint32_t *, uint16_t );
+void		FLASH_WriteDoubleWord( uint32_t, uint64_t *, uint16_t );
+void		FLASH_ReadByte( uint32_t, uint8_t *, uint16_t );
+void		FLASH_ReadHalfWord( uint32_t, uint16_t *, uint16_t );
+void		FLASH_ReadWord( uint32_t, uint32_t *, uint16_t );
+void		FLASH_ReadDoubleWord( uint32_t, uint64_t *, uint16_t );
+void		FLASH_WriteString( uint32_t, uint8_t *, uint16_t );
+void		FLASH_ReadString( uint32_t, uint8_t *, uint16_t );
+
+int16_t		Flash_Read__CW_Offset( void );
+bool		Flash_Write__CW_Offset( int16_t offset_hz );
 
 #endif		// USER_FLASH_H_
 

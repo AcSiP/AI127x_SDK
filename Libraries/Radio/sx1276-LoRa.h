@@ -97,7 +97,7 @@ typedef enum {
 /*!
  * SX1276 definitions
  */
-#define XTAL_FREQ		32000000
+//#define XTAL_FREQ		32000000
 #define FREQ_STEP		61.03515625
 
 /*!
