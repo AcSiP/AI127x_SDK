@@ -327,7 +327,7 @@ uint32_t	CLI_LoraTimeOutCalculate( tLoRaSettings *loraSettings )
 		de = 0;
 	}
 
-	num1 = ((8 * loraSettings->PayloadLength) - (4 * loraSettings->SpreadingFactor) + 28 + (16 * crc) - (20 * ih));
+	num1 = ((8 * loraSettings->MaxPayloadLength) - (4 * loraSettings->SpreadingFactor) + 28 + (16 * crc) - (20 * ih));
 	num2 = (4 * (loraSettings->SpreadingFactor - (2 * de)));
 	num3 = (uint32_t)(ceil((double)num1/num2));
 	Npayload = 8 + (num3 * (4 + loraSettings->ErrorCoding));
@@ -335,7 +335,7 @@ uint32_t	CLI_LoraTimeOutCalculate( tLoRaSettings *loraSettings )
 	Tpreamble = ((loraSettings->PreambleLength + 4.25) * Ts ) * 1000;		// ms
 	Tpayload = (Npayload * Ts) * 1000;		// ms
 
-	return (uint32_t)(ceil(Tpreamble + Tpayload) + 400);		// ms
+	return (uint32_t)( ceil(Tpreamble + Tpayload) + 500 );		// ms
 }
 
 
@@ -1358,20 +1358,24 @@ int	CLI_ShellCmd_LoraNodeData(shell_cmd_args *args)
 	uint32_t	addr, addr0;
 	uint8_t		dataarray[MaxMsgDataSize];
 
-	if( (SystemOperMode == SystemInNormal) && (EnableMaster == false) ) {
+	if( SystemOperMode != SystemInNormal ) {
+		Console_Output_String( "System NOT in Normal mode.\r\n" );
+		return SHELL_PROCESS_ERR_CMD_UNKN;
+	}
+
+	if( ! EnableMaster ) {
 		if( args->count != 1 ) {
-			Console_Output_String( "This Command in Normal Mode.\r\n" );
 			Console_Output_String( "Lora module is Slave.\r\n" );
 			Console_Output_String( "Need one parameter.\r\n" );
 			return SHELL_PROCESS_ERR_CMD_UNKN;
 		}
 
-		if( LoraGateWay == NULL ) {
+		if( ! LoraGateWay ) {
 			Console_Output_String( "NO LoraGateWay.\r\n" );
 			return SHELL_PROCESS_ERR_CMD_UNKN;
 		}
 
-		if(LoraNeedTxData == true) return SHELL_PROCESS_ERR_CMD_UNKN;
+		if( LoraNeedTxData ) return SHELL_PROCESS_ERR_CMD_UNKN;
 
 		memset((void *)TxDataArray, 0, MaxMsgDataSize);
 		src = (const uint8_t *)(args->args[0].val);
@@ -1383,7 +1387,7 @@ int	CLI_ShellCmd_LoraNodeData(shell_cmd_args *args)
 			return SHELL_PROCESS_ERR_CMD_UNKN;
 		}
 
-		if(size > MaxMsgDataSize) {
+		if( size > MaxMsgDataSize ) {
 			memset((void *)TxDataArray, 0, MaxMsgDataSize);
 			TxDataSize = 0;
 			LoraNeedTxData = false;
@@ -1392,58 +1396,54 @@ int	CLI_ShellCmd_LoraNodeData(shell_cmd_args *args)
 		TxDataSize = size;
 		LoraNeedTxData = true;
 		return SHELL_PROCESS_OK;
-	} else {
-		if((SystemOperMode == SystemInNormal) && (EnableMaster == true)) {
-			if(args->count != 2) {
-				Console_Output_String( "This Command in Normal Mode.\r\n" );
-				Console_Output_String( "Lora module is Master.\r\n" );
-				Console_Output_String( "Need two parameter.\r\n" );
-				return SHELL_PROCESS_ERR_CMD_UNKN;
-			}
+	}
 
-			if(strlen(args->args[0].val) != 6) {
-				// Console_Output_String( "AddrSize=" );		// test output
-				// sprintf((char *)str, "%d", strlen(args->args[0].val));
-				// Console_Output_String( (const char *)str );		// test output
-				// Console_Output_String( "\r\n" );
-				Console_Output_String( "Lora node address length NOT EQUAL 6Bytes.\r\n" );
-				return SHELL_PROCESS_ERR_CMD_UNKN;
-			}
-
-			addr0 = (uint32_t)strtol(args->args[0].val, NULL, 16);
-
-			if(!!(addr0 & 0xFF000000)) return SHELL_PROCESS_ERR_CMD_UNKN;
-
-			for(count = 0 ; count < MAX_LoraNodeNum ; count++) {
-				if(LoraNodeDevice[count] != NULL) {
-					addr = (((uint32_t)LoraNodeDevice[count]->NodeAddress[2]) << 16) & 0x00FF0000;
-					addr |= (((uint32_t)LoraNodeDevice[count]->NodeAddress[1]) << 8) & 0x0000FF00;
-					addr |= ((uint32_t)LoraNodeDevice[count]->NodeAddress[0]) & 0x000000FF;
-					if(addr0 == addr) break;
-				}
-			}
-
-			if( count < MAX_LoraNodeNum ) {
-				src = (const uint8_t *)(args->args[1].val);
-				base64_size = strlen(args->args[1].val);
-
-				memset((void *)dataarray, 0, MaxMsgDataSize);
-				if( Base64_decode( dataarray, MaxMsgDataSize, &size, src, base64_size ) != 0 ) {
-					return SHELL_PROCESS_ERR_CMD_UNKN;
-				} else {
-					if(LoraLinkListEvent_BuildLoraEvent(LoraEventPriority1, count, Master_AcsipProtocol_Data, LoraNodeDevice[count]->NodeAddress, dataarray, (uint8_t *)&size) == false) {
-						return SHELL_PROCESS_ERR_CMD_UNKN;
-					}
-				}
-			} else {
-				Console_Output_String( "This NODE NOT in AcSipLoraNet.\r\n" );
-				return SHELL_PROCESS_ERR_CMD_UNKN;
-			}
-			return SHELL_PROCESS_OK;
-		} else {
-			Console_Output_String( "System NOT in Normal mode,\r\n" );
+	if( EnableMaster ) {
+		if(args->count != 2) {
+			Console_Output_String( "Lora module is Master.\r\n" );
+			Console_Output_String( "Need two parameter.\r\n" );
 			return SHELL_PROCESS_ERR_CMD_UNKN;
 		}
+
+		if(strlen(args->args[0].val) != 6) {
+			// Console_Output_String( "AddrSize=" );		// test output
+			// sprintf((char *)str, "%d", strlen(args->args[0].val));
+			// Console_Output_String( (const char *)str );		// test output
+			// Console_Output_String( "\r\n" );
+			Console_Output_String( "Lora node address length NOT EQUAL 6Bytes.\r\n" );
+			return SHELL_PROCESS_ERR_CMD_UNKN;
+		}
+
+		addr0 = (uint32_t)strtol(args->args[0].val, NULL, 16);
+
+		if(!!(addr0 & 0xFF000000)) return SHELL_PROCESS_ERR_CMD_UNKN;
+
+		for(count = 0 ; count < MAX_LoraNodeNum ; count++) {
+			if(LoraNodeDevice[count] != NULL) {
+				addr = (((uint32_t)LoraNodeDevice[count]->NodeAddress[2]) << 16) & 0x00FF0000;
+				addr |= (((uint32_t)LoraNodeDevice[count]->NodeAddress[1]) << 8) & 0x0000FF00;
+				addr |= ((uint32_t)LoraNodeDevice[count]->NodeAddress[0]) & 0x000000FF;
+				if(addr0 == addr) break;
+			}
+		}
+
+		if( count < MAX_LoraNodeNum ) {
+			src = (const uint8_t *)(args->args[1].val);
+			base64_size = strlen(args->args[1].val);
+
+			memset((void *)dataarray, 0, MaxMsgDataSize);
+			if( Base64_decode( dataarray, MaxMsgDataSize, &size, src, base64_size ) != 0 ) {
+				return SHELL_PROCESS_ERR_CMD_UNKN;
+			} else {
+				if(LoraLinkListEvent_BuildLoraEvent(LoraEventPriority1, count, Master_AcsipProtocol_Data, LoraNodeDevice[count]->NodeAddress, dataarray, (uint8_t *)&size) == false) {
+					return SHELL_PROCESS_ERR_CMD_UNKN;
+				}
+			}
+		} else {
+			Console_Output_String( "This NODE NOT in AcSipLoraNet.\r\n" );
+			return SHELL_PROCESS_ERR_CMD_UNKN;
+		}
+		return SHELL_PROCESS_OK;
 	}
 }
 
