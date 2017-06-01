@@ -624,10 +624,13 @@ static	bool	MasterLoraEvent_PROCESS( void )
 static void	OnMasterForNormal( void )
 {
 	int8_t		count, str[64];
+	int		radio_ret;
+	bool		flag_debug_radio = false;
 
-	switch( Radio->Process() ) {
+	radio_ret = Radio->Process();
+	switch( radio_ret ) {
 	case RF_CHANNEL_EMPTY:
-//		Console_Output_String( "EMPTY\r\n" );
+		if( flag_debug_radio ) Console_Output_String( "EMPTY\r\n" );
 		// CLI_LoraGetRFFrequency( );
 		if( LBTandAFA_RX() ){
 			// Keeping CAD
@@ -638,7 +641,7 @@ static void	OnMasterForNormal( void )
 
 
 	case RF_RX_TIMEOUT:
-		// Console_Output_String( "RX_TIMEOUT\r\n" );		//test output
+		if( flag_debug_radio ) Console_Output_String( "RX_TIMEOUT\r\n" );
 
 		if( (LoraRunningEvent.RunNodeEvent == Master_AcsipProtocol_Poll) && (LoraNodeDevice[LoraRunningEvent.RunNodeNumber] ) ) {
 			Console_Output_String( "Node=" );
@@ -708,7 +711,7 @@ static void	OnMasterForNormal( void )
 		break;
 
 	case RF_RX_DONE:
-		// Console_Output_String( "RX_Done\r\n" );		// test output
+		if( flag_debug_radio ) Console_Output_String( "RX_Done\r\n" );
 		Radio->GetRxPacket( (void *)LoraRxBuffer, ( uint16_t* )&LoraRxPayloadSize );
 
 		// LoraRxPayloadSize = LoraRxBuffer[0] + 8;
@@ -741,7 +744,7 @@ static void	OnMasterForNormal( void )
 		break;
 
 	case RF_TX_DONE:
-		// Console_Output_String( "TX_Done\r\n" );		// test output
+		if( flag_debug_radio ) Console_Output_String( "TX_Done\r\n" );
 		if( TxFrame.FrameFlag == FrameFlag_Broadcast ) {
 			memset((void *)LoraTxBuffer, 0, LoraBufferLength);
 			LoraTxPayloadSize = 0;
@@ -750,7 +753,7 @@ static void	OnMasterForNormal( void )
 		break;
 
 	case RF_TX_TIMEOUT:
-		// Console_Output_String( "TX_TIMEOUT\r\n" );		// test output
+		if( flag_debug_radio ) Console_Output_String( "TX_TIMEOUT\r\n" );
 		memset((void *)LoraTxBuffer, 0, LoraBufferLength);
 		LoraTxPayloadSize = 0;
 		memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
@@ -759,13 +762,17 @@ static void	OnMasterForNormal( void )
 		break;
 
 	case RF_CHANNEL_ACTIVITY_DETECTED:
-//		Console_Output_String( "DETECTED\r\n" );		// test output
+		if( flag_debug_radio ) Console_Output_String( "DETECTED\r\n" );
 		// CLI_LoraGetRFFrequency( );				// test output
 		Radio->StartRx( );
 		break;
 
+	case RF_BUSY:
+		break;
+
 	default:
-		// Console_Output_String( "default\r\n" );		// test output
+		snprintf( (char *)str, sizeof(str), "%d Radio->Process() = %d\r\n", __LINE__, radio_ret );
+		Console_Output_String( (const char *)str );
 		break;
 	}
 }
