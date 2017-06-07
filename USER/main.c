@@ -55,7 +55,7 @@ uint32_t			Last_Measure_TickCounter = 0;
 
 ///////////////// for CmdUART & CLI ///////////////////////
 extern __IO bool		LoRaOn;
-uint8_t				CLI_Buf[ 128 ];
+uint8_t				CLI_Buf[ 512 ];
 
 Byte_Queue_Struct		Console__RX_Queue;
 

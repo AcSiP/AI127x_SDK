@@ -23,13 +23,13 @@
 #include "radio.h"
 
 // max number of character for a command line passed to the shell
-#define SHELL_MAX_CMD_LINE		90
+#define SHELL_MAX_CMD_LINE		( ( MAX_LoraPayloadLength / 3 ) * 4 + 32 ) 
 
 // max number of arguments passed with one command to the shell
 #define SHELL_MAX_ARGS			3
 
 // max number of character for a single argument form a command line passed to the shell
-#define SHELL_MAX_ARG_LEN		MAX_LoraPayloadLength
+#define SHELL_MAX_ARG_LEN		( ( MAX_LoraPayloadLength / 3 ) * 4 + 1 )
 
 // return code given when processing of a command line was OK
 #define SHELL_PROCESS_OK		0
