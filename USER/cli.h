@@ -158,6 +158,9 @@ int		CLI_ShellCmd__Append_Hop_Channel( shell_cmd_args *args );
 int		CLI_ShellCmd__Read_CW_Offset( shell_cmd_args *args );
 int		CLI_ShellCmd__Write_CW_Offset( shell_cmd_args *args );
 
+int		CLI_ShellCmd__Get_Slave_Poll_Timeout( shell_cmd_args *args );
+int		CLI_ShellCmd__Set_Slave_Poll_Timeout( shell_cmd_args *args );
+
 int		CLI_ShellCmd_testPrint1(shell_cmd_args *);
 int		CLI_ShellCmd_testPrint2(shell_cmd_args *);
 

@@ -44,7 +44,6 @@ __IO bool				isInSleep = false;					// for SLAVE
 __IO uint8_t				SLAVE_LoraHoppingStartChannel = 0;			// for SLAVE
 extern __IO uint16_t			Running_TimeCount;					// for MASTER & SLAVE
 extern __IO uint16_t			SLAVE_LoraPollEventInterval;				// for SLAVE
-extern tDeviceNodeSleepAndRandomHop *	DeviceNodeSleepAndRandomHop[MAX_LoraNodeNum];		// for MASTER
 
 extern tLoraDeviceNode *		LoraGateWay;				// for SLAVE
 extern tDeviceNodeSensor *		MySensor;				// for SLAVE
@@ -473,13 +472,13 @@ void	SLEEP_SlaveSleep_STANDBY_Mode( uint16_t *SleepTime_sec )
  **************************************************************************************************/
 void	SLEEP_SlaveSleepAandRandomHopChannelProcedure(uint16_t *SleepTime)
 {
-	if((EnableMaster != false) || (LoraGateWay == NULL) /*|| (*SleepTime == 0)*/) {
+	if( EnableMaster || ! LoraGateWay ) {
 		Running_TimeCount = 0;		// 當此裝置不是 SLAVE 或還未加入網域時就不睡
 		return;
 	}
 
-	if((Running_TimeCount >= GPSnoLocated_RunningTime) && (Slave_PollEventAccomplish == false)) {
-		if(SLAVE_LoraPollEventInterval >= GPSnoLocated_RunningTime) {
+	if( Running_TimeCount >= GPSnoLocated_RunningTime && ! Slave_PollEventAccomplish ) {
+		if( SLAVE_LoraPollEventInterval >= GPSnoLocated_RunningTime ) {
 			// Console_Output_String( "Clear&Default\r\n" );
 			SLAVE_LoraPollEventInterval = 0;
 			RandomHopStartChannel_SlaveDefaultHoppingChannel();
@@ -492,7 +491,7 @@ void	SLEEP_SlaveSleepAandRandomHopChannelProcedure(uint16_t *SleepTime)
 		}
 		Running_TimeCount = 0;
 	} else {
-		if(Slave_PollEventAccomplish == true) {
+		if( Slave_PollEventAccomplish ) {
 			if( *SleepTime ) {
 				SLEEP_SlaveSleep_Deep_STOP_Mode( SleepTime );
 				RandomHopStartChannel_SetHoppingStartChannelFreq(SLAVE_LoraHoppingStartChannel);
@@ -501,7 +500,7 @@ void	SLEEP_SlaveSleepAandRandomHopChannelProcedure(uint16_t *SleepTime)
 			SLAVE_LoraPollEventInterval = 0;
 			Slave_PollEventAccomplish = false;
 		} else {
-			if(SLAVE_LoraPollEventInterval >= GPSnoLocated_RunningTime) {
+			if( SLAVE_LoraPollEventInterval >= GPSnoLocated_RunningTime ) {
 				if( *SleepTime ) SLEEP_SlaveSleep_Deep_STOP_Mode( SleepTime );
 
 				RandomHopStartChannel_SlaveDefaultHoppingChannel();
@@ -536,15 +535,15 @@ void		SLEEP_MasterSleepProcedure(void)
 	if( Event_Count[1] ) return;
 	if( Event_Count[2] ) return;
 
-	for(count = 0 ; count < MAX_LoraNodeNum ; count++) {
+	for( count = 0 ; count < MAX_LoraNodeNum ; count++ ) {
 		// 此 SLAVE Node 裝置是否存在,不存在就跳到下一值去判斷
-		if(DeviceNodeSleepAndRandomHop[count] == NULL) continue;
+		if( ! Device_Information[count].Flag_Valid ) continue;
 
 		// 判斷個別事件排程裡是否有事件準備執行
-		if(DeviceNodeSleepAndRandomHop[count]->isNowSleeping == false) {
-			if( DeviceNodeSleepAndRandomHop[count]->Event_Count[0] ) return;
-			if( DeviceNodeSleepAndRandomHop[count]->Event_Count[1] ) return;
-			if( DeviceNodeSleepAndRandomHop[count]->Event_Count[2] ) return;
+		if( ! Device_Information[count].Node_Sleep_Hop.isNowSleeping ) {
+			if( Device_Information[count].Node_Sleep_Hop.Event_Count[0] ) return;
+			if( Device_Information[count].Node_Sleep_Hop.Event_Count[1] ) return;
+			if( Device_Information[count].Node_Sleep_Hop.Event_Count[2] ) return;
 		}
 	}
 

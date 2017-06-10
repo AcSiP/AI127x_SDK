@@ -62,6 +62,8 @@ typedef struct	sLoRaSettings
 
 	uint32_t	Channel_List[64];		// Frequency List in KHz
 	uint8_t		Channel_Lists;			// Frequency List used items
+
+	uint16_t	Poll_Timeout_Sec;
 } tLoRaSettings;
 
 typedef enum {
@@ -81,17 +83,17 @@ typedef enum {
  */
 // LoRa
 typedef enum {
-	RFLR_STATE_IDLE,
-	RFLR_STATE_RX_INIT,
-	RFLR_STATE_RX_RUNNING,
-	RFLR_STATE_RX_DONE,
-	RFLR_STATE_RX_TIMEOUT,
-	RFLR_STATE_TX_INIT,
-	RFLR_STATE_TX_RUNNING,
-	RFLR_STATE_TX_DONE,
-	RFLR_STATE_TX_TIMEOUT,
-	RFLR_STATE_CAD_INIT,
-	RFLR_STATE_CAD_RUNNING
+	RFLR_STATE_IDLE,		// 0
+	RFLR_STATE_RX_INIT,		// 1
+	RFLR_STATE_RX_RUNNING,		// 2
+	RFLR_STATE_RX_DONE,		// 3
+	RFLR_STATE_RX_TIMEOUT,		// 4
+	RFLR_STATE_TX_INIT,		// 5
+	RFLR_STATE_TX_RUNNING,		// 6
+	RFLR_STATE_TX_DONE,		// 7
+	RFLR_STATE_TX_TIMEOUT,		// 8
+	RFLR_STATE_CAD_INIT,		// 9
+	RFLR_STATE_CAD_RUNNING		// 10
 } tRFLRStates;
 
 /*!

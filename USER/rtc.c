@@ -32,9 +32,13 @@
 #ifdef STM32F401xx
 	#include "stm32f4xx.h"
 #endif
+
+#include "config.h"
+
 #include "rtc.h"
 #include "sleep.h"
 #include "main.h"
+
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -53,9 +57,6 @@ extern __IO bool			isInSleep;						// for SLAVE
 extern tLoraDeviceNode *		LoraGateWay;						// for SLAVE
 extern __IO uint32_t			SystemOperMode;
 extern bool				EnableMaster;						// 1=Master or 0=Slave selection
-extern tLoraDeviceNode *		LoraNodeDevice[MAX_LoraNodeNum];			// for MASTER
-extern tDeviceNodeSleepAndRandomHop *	DeviceNodeSleepAndRandomHop[MAX_LoraNodeNum];		// for MASTER
-extern tDeviceNodeSensor *		DeviceNodeSensor[MAX_LoraNodeNum];			// for MASTER
 extern uint8_t				LoraNodeCount;						// for MASTER
 
 static	bool				RTC__Flag_IRQ_Configured = false;
@@ -330,36 +331,18 @@ static void	RTC__Process_ISR( void )
 
 	// Check all events are done
 	uint16_t	i;
-	bool		flag_need_build_pool = true;
 
 	Running_TimeCount++;
-	for( i = 0; i < MAX_LoraNodeNum; i++ ) {
-		if( LoraNodeDevice[i] && DeviceNodeSleepAndRandomHop[i] ) {
-			if( DeviceNodeSleepAndRandomHop[i]->Event_Count[2] ) {
-				flag_need_build_pool = false;
-				break;
-			}
-		}
-	}
 
 // 	char	cb[128];
-// 	if( flag_need_build_pool ){
-// 		snprintf( cb, sizeof( cb ), "%d, flag_need_build_pool = %d \r\n", __LINE__, (int) flag_need_build_pool );
-// 		Console_Output_String( cb );
-// 	}
+// 	snprintf( cb, sizeof( cb ), "%d, Running_TimeCount = %d \r\n", __LINE__, (int) Running_TimeCount );
+// 	Console_Output_String( cb );
 
 	for( i = 0; i < MAX_LoraNodeNum; i++ ) {
-		if( LoraNodeDevice[i] && DeviceNodeSleepAndRandomHop[i] ) {
-			if( Running_TimeCount >= DeviceNodeSleepAndRandomHop[i]->WakeUpTimePoint ) {
-				DeviceNodeSleepAndRandomHop[i]->isNowSleeping = false;
-				DeviceNodeSleepAndRandomHop[i]->WakeUpTimePoint = 0;
-			}
-
-			if( ! DeviceNodeSleepAndRandomHop[i]->isNowSleeping && flag_need_build_pool ) {
-// 				snprintf( cb, sizeof( cb ), "%d, RHop[%d]->P2 = %d \r\n", __LINE__, i, DeviceNodeSleepAndRandomHop[i]->Event_Head[ LoraEventPriority2 ] );
-// 				Console_Output_String( cb );
-
-				LoraLinkListEvent_BuildLoraEvent( LoraEventPriority2, i, Master_AcsipProtocol_Poll, LoraNodeDevice[i]->NodeAddress, NULL, NULL );
+		if( Device_Information[i].Flag_Valid ) {
+			if( Running_TimeCount >= Device_Information[i].Node_Sleep_Hop.WakeUpTimePoint ) {
+				Device_Information[i].Node_Sleep_Hop.isNowSleeping = false;
+				Device_Information[i].Node_Sleep_Hop.WakeUpTimePoint = 0;
 			}
 		}
 	}

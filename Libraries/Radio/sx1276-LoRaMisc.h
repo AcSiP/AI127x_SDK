@@ -180,33 +180,6 @@ void		SX1276LoRaSetHopPeriod( uint8_t value );
  */
 uint8_t		SX1276LoRaGetHopPeriod( void );
 
-/*!
- * \brief Set timeout Tx packet (based on MCU timer, timeout between Tx Mode entry Tx Done IRQ)
- *
- * \param [IN] value timeout (ms)
- */
-void		SX1276LoRaSetTxPacketTimeout( uint32_t value );
-
-/*!
- * \brief Get timeout between Tx packet (based on MCU timer, timeout between Tx Mode entry Tx Done IRQ)
- *
- * \retval value timeout (ms)
- */
-uint32_t	SX1276LoRaGetTxPacketTimeout( void );
-
-/*!
- * \brief Set timeout Rx packet (based on MCU timer, timeout between Rx Mode entry and Rx Done IRQ)
- *
- * \param [IN] value timeout (ms)
- */
-void		SX1276LoRaSetRxPacketTimeout( uint32_t value );
-
-/*!
- * \brief Get timeout Rx packet (based on MCU timer, timeout between Rx Mode entry and Rx Done IRQ)
- *
- * \retval value timeout (ms)
- */
-uint32_t	SX1276LoRaGetRxPacketTimeout( void );
 
 /*!
  * \brief Set payload length

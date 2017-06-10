@@ -205,7 +205,7 @@ void		RandomHopStartChannel_SetHoppingStartChannelFreq(uint8_t channel)
 		SX1276LoRaSetRFFrequency( LoRaSettings.Channel_List[Running_HoppingStartChannel] );
 
 		if( ! EnableMaster ) {
-			char		str[24];
+			char		str[32];
 			snprintf( str, sizeof(str), "Freq %d KHz\r\n", LoRaSettings.Channel_List[Running_HoppingStartChannel] / 1000 );
 			Console_Output_String( str );
 		}
