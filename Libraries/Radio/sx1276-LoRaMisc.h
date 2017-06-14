@@ -167,21 +167,6 @@ void		SX1276LoRaSetRxSingleOn( bool enable );
 bool		SX1276LoRaGetRxSingleOn( void );
 
 /*!
- * \brief Enables/Disables the frequency hopping 
- *
- * \param [IN] enable [true, false]
- */
-
-void		SX1276LoRaSetFreqHopOn( bool enable );
-
-/*!
- * \brief Get the frequency hopping status 
- *
- * \param [IN] enable [true, false]
- */
-bool		SX1276LoRaGetFreqHopOn( void );
-
-/*!
  * \brief Set symbol period between frequency hops
  *
  * \param [IN] value
@@ -195,33 +180,6 @@ void		SX1276LoRaSetHopPeriod( uint8_t value );
  */
 uint8_t		SX1276LoRaGetHopPeriod( void );
 
-/*!
- * \brief Set timeout Tx packet (based on MCU timer, timeout between Tx Mode entry Tx Done IRQ)
- *
- * \param [IN] value timeout (ms)
- */
-void		SX1276LoRaSetTxPacketTimeout( uint32_t value );
-
-/*!
- * \brief Get timeout between Tx packet (based on MCU timer, timeout between Tx Mode entry Tx Done IRQ)
- *
- * \retval value timeout (ms)
- */
-uint32_t	SX1276LoRaGetTxPacketTimeout( void );
-
-/*!
- * \brief Set timeout Rx packet (based on MCU timer, timeout between Rx Mode entry and Rx Done IRQ)
- *
- * \param [IN] value timeout (ms)
- */
-void		SX1276LoRaSetRxPacketTimeout( uint32_t value );
-
-/*!
- * \brief Get timeout Rx packet (based on MCU timer, timeout between Rx Mode entry and Rx Done IRQ)
- *
- * \retval value timeout (ms)
- */
-uint32_t	SX1276LoRaGetRxPacketTimeout( void );
 
 /*!
  * \brief Set payload length

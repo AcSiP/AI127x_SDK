@@ -36,14 +36,15 @@
 /* Private variables ---------------------------------------------------------*/
 tLoraNodeEvent *	Event_Head[ LoraEventPriorities ];
 uint8_t			Event_Count[ LoraEventPriorities ];
+uint8_t			Polling_Index = 0;
+
+
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
 
 extern __IO tLoraRunningEvent		LoraRunningEvent;
-extern tLoraDeviceNode *		LoraNodeDevice[ MAX_LoraNodeNum ];			// for MASTER
-extern tDeviceNodeSleepAndRandomHop *	DeviceNodeSleepAndRandomHop[ MAX_LoraNodeNum ];		// for MASTER
 
 
 void		LoraLinkListEvent_Initialization( void )
@@ -238,8 +239,8 @@ bool		LoraLinkListEvent_BuildLoraEvent( uint8_t Priority, uint8_t Num, uint8_t E
 	case Master_AcsipProtocol_Data:
 	case Master_AcsipProtocol_Leave:
 	case Master_AcsipProtocol_Interval:
-		if( DeviceNodeSleepAndRandomHop[Num] ) {
-			result = LoraLinkListEvent_CreateNodeEvent(Priority, Num, Event, Data, DataSize);
+		if( Device_Information[Num].Flag_Valid ) {
+			result = LoraLinkListEvent_CreateNodeEvent( Priority, Num, Event, Data, DataSize );
 		}
 		break;
 
@@ -290,10 +291,10 @@ bool		Dispatch__Lora_Event( uint8_t priority )
 
 	// Check group node event
 	for( i = 0; i < MAX_LoraNodeNum; i++ ) {
-		if( ! DeviceNodeSleepAndRandomHop[i] ) continue;			// Slave is not exist
-		if( DeviceNodeSleepAndRandomHop[i]->isNowSleeping ) continue;		// Slave is sleeping
+		if( ! Device_Information[i].Flag_Valid ) continue;				// Slave is not exist
+		if( Device_Information[i].Node_Sleep_Hop.isNowSleeping ) continue;		// Slave is sleeping
 
-		pHead = DeviceNodeSleepAndRandomHop[i]->Event_Head[ priority ];
+		pHead = Device_Information[i].Node_Sleep_Hop.Event_Head[ priority ];
 		if( pHead ) {
 			Copy_NodeEvent_2_RunningEvent( pHead );
 			LoraLinkListEvent_DestroyNodeHeadEvent( priority, i );
@@ -420,25 +421,25 @@ bool		LoraLinkListEvent_CreateNodeEvent( uint8_t Priority, uint8_t Num, uint8_t 
 
 	switch( Priority ) {
 	case LoraEventPriority0:
-		EventHead = &DeviceNodeSleepAndRandomHop[Num]->Event_Head[0];
-		EventCount = &DeviceNodeSleepAndRandomHop[Num]->Event_Count[0];
+		EventHead = & Device_Information[Num].Node_Sleep_Hop.Event_Head[0];
+		EventCount = & Device_Information[Num].Node_Sleep_Hop.Event_Count[0];
 		break;
 
 	case LoraEventPriority1:
-		EventHead = &DeviceNodeSleepAndRandomHop[Num]->Event_Head[1];
-		EventCount = &DeviceNodeSleepAndRandomHop[Num]->Event_Count[1];
+		EventHead = & Device_Information[Num].Node_Sleep_Hop.Event_Head[1];
+		EventCount = & Device_Information[Num].Node_Sleep_Hop.Event_Count[1];
 		break;
 
 	case LoraEventPriority2:
-		EventHead = &DeviceNodeSleepAndRandomHop[Num]->Event_Head[2];
-		EventCount = &DeviceNodeSleepAndRandomHop[Num]->Event_Count[2];
+		EventHead = & Device_Information[Num].Node_Sleep_Hop.Event_Head[2];
+		EventCount = & Device_Information[Num].Node_Sleep_Hop.Event_Count[2];
 		break;
 
 	default:
 		return( false );
 	}
 
-	temp = LoraLinkListEvent__Malloc_Event( Num, Event, LoraNodeDevice[Num]->NodeAddress, Data, *DataSize );
+	temp = LoraLinkListEvent__Malloc_Event( Num, Event, Device_Information[Num].Node_MAC.NodeAddress, Data, *DataSize );
 	if( ! temp ) {
 		snprintf( cs, sizeof(cs), "%d, %s() \r\n", __LINE__, __FUNCTION__ );
 		Console_Output_String( cs );
@@ -462,8 +463,8 @@ void		LoraLinkListEvent_DestroyNodeHeadEvent( uint8_t priority, uint8_t num )
 	tLoraNodeEvent **	EventHead = NULL;
 	uint8_t *		EventCount = NULL;
 
-	EventHead = & DeviceNodeSleepAndRandomHop[num]->Event_Head[ priority ];
-	EventCount = & DeviceNodeSleepAndRandomHop[num]->Event_Count[ priority ];
+	EventHead = & Device_Information[num].Node_Sleep_Hop.Event_Head[ priority ];
+	EventCount = & Device_Information[num].Node_Sleep_Hop.Event_Count[ priority ];
 
 	if( *EventCount == 0 ) return;
 
@@ -487,32 +488,32 @@ void		LoraLinkListEvent_LoraNodeEventDelete(uint8_t Num)
 	tLoraNodeEvent *	HeadTemp = NULL;
 	tLoraNodeEvent *	NxtTemp = NULL;
 
-	if(Num >= MAX_LoraNodeNum) return;
-	if(DeviceNodeSleepAndRandomHop[Num] == NULL) return;
+	if( Num >= MAX_LoraNodeNum ) return;
+	if( ! Device_Information[Num].Flag_Valid ) return;
 
-	HeadTemp = DeviceNodeSleepAndRandomHop[Num]->Event_Head[0];
+	HeadTemp = Device_Information[Num].Node_Sleep_Hop.Event_Head[0];
 	while(HeadTemp != NULL) {
 		NxtTemp = HeadTemp->Next;
 		LoraLinkListEvent__Free_Event( HeadTemp );
 		HeadTemp = NxtTemp;
 	}
-	DeviceNodeSleepAndRandomHop[Num]->Event_Count[0] = 0;
+	Device_Information[Num].Node_Sleep_Hop.Event_Count[0] = 0;
 
-	HeadTemp = DeviceNodeSleepAndRandomHop[Num]->Event_Head[1];
+	HeadTemp = Device_Information[Num].Node_Sleep_Hop.Event_Head[1];
 	while(HeadTemp != NULL) {
 		NxtTemp = HeadTemp->Next;
 		LoraLinkListEvent__Free_Event( HeadTemp );
 		HeadTemp = NxtTemp;
 	}
-	DeviceNodeSleepAndRandomHop[Num]->Event_Count[1] = 0;
+	Device_Information[Num].Node_Sleep_Hop.Event_Count[1] = 0;
 
-	HeadTemp = DeviceNodeSleepAndRandomHop[Num]->Event_Head[2];
+	HeadTemp = Device_Information[Num].Node_Sleep_Hop.Event_Head[2];
 	while(HeadTemp != NULL) {
 		NxtTemp = HeadTemp->Next;
 		LoraLinkListEvent__Free_Event( HeadTemp );
 		HeadTemp = NxtTemp;
 	}
-	DeviceNodeSleepAndRandomHop[Num]->Event_Count[2] = 0;
+	Device_Information[Num].Node_Sleep_Hop.Event_Count[2] = 0;
 }
 
 /************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

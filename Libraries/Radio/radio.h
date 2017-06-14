@@ -68,7 +68,7 @@
 //#define LoraReceptionFailureTimes	(5)	// Unit:Times
 #define LoraReceptionFailureTimes	(3)	// Unit:Times
 
-#define Lora_RFHoppingPeriod		(5)
+#define Lora_RFHoppingPeriod		(0)
 
 #define MAX_LoraOutputPower		(20)
 #define MIN_LoraOutputPower		(5)

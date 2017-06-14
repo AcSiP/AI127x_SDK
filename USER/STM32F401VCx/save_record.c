@@ -45,9 +45,6 @@
 extern __IO uint32_t			SystemOperMode;
 extern bool				EnableMaster;		// 1=Master or 0=Slave selection
 extern tLoRaSettings			LoRaSettings;
-extern tLoraDeviceNode *		LoraNodeDevice[MAX_LoraNodeNum];			// for MASTER
-extern tDeviceNodeSleepAndRandomHop *	DeviceNodeSleepAndRandomHop[MAX_LoraNodeNum];		// for MASTER
-extern tDeviceNodeSensor *		DeviceNodeSensor[MAX_LoraNodeNum];			// for MASTER
 extern uint8_t				LoraNodeCount;						// for MASTER
 extern tLoraDeviceNode *		LoraGateWay;						// for SLAVE
 extern tDeviceNodeSensor *		MySensor;						// for SLAVE
@@ -96,73 +93,77 @@ void	SaveRecord_WriteInMyselfParaAndLoraGateWayParaAndLoraNodePara(void)
 	uint32_t		temp, node_save_addr, interval;
 	SaveRecordMyPara_t	MyLoraPara;
 	SaveRecordNodePara_t	SaveNodePara;
+// 	char			dbg_buf[64];
 
-	if(SystemOperMode == SystemInNormal) {
-		FLASH_ReadWord( MyWorkParaAddr + 4, &temp, 1 );
-		if((temp != 0xFFFFFFFF) && (EnableMaster == true)) {
-			FLASH_ReadByte( LoraGateWayParaAddr, prov, 4 );
-			FLASH_ReadWord( LoraGateWayParaInterval, &interval, 1 );
+	if( SystemOperMode != SystemInNormal ) return;
+
+	FLASH_ReadWord( MyWorkParaAddr + 4, &temp, 1 );
+	if((temp != 0xFFFFFFFF) && (EnableMaster == true)) {
+		FLASH_ReadByte( LoraGateWayParaAddr, prov, 4 );
+		FLASH_ReadWord( LoraGateWayParaInterval, &interval, 1 );
+		FLASH_EraseRecordSector(WorkParaSector);
+	} else {
+		if((temp != 0xFFFFFFFF) && (EnableMaster == false)) {
+			FLASH_ReadWord( LoraNodeParaAddr + 4, &temp, 1 );
+			if(temp != 0xFFFFFFFF) {
+				size = (sizeof(SaveRecordNodePara_t) * MAX_LoraNodeNum) + 4;
+				node_saved_data = (uint8_t *) malloc(size);
+				if(node_saved_data != NULL) FLASH_ReadByte( LoraNodeParaAddr, node_saved_data, size );
+			}
 			FLASH_EraseRecordSector(WorkParaSector);
-		} else {
-			if((temp != 0xFFFFFFFF) && (EnableMaster == false)) {
-				FLASH_ReadWord( LoraNodeParaAddr + 4, &temp, 1 );
-				if(temp != 0xFFFFFFFF) {
-					size = (sizeof(SaveRecordNodePara_t) * MAX_LoraNodeNum) + 4;
-					node_saved_data = (uint8_t *) malloc(size);
-					if(node_saved_data != NULL) FLASH_ReadByte( LoraNodeParaAddr, node_saved_data, size );
-				}
-				FLASH_EraseRecordSector(WorkParaSector);
-			}
+		}
+	}
+
+	memset((void *)&MyLoraPara.MyPara, 0, sizeof(tLoRaSettings));
+	memcpy(( void * )&MyLoraPara.MyPara, ( void * )&LoRaSettings, sizeof(tLoRaSettings));
+	if( MyLoraPara.MyPara.FreqHopOn ) {
+		MyLoraPara.MyPara.RFFrequency = Lora_RFFrequency;
+		MyLoraPara.MyPara.HopPeriod = Lora_RFHoppingPeriod;
+	}
+	FLASH_WriteByte( MyWorkParaAddr + 4, MyLoraPara.Value, sizeof(MyLoraPara.Value));
+
+	if( EnableMaster ) {
+		if((prov[0] != 0XFF) || (prov[1] != 0XFF) || (prov[2] != 0XFF)) {
+			FLASH_WriteByte( LoraGateWayParaAddr, prov, 4 );
+			FLASH_WriteWord( LoraGateWayParaInterval, &interval, 1 );
 		}
 
-		memset((void *)&MyLoraPara.MyPara, 0, sizeof(tLoRaSettings));
-		memcpy(( void * )&MyLoraPara.MyPara, ( void * )&LoRaSettings, sizeof(tLoRaSettings));
-		if( MyLoraPara.MyPara.FreqHopOn ) {
-			MyLoraPara.MyPara.RFFrequency = Lora_RFFrequency;
-			MyLoraPara.MyPara.HopPeriod = Lora_RFHoppingPeriod;
+		node_save_addr = LoraNodeParaAddr;
+		FLASH_WriteHalfWord( node_save_addr, (uint16_t *)&LoraNodeCount, 1 );
+		node_save_addr += 4;
+		size = sizeof(SaveNodePara.Value);
+		temp = WorkParaSector + WorkParaSectorSize - 1;
+
+		for( count = 0 ; count < MAX_LoraNodeNum ; count++ ) {
+			if( Device_Information[count].Flag_Valid ) {
+// 				snprintf( dbg_buf, sizeof( dbg_buf ), "Saving 0x%02X%02X%02X\r\n", LoraNodeDevice[count]->NodeAddress[0], LoraNodeDevice[count]->NodeAddress[1], LoraNodeDevice[count]->NodeAddress[2] );
+// 				Console_Output_String( dbg_buf );
+
+				memset( (void *) SaveNodePara.Value, 0, size );
+				memcpy( (void *) SaveNodePara.NodePara.NodeAddress, ( void * ) Device_Information[count].Node_MAC.NodeAddress, 3 );
+				memcpy( (void *) SaveNodePara.NodePara.Aliases, ( void * ) Device_Information[count].Node_MAC.Aliases, AliasesSize );
+				SaveNodePara.NodePara.Interval = Device_Information[count].Node_MAC.Interval;
+
+				FLASH_WriteByte( node_save_addr, SaveNodePara.Value, size );
+				node_save_addr += size;
+				if(node_save_addr >= temp) break;
+			}
 		}
-		FLASH_WriteByte( MyWorkParaAddr + 4, MyLoraPara.Value, sizeof(MyLoraPara.Value));
+	} else {
+		if( LoraGateWay ) {
+			prov[0] = LoraGateWay->NodeAddress[0];
+			prov[1] = LoraGateWay->NodeAddress[1];
+			prov[2] = LoraGateWay->NodeAddress[2];
+			prov[3] = 0;
+			FLASH_WriteByte( LoraGateWayParaAddr, prov, 4 );
+			interval = LoraGateWay->Interval;
+			FLASH_WriteWord( LoraGateWayParaInterval, &interval, 1 );
+		}
 
-		if(EnableMaster == true) {
-			if((prov[0] != 0XFF) || (prov[1] != 0XFF) || (prov[2] != 0XFF)) {
-				FLASH_WriteByte( LoraGateWayParaAddr, prov, 4 );
-				FLASH_WriteWord( LoraGateWayParaInterval, &interval, 1 );
-			}
-
-			node_save_addr = LoraNodeParaAddr;
-			FLASH_WriteHalfWord( node_save_addr, (uint16_t *)&LoraNodeCount, 1 );
-			node_save_addr += 4;
-			size = sizeof(SaveNodePara.Value);
-			temp = WorkParaSector + WorkParaSectorSize - 1;
-
-			for(count = 0 ; count < MAX_LoraNodeNum ; count++) {
-				if(LoraNodeDevice[count] != NULL) {
-					memset((void *)SaveNodePara.Value, 0, size);
-					memcpy(( void * )SaveNodePara.NodePara.NodeAddress, ( void * )LoraNodeDevice[count]->NodeAddress, 3);
-					memcpy(( void * )SaveNodePara.NodePara.Aliases, ( void * )LoraNodeDevice[count]->Aliases, AliasesSize);
-					SaveNodePara.NodePara.Interval = LoraNodeDevice[count]->Interval;
-
-					FLASH_WriteByte( node_save_addr, SaveNodePara.Value, size);
-					node_save_addr += size;
-					if(node_save_addr >= temp) break;
-				}
-			}
-		} else {
-			if(LoraGateWay != NULL) {
-				prov[0] = LoraGateWay->NodeAddress[0];
-				prov[1] = LoraGateWay->NodeAddress[1];
-				prov[2] = LoraGateWay->NodeAddress[2];
-				prov[3] = 0;
-				FLASH_WriteByte( LoraGateWayParaAddr, prov, 4 );
-				interval = LoraGateWay->Interval;
-				FLASH_WriteWord( LoraGateWayParaInterval, &interval, 1 );
-			}
-
-			if(node_saved_data != NULL) {
-				FLASH_WriteByte( LoraNodeParaAddr, node_saved_data, size );
-				free(node_saved_data);
-				node_saved_data = NULL;
-			}
+		if(node_saved_data != NULL) {
+			FLASH_WriteByte( LoraNodeParaAddr, node_saved_data, size );
+			free(node_saved_data);
+			node_saved_data = NULL;
 		}
 	}
 }
@@ -275,29 +276,22 @@ void	SaveRecord_ReadOutLoraNodePara(void)
 	read_page += 4;
 	size = sizeof(prov.Value);
 
-	for(count = 0 ; count < MAX_LoraNodeNum ; count++) {
-		memset((void *)prov.Value, 0xFF, size);
+	memset( Device_Information, 0x00, sizeof( Device_Information ) );
+	for( count = 0 ; count < MAX_LoraNodeNum ; count++ ) {
+		memset( (void *) prov.Value, 0xFF, size );
 		FLASH_ReadByte( read_page, prov.Value, size );
 		read_page += size;
-		if((prov.Value[0] != 0xFF) || (prov.Value[1] != 0xFF) || (prov.Value[2] != 0xFF)) {
-			if((LoraNodeDevice[count] == NULL) && (DeviceNodeSleepAndRandomHop[count] == NULL) && (DeviceNodeSensor[count] == NULL)) {
-				LoraNodeDevice[count] = (tLoraDeviceNode *) malloc(sizeof(tLoraDeviceNode));
-				DeviceNodeSleepAndRandomHop[count] = (tDeviceNodeSleepAndRandomHop *) malloc(sizeof(tDeviceNodeSleepAndRandomHop));
-				DeviceNodeSensor[count] = (tDeviceNodeSensor *) malloc(sizeof(tDeviceNodeSensor));
-			}
+		if( (prov.Value[0] != 0xFF) || (prov.Value[1] != 0xFF) || (prov.Value[2] != 0xFF) ) {
+//			Device_Information[count].Flag_Valid = true;
+			AcsipProtocol__Initialize_Node( count );
 
-			if((LoraNodeDevice[count] != NULL) && (DeviceNodeSleepAndRandomHop[count] != NULL) && (DeviceNodeSensor[count] != NULL)) {
-				memset((void *)LoraNodeDevice[count], 0, sizeof(tLoraDeviceNode));
-				memset((void *)DeviceNodeSleepAndRandomHop[count], 0, sizeof(tDeviceNodeSleepAndRandomHop));
-				memset((void *)DeviceNodeSensor[count], 0, sizeof(tDeviceNodeSensor));
-				memcpy(( void * )LoraNodeDevice[count]->NodeAddress, ( void * )prov.NodePara.NodeAddress, 3);
-				memcpy(( void * )LoraNodeDevice[count]->Aliases, ( void * )prov.NodePara.Aliases,  AliasesSize);
-				LoraNodeDevice[count]->Interval = prov.NodePara.Interval;
-				if(LoraNodeDevice[count]->Interval != 0) {
-					DeviceNodeSleepAndRandomHop[count]->DefineLoraRxFailureTimes = DEF_Allowed_LoRa_Rx_Failure_Times_Times;
-				} else {
-					DeviceNodeSleepAndRandomHop[count]->DefineLoraRxFailureTimes = 0;
-				}
+			memcpy(( void * ) Device_Information[count].Node_MAC.NodeAddress, (void *) prov.NodePara.NodeAddress, 3 );
+			memcpy(( void * ) Device_Information[count].Node_MAC.Aliases, (void *) prov.NodePara.Aliases, AliasesSize );
+			Device_Information[count].Node_MAC.Interval = prov.NodePara.Interval;
+			if( Device_Information[count].Node_MAC.Interval ) {
+				Device_Information[count].Node_Sleep_Hop.DefineLoraRxFailureTimes = DEF_Allowed_LoRa_Rx_Failure_Times_Times;
+			} else {
+				Device_Information[count].Node_Sleep_Hop.DefineLoraRxFailureTimes = 0;
 			}
 		} else {
 			break;
@@ -416,10 +410,10 @@ void	SaveRecord_ReadOutTraceData(void)
 			snprintf( (char *)str, sizeof(str), "%d", temp.TraceData.NodeSensorData.GPS_Longitude );
 			Console_Output_String( (const char *)str );
 			Console_Output_String( " " );
-			Console_Output_String( "UTC-Time=" );
-			snprintf( (char *)str, sizeof(str), "%u", temp.TraceData.NodeSensorData.UTC );
-			Console_Output_String( (const char *)str );
-			Console_Output_String( " " );
+//			Console_Output_String( "UTC-Time=" );
+//			snprintf( (char *)str, sizeof(str), "%u", temp.TraceData.NodeSensorData.UTC );
+//			Console_Output_String( (const char *)str );
+//			Console_Output_String( " " );
 			Console_Output_String( "Battery=" );
 			snprintf( (char *)str, sizeof(str), "%u", temp.TraceData.NodeSensorData.Battery );
 			Console_Output_String( (const char *)str );

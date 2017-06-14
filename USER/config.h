@@ -29,7 +29,7 @@
 
 
 /* Exported define -----------------------------------------------------------*/
-#define FirmwareVersion				("1.7.2017.0419")
+#define FirmwareVersion				("1.12.2017.0610")
 #define ComPortBaudRate				(38400)
 #define GPSnoLocated_RunningTime		(60)		// Unit:s
 #define	DEF_Allowed_LoRa_Rx_Failure_Times_Times	(5)		// Unit: polling round
@@ -60,6 +60,20 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 #define		MAX_HOPPING_CHANNELS	64
+
+#ifdef STM32F072
+	#define MAX_LoraNodeNum			(16)
+#endif
+
+#ifdef STM32F401xx
+	#define MAX_LoraNodeNum			(32)
+#endif
+
+
+
+#define MaxPacketSize				(255)
+#define MaxMsgDataSize				(244)		// 32(Total Size = MaxPacketSize) - 9(Length:1、Flag:1、SN:1、NodeAdd:3、NextHoppingChannel:1、CRC:2) - 3(MyAdd) = 20
+								// 在預設的一個訊框 32bytes 長度,一個 LoraNodeData 的訊框可以放進 24bytes 的 BASE64 的資料長度。
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */

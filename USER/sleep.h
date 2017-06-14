@@ -28,23 +28,6 @@
 
 
 /* Exported types ------------------------------------------------------------*/
-typedef struct sDeviceNodeSleepAndRandomHop {
-	// for sleep
-	bool			isNowSleeping;
-	uint16_t		WakeUpTimePoint;
-
-	// for Lora disconnect
-	uint16_t		DefineLoraRxFailureTimes;
-	bool			isLoraDisconnecting;
-	uint16_t		LoraRxFailureTimes;
-
-	// for random hopping start channel
-	uint8_t			LoraHoppingStartChannel;
-
-	// for Lora Event
-	tLoraNodeEvent *	Event_Head[ LoraEventPriorities ];
-	uint8_t			Event_Count[ LoraEventPriorities ];
-} tDeviceNodeSleepAndRandomHop;
 
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/

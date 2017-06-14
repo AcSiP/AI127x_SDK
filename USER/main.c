@@ -13,6 +13,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "lbtafa.h"
+#include "flash.h"
 
 #include "Base_Driver__UART1.h"
 #include "UART_Console.h"
@@ -51,10 +52,9 @@ uint32_t			Last_Measure_TickCounter = 0;
 
 
 
-
 ///////////////// for CmdUART & CLI ///////////////////////
 extern __IO bool		LoRaOn;
-uint8_t				CLI_Buf[ 128 ];
+uint8_t				CLI_Buf[ 512 ];
 
 Byte_Queue_Struct		Console__RX_Queue;
 
@@ -75,18 +75,18 @@ __IO uint8_t			LoraTxBuffer[LoraBufferLength];
 __IO uint8_t			LoraRxBuffer[LoraBufferLength];
 tRadioDriver *			Radio = NULL;
 uint8_t				LoraOperationMode;
+int16_t				RF__CW_Offset = 0;
+
 
 ///////////////// for Acsip Protocol //////////////////////
 __IO tAcsipProtocolFrame	TxFrame;
 __IO tAcsipProtocolFrame	RxFrame;
 __IO tLoraRunningEvent		LoraRunningEvent;
 
-extern tLoraDeviceNode *		LoraNodeDevice[MAX_LoraNodeNum];			// for MASTER
-extern tDeviceNodeSleepAndRandomHop *	DeviceNodeSleepAndRandomHop[MAX_LoraNodeNum];		// for MASTER
-extern tDeviceNodeSensor *		DeviceNodeSensor[MAX_LoraNodeNum];			// for MASTER
-extern uint8_t				LoraNodeCount;						// for MASTER
-extern tLoraDeviceNode *		LoraGateWay;						// for SLAVE
-extern tDeviceNodeSensor *		MySensor;						// for SLAVE
+extern uint8_t			Polling_Index;
+extern uint8_t			LoraNodeCount;					// for MASTER
+extern tLoraDeviceNode *	LoraGateWay;					// for SLAVE
+extern tDeviceNodeSensor *	MySensor;					// for SLAVE
 
 
 ///////////////// for Button ///////////////////////////
@@ -218,6 +218,7 @@ int	main( void )
 
 	CmdUART__Init();
 	enableGlobalInterrupts();
+	srand( TickCounter );
 
 #ifdef Board__A22_Tracker
 	Led_BootFlashLed();
@@ -239,7 +240,9 @@ int	main( void )
 	Radio = RadioDriverInit();
 
 	LoraPara_LoadAndConfiguration();
+	CLI_ClearHoppingRandomChannelNumber();
 
+	RF__CW_Offset = Flash_Read__CW_Offset();
 	Radio->Init();
 	SX1276LoRaSetHopPeriod( Lora_RFHoppingPeriod );
 	Radio->StartRx();
@@ -278,6 +281,9 @@ int	main( void )
 
 	RTC_AlarmConfig();
 	RTC_AlarmRun();
+
+	// Show Carrier offset value
+	CLI_ShellCmd__Read_CW_Offset( NULL );
 
 	Console_Output_String( "FirmwareVersion=" );
 	Console_Output_String( FirmwareVersion );
@@ -351,7 +357,7 @@ int	main( void )
 
 				if( EnableMaster ) {
 					OnMasterForNormal();
-					SLEEP_MasterSleepProcedure();
+//					SLEEP_MasterSleepProcedure();
 				} else {
 					if( Last_Measure_TickCounter < TickCounter ) {
 						Last_Measure_TickCounter = TickCounter + 3000;
@@ -362,7 +368,7 @@ int	main( void )
 						if(MySensor != NULL) {
 							MySensor->GPS_Latitude =	ADC1__Get_Converted_Value( ADC_IDX___ADC0 );
 							MySensor->GPS_Longitude =	ADC1__Get_Converted_Value( ADC_IDX___ADC1 );
-							MySensor->UTC =			ADC1__Get_Converted_Value( ADC_IDX___ADC4 );
+//							MySensor->UTC =			ADC1__Get_Converted_Value( ADC_IDX___ADC4 );
 							MySensor->Battery =		ADC1__Get_Converted_Value( ADC_IDX___VBat );
 						}
 					}
@@ -373,6 +379,14 @@ int	main( void )
 
 					OnSlaveForNormal();
 					if( LoraGateWay ) SLEEP_SlaveSleepAandRandomHopChannelProcedure( & LoraGateWay->Interval );
+
+					// Check SLAVE node lost link timeout
+					if( SLAVE_LoraPollEventInterval >= LoRaSettings.Poll_Timeout_Sec ) {
+						// Console_Output_String( "Clear&Default\r\n" );
+						SLAVE_LoraPollEventInterval = 0;
+						RandomHopStartChannel_SlaveDefaultHoppingChannel();
+					}
+
 				}
 				break;
 
@@ -450,6 +464,8 @@ void	LoraPara_LoadAndConfiguration(void)
 	LoRaSettings.RxPacketTimeout = LoRaSettings.TxPacketTimeout;
 	// LoRaSettings.Oscillator = OscillatorTCXO;
 	LoRaSettings.Oscillator = OscillatorCrystal;
+	LoRaSettings.Poll_Timeout_Sec = 30;
+
 	SaveRecord_ReadOutMyselfPara();
 }
 
@@ -483,7 +499,10 @@ void	Main__Configure_RX( void )
  **************************************************************************************************/
 static	bool	MasterLoraEvent_PROCESS( void )
 {
-	static uint8_t	tx_size;
+	uint8_t			tx_size;
+	bool			flag_escape;
+	tLoraDeviceNode *	pNode;
+// 	char			cb[128];
 
 	/* 目前寫到最後的想法是將 NodeCount 搬到上一層去做++與range判斷
 	因為若是在這裡做這件事,在後面進到NormalMaster函式裡後,帶入的值
@@ -493,7 +512,7 @@ static	bool	MasterLoraEvent_PROCESS( void )
 	必須等待rx_timeout或rx_done等的狀況,所以須如實等待,也需防止無限的busy等當機狀態,(注意slave是否也須注意此情形)  */
 
 	if( ! LoraLinkListEvent_DispatcherLoraEvent() ) {
-		// Console_Output_String( "DispatcherLoraEvent=false\r\n" );			// test output
+		// Console_Output_String( "DispatcherLoraEvent=false\r\n" );
 		// snprintf( (char *)str, sizeof(str), "%02u", LoraEvent.NodeEvent );		// test output
 		// Console_Output_String( "LoraEvent=" );					// test output
 		// Console_Output_String( (const char *)str );					// test output
@@ -508,11 +527,36 @@ static	bool	MasterLoraEvent_PROCESS( void )
 			if( Event_Count[2] > 0 ) Event_Count[2]--;
 		}
 		// Console_Output_String( "MemsetLoraEvent\r\n" );			// test output
-		memset( (void *)&LoraRunningEvent, 0, sizeof(tLoraRunningEvent) );
-		return( false );
+		memset( (void *) & LoraRunningEvent, 0, sizeof(tLoraRunningEvent) );
+
+
+		// Generate event to poll next node
+		flag_escape = false;
+		while( true ) {
+// 			snprintf( cb, sizeof( cb ), "%d, Polling_Index = %d \r\n", __LINE__, (int) Polling_Index );
+// 			Console_Output_String( cb );
+
+			if( Polling_Index >= MAX_LoraNodeNum ) {
+				Polling_Index = 0;
+				if( flag_escape ) break;
+				flag_escape = true;
+			}
+
+			if( Device_Information[Polling_Index].Flag_Valid ) {
+				if( ! Device_Information[Polling_Index].Node_Sleep_Hop.isNowSleeping ) {
+					LoraLinkListEvent_BuildLoraEvent( LoraEventPriority2, Polling_Index, Master_AcsipProtocol_Poll, Device_Information[Polling_Index].Node_MAC.NodeAddress, NULL, NULL );
+					Polling_Index++;
+					break;
+				}
+			} 
+			Polling_Index++;
+		}
+
+		if( ! LoraLinkListEvent_DispatcherLoraEvent() ) return( false );
 	}
 
-	// Console_Output_String( "DispatcherLoraEvent=true\r\n" );		// test output
+// 	Console_Output_String( "DispatcherLoraEvent=true\r\n" );
+	pNode = & Device_Information[LoraRunningEvent.RunNodeNumber].Node_MAC;
 	switch( LoraRunningEvent.RunNodeEvent ) {
 	case Master_AcsipProtocol_Broadcast:
 		// 增加廣播請求函式
@@ -520,28 +564,28 @@ static	bool	MasterLoraEvent_PROCESS( void )
 		return( false );
 
 	case Master_AcsipProtocol_Join:
-		AcsipProtocol_LoraJoinNetworkRequest( LoraRunningEvent.RunNodeAddr, &TxFrame, LoraTxBuffer, &tx_size );
+		AcsipProtocol_LoraJoinNetworkRequest( LoraRunningEvent.RunNodeAddr, & TxFrame, LoraTxBuffer, & tx_size );
 		LoraTxPayloadSize = tx_size;
 		break;
 
 	case Master_AcsipProtocol_Poll:
-		AcsipProtocol_LoraPollRequest( LoraNodeDevice[LoraRunningEvent.RunNodeNumber], &TxFrame, LoraTxBuffer, &tx_size );
+		AcsipProtocol_LoraPollRequest( LoraRunningEvent.RunNodeNumber, & TxFrame, LoraTxBuffer, & tx_size );
 		LoraTxPayloadSize = tx_size;
 		// LoraPollEventCount--;
 		break;
 
 	case Master_AcsipProtocol_Data:
-		AcsipProtocol_LoraDataRequest( LoraNodeDevice[LoraRunningEvent.RunNodeNumber], LoraRunningEvent.RunNodeData, &LoraRunningEvent.RunNodeDataSize, &TxFrame, LoraTxBuffer, &tx_size );
+		AcsipProtocol_LoraDataRequest( LoraRunningEvent.RunNodeNumber, LoraRunningEvent.RunNodeData, & LoraRunningEvent.RunNodeDataSize, & TxFrame, LoraTxBuffer, & tx_size );
 		LoraTxPayloadSize = tx_size;
 		break;
 
 	case Master_AcsipProtocol_Leave:
-		AcsipProtocol_LoraLeaveNetworkRequest( LoraNodeDevice[LoraRunningEvent.RunNodeNumber], &TxFrame, LoraTxBuffer, &tx_size );
+		AcsipProtocol_LoraLeaveNetworkRequest( pNode, & TxFrame, LoraTxBuffer, & tx_size );
 		LoraTxPayloadSize = tx_size;
 		break;
 
 	case Master_AcsipProtocol_Interval:
-		AcsipProtocol_LoraIntervalRequest( LoraNodeDevice[LoraRunningEvent.RunNodeNumber], &TxFrame, LoraTxBuffer, &tx_size );
+		AcsipProtocol_LoraIntervalRequest( LoraRunningEvent.RunNodeNumber, & TxFrame, LoraTxBuffer, & tx_size );
 		LoraTxPayloadSize = tx_size;
 		// Console_Output_String( "LoraEvent_PROCESS_Interval\r\n" );		// test output
 		break;
@@ -549,8 +593,8 @@ static	bool	MasterLoraEvent_PROCESS( void )
 	default:
 		LoraTxPayloadSize = 0;
 	}
-
 	if( ! LoraTxPayloadSize ) return( false );
+
 
 	switch( LoraRunningEvent.RunNodeEvent ) {
 	case Master_AcsipProtocol_Broadcast:
@@ -562,8 +606,8 @@ static	bool	MasterLoraEvent_PROCESS( void )
 	case Master_AcsipProtocol_Data:
 	case Master_AcsipProtocol_Leave:
 	case Master_AcsipProtocol_Interval:
-		if( DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber] ) {
-			RandomHopStartChannel_SetHoppingStartChannelFreq( DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraHoppingStartChannel );
+		if( Device_Information[LoraRunningEvent.RunNodeNumber].Flag_Valid ) {
+			RandomHopStartChannel_SetHoppingStartChannelFreq( Device_Information[LoraRunningEvent.RunNodeNumber].Node_Sleep_Hop.HoppingChannel );
 		}
 		break;
 
@@ -617,10 +661,13 @@ static	bool	MasterLoraEvent_PROCESS( void )
 static void	OnMasterForNormal( void )
 {
 	int8_t		count, str[64];
+	int		radio_ret;
+	bool		flag_debug_radio = false;
 
-	switch( Radio->Process() ) {
+	radio_ret = Radio->Process();
+	switch( radio_ret ) {
 	case RF_CHANNEL_EMPTY:
-//		Console_Output_String( "EMPTY\r\n" );
+		if( flag_debug_radio ) Console_Output_String( "EMPTY\r\n" );
 		// CLI_LoraGetRFFrequency( );
 		if( LBTandAFA_RX() ){
 			// Keeping CAD
@@ -631,77 +678,78 @@ static void	OnMasterForNormal( void )
 
 
 	case RF_RX_TIMEOUT:
-		// Console_Output_String( "RX_TIMEOUT\r\n" );		//test output
+		if( flag_debug_radio ) Console_Output_String( "RX_TIMEOUT\r\n" );
 
-		if( (LoraRunningEvent.RunNodeEvent == Master_AcsipProtocol_Poll) && (LoraNodeDevice[LoraRunningEvent.RunNodeNumber] ) ) {
-			Console_Output_String( "Node=" );
-			for(count = 2 ; count >= 0 ; count--) {
-				snprintf( (char *)str, sizeof(str), "%02x", LoraRunningEvent.RunNodeAddr[count]);
-				Console_Output_String( (const char *)str );
-			}
+		if( Device_Information[LoraRunningEvent.RunNodeNumber].Flag_Valid ) {
+			if( LoraRunningEvent.RunNodeEvent == Master_AcsipProtocol_Poll ) {
+				Console_Output_String( "Node=" );
+				for(count = 2 ; count >= 0 ; count--) {
+					snprintf( (char *)str, sizeof(str), "%02x", LoraRunningEvent.RunNodeAddr[count]);
+					Console_Output_String( (const char *)str );
+				}
 
 #ifdef Board__A22_Tracker
-			Console_Output_String( " EVT=GPS 0 0 0 0 0.0\r\n" );
+				Console_Output_String( " EVT=GPS 0 0 0 0 0.0\r\n" );
 #else
 //			Console_Output_String( " EVT=Poll 0.0\r\n" );
 
-			Console_Output_String( " EVT=Poll " );
+				Console_Output_String( " EVT=Poll " );
 
-			Console_Output_String( "1111 " );
-			Console_Output_String( "2222 " );
-			Console_Output_String( "3333 " );
-			Console_Output_String( "444 " );
+				Console_Output_String( "1111 " );
+				Console_Output_String( "2222 " );
+//				Console_Output_String( "3333 " );
+				Console_Output_String( "444 " );
 
-			if( LoRaSettings.FreqHopOn ){
-				snprintf( (char *)str, sizeof(str), ", Freq= %d ", LoRaSettings.Channel_List[Running_HoppingStartChannel] / 1000 );
+				if( LoRaSettings.FreqHopOn ){
+					snprintf( (char *)str, sizeof(str), ", Freq= %d ", LoRaSettings.Channel_List[Running_HoppingStartChannel] / 1000 );
+					Console_Output_String( (const char *)str );
+					Console_Output_String( " " );
+				} else {
+					snprintf( (char *)str, sizeof(str), ", Freq= %d ", LoRaSettings.RFFrequency / 1000 );
+					Console_Output_String( (const char *)str );
+					Console_Output_String( " " );
+				}
+
+				snprintf( (char *)str, sizeof(str), ", SNR= %d ", (-99) );
 				Console_Output_String( (const char *)str );
 				Console_Output_String( " " );
-			} else {
-				snprintf( (char *)str, sizeof(str), ", Freq= %d ", LoRaSettings.RFFrequency / 1000 );
+
+				snprintf( (char *)str, sizeof(str), ", RSSI= %3.1f ", (-140.0) );
 				Console_Output_String( (const char *)str );
-				Console_Output_String( " " );
-			}
-
-			snprintf( (char *)str, sizeof(str), ", SNR= %d ", (-99) );
-			Console_Output_String( (const char *)str );
-			Console_Output_String( " " );
-
-			snprintf( (char *)str, sizeof(str), ", RSSI= %3.1f ", (-140.0) );
-			Console_Output_String( (const char *)str );
-			Console_Output_String( "\r\n" );
+				Console_Output_String( "\r\n" );
 
 #endif
-		}		// 用來通知上層(如藍芽、APP),SLAVE Node 沒有回應, 此時 SLAVE Node 可能睡覺或已離線
+			}		// 用來通知上層(如藍芽、APP),SLAVE Node 沒有回應, 此時 SLAVE Node 可能睡覺或已離線
 
-		if( (LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Broadcast) && (LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Join) && (LoraRunningEvent.RunNodeEvent != 0) ) {
-			if( DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber] ) {
-				DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraRxFailureTimes += 1;
-				if( ! DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->isLoraDisconnecting ) {
-					if( DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraRxFailureTimes > ( LoraReceptionFailureTimes + DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->DefineLoraRxFailureTimes ) ) {
+			if( LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Broadcast && LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Join && LoraRunningEvent.RunNodeEvent != 0 ) {
+				Device_Information[LoraRunningEvent.RunNodeNumber].Node_Sleep_Hop.LoraRxFailureTimes += 1;
+				if( ! Device_Information[LoraRunningEvent.RunNodeNumber].Node_Sleep_Hop.isLoraDisconnecting ) {
+					if( Device_Information[LoraRunningEvent.RunNodeNumber].Node_Sleep_Hop.LoraRxFailureTimes > ( LoraReceptionFailureTimes + Device_Information[LoraRunningEvent.RunNodeNumber].Node_Sleep_Hop.DefineLoraRxFailureTimes ) ) {
 						Console_Output_String( "Node=" );
 						for(count = 2 ; count >= 0 ; count--) {
 							snprintf( (char *)str, sizeof(str), "%02x", LoraRunningEvent.RunNodeAddr[count] );
 							Console_Output_String( (const char *)str );
 						}
 						Console_Output_String( " EVT=Disconnecting\r\n" );
-						DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->isLoraDisconnecting = true;
-						DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraHoppingStartChannel = 0;
+						Device_Information[LoraRunningEvent.RunNodeNumber].Node_Sleep_Hop.isLoraDisconnecting = true;
 					}
 				}		// 用來通知上層(如藍芽、APP),SLAVE 的 Lora 是斷線狀態
-			}		// 當沒有接收到 SLAVE Node 傳過來的訊息時,連續累積到一定次數後,只輸出一次裝置為斷線狀態,並把狀態標註起來
-		}		// ,更將針對此 Node 的跳頻隨機起始通道設定為 0。
+			}			// 當沒有接收到 SLAVE Node 傳過來的訊息時,連續累積到一定次數後,只輸出一次裝置為斷線狀態,並把狀態標註起來
+						// ,更將針對此 Node 的跳頻隨機起始通道設定為 0。
 
-		if( (LoraRunningEvent.RunNodeEvent == Master_AcsipProtocol_Interval) && LoraNodeDevice[LoraRunningEvent.RunNodeNumber] ){
-			LoraNodeDevice[LoraRunningEvent.RunNodeNumber]->Interval = 0;
+
+			if( LoraRunningEvent.RunNodeEvent == Master_AcsipProtocol_Interval ) {
+				Device_Information[LoraRunningEvent.RunNodeNumber].Node_MAC.Interval = 0;
+			}
+			// 當 LoraEvent 為 Master_AcsipProtocol_Interval 時,表針對此 SLAVE Node 須設定其 Interval,
+			// 所以當 SLAVE Node 在此 LoraEvent 無回應時,就針對此 SLAVE Node 的 Interval 清除為 0。
 		}
-		// 當 LoraEvent 為 Master_AcsipProtocol_Interval 時,表針對此 SLAVE Node 須設定其 Interval,
-		// 所以當 SLAVE Node 在此 LoraEvent 無回應時,就針對此 SLAVE Node 的 Interval 清除為 0。
 
 		if( ! MasterLoraEvent_PROCESS() ) Main__Configure_RX();
 		break;
 
 	case RF_RX_DONE:
-		// Console_Output_String( "RX_Done\r\n" );		// test output
+		if( flag_debug_radio ) Console_Output_String( "RX_Done\r\n" );
 		Radio->GetRxPacket( (void *)LoraRxBuffer, ( uint16_t* )&LoraRxPayloadSize );
 
 		// LoraRxPayloadSize = LoraRxBuffer[0] + 8;
@@ -723,10 +771,10 @@ static void	OnMasterForNormal( void )
 		Clear_LoRa_TX_Buffer();
 		Clear_LoRa_RX_Buffer();
 
-		if((LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Broadcast) && (LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Join) && (LoraRunningEvent.RunNodeEvent != 0)) {
-			if(DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber] != NULL) {
-				DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->isLoraDisconnecting = false;
-				DeviceNodeSleepAndRandomHop[LoraRunningEvent.RunNodeNumber]->LoraRxFailureTimes = 0;
+		if( LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Broadcast && LoraRunningEvent.RunNodeEvent != Master_AcsipProtocol_Join && LoraRunningEvent.RunNodeEvent != 0 ) {
+			if( Device_Information[LoraRunningEvent.RunNodeNumber].Flag_Valid ) {
+				Device_Information[LoraRunningEvent.RunNodeNumber].Node_Sleep_Hop.isLoraDisconnecting = false;
+				Device_Information[LoraRunningEvent.RunNodeNumber].Node_Sleep_Hop.LoraRxFailureTimes = 0;
 			}
 		}		// 當有成功接收到相關訊息,則持續將 SLAVE Node 判定為連線狀態
 
@@ -734,7 +782,7 @@ static void	OnMasterForNormal( void )
 		break;
 
 	case RF_TX_DONE:
-		// Console_Output_String( "TX_Done\r\n" );		// test output
+		if( flag_debug_radio ) Console_Output_String( "TX_Done\r\n" );
 		if( TxFrame.FrameFlag == FrameFlag_Broadcast ) {
 			memset((void *)LoraTxBuffer, 0, LoraBufferLength);
 			LoraTxPayloadSize = 0;
@@ -743,7 +791,7 @@ static void	OnMasterForNormal( void )
 		break;
 
 	case RF_TX_TIMEOUT:
-		// Console_Output_String( "TX_TIMEOUT\r\n" );		// test output
+		if( flag_debug_radio ) Console_Output_String( "TX_TIMEOUT\r\n" );
 		memset((void *)LoraTxBuffer, 0, LoraBufferLength);
 		LoraTxPayloadSize = 0;
 		memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
@@ -752,13 +800,17 @@ static void	OnMasterForNormal( void )
 		break;
 
 	case RF_CHANNEL_ACTIVITY_DETECTED:
-//		Console_Output_String( "DETECTED\r\n" );		// test output
+		if( flag_debug_radio ) Console_Output_String( "DETECTED\r\n" );
 		// CLI_LoraGetRFFrequency( );				// test output
 		Radio->StartRx( );
 		break;
 
+	case RF_BUSY:
+		break;
+
 	default:
-		// Console_Output_String( "default\r\n" );		// test output
+		snprintf( (char *)str, sizeof(str), "%d Radio->Process() = %d\r\n", __LINE__, radio_ret );
+		Console_Output_String( (const char *)str );
 		break;
 	}
 }
@@ -886,11 +938,11 @@ static void	OnSlaveForNormal( void )
 
 	case RF_TX_DONE:
 		// Console_Output_String( "TX_Done\r\n" );		// test output
-		if(Slave_PollEvent == true) {
+		if( Slave_PollEvent ) {
 			Slave_PollEvent = false;
 			SLAVE_LoraPollEventInterval = 0;
 			// Console_Output_String( "TX_Clear\r\n" );		// test output
-			if(Slave_PollEvent_UTCnotZero == true) {
+			if( Slave_PollEvent_UTCnotZero ) {
 				// Slave_PollEvent = false;
 				Slave_PollEvent_UTCnotZero = false;
 				Slave_PollEventAccomplish = true;
@@ -899,8 +951,8 @@ static void	OnSlaveForNormal( void )
 			}
 		}		// 廣播不設定,訊框為空不設定
 
-		if((RxFrame.FrameFlag != FrameFlag_Broadcast) && (RxFrame.FrameCRC != 0) && (TxFrame.FrameCRC != 0)) {
-			if((RxFrame.FrameFlag == FrameFlag_Leave) && (TxFrame.FrameFlag == FrameFlag_LeaveResponse)) {
+		if( RxFrame.FrameFlag != FrameFlag_Broadcast && RxFrame.FrameCRC && TxFrame.FrameCRC ) {
+			if( RxFrame.FrameFlag == FrameFlag_Leave && TxFrame.FrameFlag == FrameFlag_LeaveResponse ) {
 				RandomHopStartChannel_SlaveDefaultHoppingChannel();		// SLAVE Node 離開網域後就設定回預設的起始通道 0,等待連線
 			} else {
 				SLAVE_LoraHoppingStartChannel = RxFrame.LoraRF_NextChannel;

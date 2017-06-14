@@ -23,7 +23,6 @@
 #ifdef STM32F401xx
 	#include "stm32f4xx.h"
 #endif
-#include "acsip_protocol.h"
 
 /* Exported types ------------------------------------------------------------*/
 #define MAX_LoraEventCount	5		// 5 * 3 = 15, 15 * 8 = 120, 每一優先權最多5個事件,一個 SLAVE Node 有三種優先權

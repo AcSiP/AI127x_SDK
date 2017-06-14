@@ -26,6 +26,7 @@
 	#include "stm32f4xx.h"
 #endif
 
+
 /* Exported types ------------------------------------------------------------*/
 // Master Event identifier
 #define Master_AcsipProtocol_Broadcast		(0x9A)
@@ -35,8 +36,7 @@
 #define Master_AcsipProtocol_Data		(0xAF)
 #define Master_AcsipProtocol_Leave		(0xB0)
 #define Master_AcsipProtocol_Interval		(0xB5)
-// General parameters definition
-#define MAX_LoraNodeNum				(32)
+
 // Command parameters definition
 #define CMD_JoinNetworkReq			("JReq")
 #define CMD_JoinNetworkResOK			("JOK")
@@ -58,11 +58,10 @@
 #define AcsipProtocol_MemorySpaceError		(0x55)
 #define AcsipProtocol_HoppingChannelError	(0x60)
 // Max message data size
-#define MaxPacketSize				(255)
-#define MaxMsgDataSize				(244)		// 32(Total Size = MaxPacketSize) - 9(Length:1、Flag:1、SN:1、NodeAdd:3、NextHoppingChannel:1、CRC:2) - 3(MyAdd) = 20
-								// 在預設的一個訊框 32bytes 長度,一個 LoraNodeData 的訊框可以放進 24bytes 的 BASE64 的資料長度。
+
 #define AliasesSize				(32)
 #define AliasesDoubleSize			(AliasesSize * 2)
+
 
 // SX1276 LoRa General parameters definition
 typedef struct sAcsipProtocolFrame {
@@ -99,6 +98,9 @@ typedef struct sLoraDeviceNode {
 	double		RSSI;		// MASTER與SLAVE都會用到
 } tLoraDeviceNode;
 
+
+#include "LinkListEvent.h"
+
 typedef struct sDeviceNodeSensor {
 	int32_t		GPS_Latitude;
 	int32_t		GPS_Longitude;
@@ -106,13 +108,46 @@ typedef struct sDeviceNodeSensor {
 	uint8_t		Battery;
 	int8_t		Packet_SNR;
 	double		RSSI;		// 給MASTER用,只用來記錄收到的感測資料封包的RSSI值
-}tDeviceNodeSensor;
+} tDeviceNodeSensor;
+
+
+typedef struct sDeviceNodeSleepAndRandomHop {
+	// for sleep
+	bool			isNowSleeping;
+	uint16_t		WakeUpTimePoint;
+
+	// for Lora disconnect
+	uint16_t		DefineLoraRxFailureTimes;
+	bool			isLoraDisconnecting;
+	uint16_t		LoraRxFailureTimes;
+
+	// for random hopping start channel
+	int8_t			HoppingChannel;
+	int8_t			HoppingChannel_Last;
+	int8_t			HoppingChannel_Next;
+
+	// for Lora Event
+	tLoraNodeEvent *	Event_Head[ LoraEventPriorities ];
+	uint8_t			Event_Count[ LoraEventPriorities ];
+} tDeviceNodeSleepAndRandomHop;
+
+
+typedef struct Struct__Device_Information {
+	bool				Flag_Valid;
+	tLoraDeviceNode			Node_MAC;
+	tDeviceNodeSleepAndRandomHop	Node_Sleep_Hop;
+	tDeviceNodeSensor		Node_Sensor;
+} tDevice_Information;
+
+/* Exported variables --------------------------------------------------------*/
+extern tDevice_Information		Device_Information[MAX_LoraNodeNum];
 
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 bool			AcsipProtocol__Verify_Lora_Address( const uint8_t *addr_a, const uint8_t *addr_b );
 void			AcsipProtocol__Assign_Lora_Address( uint8_t *addr_dest, const uint8_t *addr_src );
+bool			AcsipProtocol__Convert_to_Lora_Address( uint8_t *addr_dest, uint32_t addr_value );
 bool			AcsipProtocol__Malloc_Node( uint8_t idx );
 bool			AcsipProtocol__Free_Node( uint8_t idx );
 bool			AcsipProtocol__Initialize_Node( uint8_t idx );
@@ -121,11 +156,11 @@ uint8_t			AcsipProtocol__Add_Node( const uint8_t *addr );
 bool			AcsipProtocol__Del_Node( const uint8_t *addr );
 
 
-tLoraDeviceNode **	AcsipProtocol_ReadLoraDeviceNodeStatus(void);
-tDeviceNodeSensor **	AcsipProtocol_ReadDeviceNodeSensorStatus(void);
-uint8_t *		AcsipProtocol_ReadDeviceNodeConnectedCounter(void);
-tLoraDeviceNode *	AcsipProtocol_ReadLoraGatewayStatus(void);
-tDeviceNodeSensor *	AcsipProtocol_ReadMySensorStatus(void);
+//tLoraDeviceNode **	AcsipProtocol_ReadLoraDeviceNodeStatus(void);
+//tDeviceNodeSensor **	AcsipProtocol_ReadDeviceNodeSensorStatus(void);
+//uint8_t *		AcsipProtocol_ReadDeviceNodeConnectedCounter(void);
+//tLoraDeviceNode *	AcsipProtocol_ReadLoraGatewayStatus(void);
+//tDeviceNodeSensor *	AcsipProtocol_ReadMySensorStatus(void);
 
 void			AcsipProtocol_SetMyAddress(void);
 uint8_t *		AcsipProtocol_ReadMyAddress(void);
@@ -142,18 +177,21 @@ bool			AcsipProtocol_PacketToFrameProcess(__IO uint8_t *, uint8_t, __IO tAcsipPr
 void			AcsipProtocol_LoraJoinNetworkRequest(__IO uint8_t *, __IO tAcsipProtocolFrame *, __IO uint8_t *, uint8_t *);
 uint8_t			AcsipProtocol_LoraJoinNetworkResponseCB(__IO tAcsipProtocolFrame *, __IO tAcsipProtocolFrame *);
 uint8_t			AcsipProtocol_LoraJoinNetworkResponse(__IO tAcsipProtocolFrame *, const bool, __IO tAcsipProtocolFrame *, uint8_t *, uint8_t *);
-void			AcsipProtocol_LoraPollRequest(tLoraDeviceNode *, __IO tAcsipProtocolFrame *, __IO uint8_t *, uint8_t *);
+//void			AcsipProtocol_LoraPollRequest(tLoraDeviceNode *, __IO tAcsipProtocolFrame *, __IO uint8_t *, uint8_t *);
+void			AcsipProtocol_LoraPollRequest( int16_t node_idx, __IO tAcsipProtocolFrame *txFrame, __IO uint8_t *Packet, uint8_t *PacketLength);
 uint8_t			AcsipProtocol_LoraPollResponseCB(tLoraDeviceNode *, tDeviceNodeSensor *, __IO tAcsipProtocolFrame *, __IO tAcsipProtocolFrame *);
 
 uint8_t			AcsipProtocol_LoraPollResponse(__IO tAcsipProtocolFrame *, __IO tAcsipProtocolFrame *, uint8_t *, uint8_t *);
-void			AcsipProtocol_LoraDataRequest(tLoraDeviceNode *, __IO uint8_t *, __IO uint8_t *, __IO tAcsipProtocolFrame *, __IO uint8_t *, uint8_t *);
+//void			AcsipProtocol_LoraDataRequest(tLoraDeviceNode *, __IO uint8_t *, __IO uint8_t *, __IO tAcsipProtocolFrame *, __IO uint8_t *, uint8_t *);
+void			AcsipProtocol_LoraDataRequest( int16_t node_idx, __IO uint8_t *Data, __IO uint8_t *DataLength, __IO tAcsipProtocolFrame *txFrame, __IO uint8_t *Packet, uint8_t *PacketLength );
 uint8_t			AcsipProtocol_LoraDataResponseCB(tLoraDeviceNode *, __IO tAcsipProtocolFrame *, __IO tAcsipProtocolFrame *);
 uint8_t			AcsipProtocol_LoraDataResponse(__IO tAcsipProtocolFrame *, uint8_t *, uint8_t *, __IO tAcsipProtocolFrame *, uint8_t *, uint8_t *);
 void			AcsipProtocol_LoraLeaveNetworkRequest(tLoraDeviceNode *, __IO tAcsipProtocolFrame *, __IO uint8_t *, uint8_t *);
 
 uint8_t			AcsipProtocol_LoraLeaveNetworkResponseCB(tLoraDeviceNode *, __IO tAcsipProtocolFrame *);
 uint8_t			AcsipProtocol_LoraLeaveNetworkResponse(__IO tAcsipProtocolFrame *, const bool, __IO tAcsipProtocolFrame *, uint8_t *, uint8_t *);
-void			AcsipProtocol_LoraIntervalRequest(tLoraDeviceNode *, __IO tAcsipProtocolFrame *, __IO uint8_t *, uint8_t *);
+//void			AcsipProtocol_LoraIntervalRequest(tLoraDeviceNode *, __IO tAcsipProtocolFrame *, __IO uint8_t *, uint8_t *);
+void			AcsipProtocol_LoraIntervalRequest( int16_t node_idx, __IO tAcsipProtocolFrame *txFrame, __IO uint8_t *Packet, uint8_t *PacketLength);
 uint8_t			AcsipProtocol_LoraIntervalResponseCB(tLoraDeviceNode *, __IO tAcsipProtocolFrame *, __IO tAcsipProtocolFrame *);
 uint8_t			AcsipProtocol_LoraIntervalResponse(__IO tAcsipProtocolFrame *, __IO tAcsipProtocolFrame *, uint8_t *, uint8_t *);
 

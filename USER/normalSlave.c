@@ -21,6 +21,8 @@
 #ifdef STM32F401xx
 	#include "stm32f4xx.h"
 #endif
+
+#include "config.h"
 #include "radio.h"
 #include "acsip_protocol.h"
 #include "main.h"
@@ -38,8 +40,6 @@ extern uint8_t			LoraTxBuffer[LoraBufferLength];
 extern uint8_t			LoraRxBuffer[LoraBufferLength];
 extern __IO tAcsipProtocolFrame	TxFrame;
 extern __IO tAcsipProtocolFrame RxFrame;
-extern tLoraDeviceNode *	LoraNodeDevice[MAX_LoraNodeNum];		// for MASTER
-extern tDeviceNodeSensor *	DeviceNodeSensor[MAX_LoraNodeNum];		// for MASTER
 extern uint8_t			LoraNodeCount;					// for MASTER
 extern tLoraDeviceNode *	LoraGateWay;					// for SLAVE
 extern tDeviceNodeSensor *	MySensor;					// for SLAVE

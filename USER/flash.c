@@ -42,20 +42,10 @@
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
-#ifdef STM32F401xx
-	uint32_t	GetSector( uint32_t );
-#endif
 
-/***************************************************************************************************
- *  Function Name: GetSector
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
 #ifdef STM32F401xx
+uint32_t	GetSector( uint32_t );
+
 uint32_t	GetSector( uint32_t Address )
 {
 	if( (Address < ADDR_FLASH_SECTOR_1) && (Address >= ADDR_FLASH_SECTOR_0) ) return FLASH_Sector_0;
@@ -70,15 +60,6 @@ uint32_t	GetSector( uint32_t Address )
 #endif
 
 
-/***************************************************************************************************
- *  Function Name: FLASH_EraseAllRecordSector
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
 /*
 #ifdef STM32F401xx
 void		FLASH_EraseAllRecordSector( void )
@@ -104,15 +85,6 @@ void		FLASH_EraseAllRecordSector( void )
 
 
 
-/***************************************************************************************************
- *  Function Name: FLASH_EraseRecordSector
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
 #ifdef STM32F401xx
 void	FLASH_EraseRecordSector( uint32_t FLASH_Sector )
 {
@@ -145,15 +117,6 @@ void	FLASH_EraseRecordSector( uint32_t FLASH_Sector )
 
 
 
-/***************************************************************************************************
- *  Function Name: FLASH_EraseAllRecordPage
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
 /*
 #ifdef STM32F072
 void		FLASH_EraseAllRecordPage( void )
@@ -175,16 +138,6 @@ void		FLASH_EraseAllRecordPage( void )
 */
 
 
-
-/***************************************************************************************************
- *  Function Name: FLASH_EraseFlashPage
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
 #ifdef STM32F072
 void	FLASH_EraseRecordPage( uint32_t PageStartAddr )
 {
@@ -211,15 +164,6 @@ void	FLASH_EraseRecordPage( uint32_t PageStartAddr )
 #endif
 
 
-/***************************************************************************************************
- *  Function Name: FLASH_WriteByte
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
 void		FLASH_WriteByte( uint32_t StartAddr, uint8_t *Data, uint16_t Num )
 {
 	uint16_t	count;
@@ -252,17 +196,7 @@ void		FLASH_WriteByte( uint32_t StartAddr, uint8_t *Data, uint16_t Num )
 }
 
 
-
-/***************************************************************************************************
- *  Function Name: FLASH_WriteHalfWord
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
-void		FLASH_WriteHalfWord( uint32_t StartAddr, uint16_t *Data, uint16_t Num )
+void		FLASH_WriteHalfWord( uint32_t StartAddr, const uint16_t * Data, uint16_t Num )
 {
 	uint16_t	count;
 
@@ -283,15 +217,6 @@ void		FLASH_WriteHalfWord( uint32_t StartAddr, uint16_t *Data, uint16_t Num )
 }
 
 
-/***************************************************************************************************
- *  Function Name: FLASH_WriteWord
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
 void		FLASH_WriteWord( uint32_t StartAddr, uint32_t *Data, uint16_t Num )
 {
 	uint16_t	count;
@@ -313,16 +238,6 @@ void		FLASH_WriteWord( uint32_t StartAddr, uint32_t *Data, uint16_t Num )
 }
 
 
-
-/***************************************************************************************************
- *  Function Name: FLASH_WriteDoubleWord
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
 void		FLASH_WriteDoubleWord( uint32_t StartAddr, uint64_t *Data, uint16_t Num)
 {
 	uint16_t	count;
@@ -350,16 +265,6 @@ void		FLASH_WriteDoubleWord( uint32_t StartAddr, uint64_t *Data, uint16_t Num)
 }
 
 
-
-/***************************************************************************************************
- *  Function Name: FLASH_ReadByte
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
 void		FLASH_ReadByte( uint32_t StartAddr, uint8_t *Data, uint16_t Num )
 {
 	while( Num-- ) {
@@ -367,15 +272,7 @@ void		FLASH_ReadByte( uint32_t StartAddr, uint8_t *Data, uint16_t Num )
 	}
 }
 
-/***************************************************************************************************
- *  Function Name: FLASH_ReadHalfWord
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
+
 void		FLASH_ReadHalfWord( uint32_t StartAddr, uint16_t *Data, uint16_t Num )
 {
 	while( Num-- ) {
@@ -385,15 +282,6 @@ void		FLASH_ReadHalfWord( uint32_t StartAddr, uint16_t *Data, uint16_t Num )
 }
 
 
-/***************************************************************************************************
- *  Function Name: FLASH_ReadWord
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
 void		FLASH_ReadWord( uint32_t StartAddr, uint32_t *Data, uint16_t Num )
 {
 	while( Num-- ) {
@@ -403,15 +291,6 @@ void		FLASH_ReadWord( uint32_t StartAddr, uint32_t *Data, uint16_t Num )
 }
 
 
-/***************************************************************************************************
- *  Function Name: FLASH_ReadDoubleWord
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
 void		FLASH_ReadDoubleWord( uint32_t StartAddr, uint64_t *Data, uint16_t Num )
 {
 	while( Num-- ) {
@@ -421,33 +300,66 @@ void		FLASH_ReadDoubleWord( uint32_t StartAddr, uint64_t *Data, uint16_t Num )
 }
 
 
-/***************************************************************************************************
- *  Function Name: FLASH_WriteString
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
 void		FLASH_WriteString( uint32_t StartAddr, uint8_t *Data, uint16_t Num )
 {
 	FLASH_WriteByte( StartAddr, Data, Num );
 }
 
 
-/***************************************************************************************************
- *  Function Name: FLASH_ReadString
- *
- *  Description:
- *  Input :
- *  Output:
- *  Return:
- *  Example :
- **************************************************************************************************/
 void		FLASH_ReadString( uint32_t StartAddr, uint8_t *Data, uint16_t Num )
 {
 	FLASH_ReadByte(StartAddr, Data, Num);
 }
+
+#ifdef STM32F401xx
+int16_t		Flash_Read__CW_Offset( void )
+{
+	int		i;
+	int16_t		last_val = 0;
+	uint16_t	val;
+
+	for( i = 0; i < 16; i += 2 ) {
+		FLASH_ReadHalfWord( Record__CW_Offset__Addr + i, & val, 1 );
+		if( val == 0xffff ) break;
+
+		val += 1;
+		last_val = (int) val;
+	}
+	return( last_val );
+}
+
+bool		Flash_Write__CW_Offset( int16_t offset_hz )
+{
+	int		i;
+	uint16_t	val;
+
+	if( ! offset_hz ) return( true );
+
+	offset_hz -= 1;
+	for( i = 0; i < 16; i += 2 ) {
+		FLASH_ReadHalfWord( Record__CW_Offset__Addr + i, & val, 1 );
+		if( val != 0xffff ) continue;
+
+		val = (uint16_t) offset_hz;
+		FLASH_WriteHalfWord( Record__CW_Offset__Addr + i, & val , 1 );
+		return( true );
+	}
+	return( false );
+}
+#endif
+
+#ifdef STM32F072
+int16_t		Flash_Read__CW_Offset( void )
+{
+//	FLASH_WriteByte( 0x1FFF7800 + addr, & val, 1 );
+	return( 0 );
+}
+
+bool		Flash_Write__CW_Offset( int16_t offset_hz )
+{
+	return( false );
+}
+#endif
+
 
 /************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

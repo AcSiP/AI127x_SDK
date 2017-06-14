@@ -22,6 +22,8 @@
 #ifdef STM32F401xx
 	#include "stm32f4xx.h"
 #endif
+
+#include "config.h"
 #include "radio.h"
 #include "acsip_protocol.h"
 #include "main.h"
@@ -34,19 +36,16 @@
 extern tLoRaSettings			LoRaSettings;
 extern __IO tAcsipProtocolFrame		TxFrame;
 extern __IO tAcsipProtocolFrame		RxFrame;
-extern __IO uint16_t			Running_TimeCount;					// for MASTER & SLAVE
-extern tLoraDeviceNode *		LoraNodeDevice[MAX_LoraNodeNum];			// for MASTER
-extern tDeviceNodeSleepAndRandomHop *	DeviceNodeSleepAndRandomHop[MAX_LoraNodeNum];		// for MASTER
-extern tDeviceNodeSensor *		DeviceNodeSensor[MAX_LoraNodeNum];			// for MASTER
-extern uint8_t				LoraNodeCount;						// for MASTER
-extern tLoraDeviceNode *		LoraGateWay;						// for SLAVE
-extern tDeviceNodeSensor *		MySensor;						// for SLAVE
+extern __IO uint16_t			Running_TimeCount;			// for MASTER & SLAVE
+extern uint8_t				LoraNodeCount;				// for MASTER
+extern tLoraDeviceNode *		LoraGateWay;				// for SLAVE
+extern tDeviceNodeSensor *		MySensor;				// for SLAVE
 
 extern __IO uint8_t			Running_HoppingStartChannel;
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
-static void	NormalMaster_RecordNodeRandomHoppingChannel(__IO uint8_t *, __IO uint8_t *);
+void		NormalMaster_RecordNodeRandomHoppingChannel( const uint8_t *NodeAddr, uint8_t Channel );
 
 
 /***************************************************************************************************
@@ -61,29 +60,31 @@ static void	NormalMaster_RecordNodeRandomHoppingChannel(__IO uint8_t *, __IO uin
  **************************************************************************************************/
 uint8_t		NormalMaster(__IO tLoraRunningEvent *Event)
 {
-	static uint8_t	base64_data[((MaxMsgDataSize/3)*4)];
-	size_t		dsize;
-	uint8_t		result;
-	int8_t		str[64];
-	int8_t		count;
+	static uint8_t		base64_data[((MaxMsgDataSize/3)*4)];
+
+	tDevice_Information *	ptr;
+	size_t			dsize;
+	uint8_t			result;
+	char			str[64];
+	int8_t			count;
 
 	result = AcsipProtocol_NoAction;
+	ptr = & Device_Information[ Event->RunNodeNumber ];
 
-	switch(Event->RunNodeEvent) {
+	switch( Event->RunNodeEvent ) {
 	case Master_AcsipProtocol_Broadcast:
 		break;
 
 	case Master_AcsipProtocol_Join:
 		// result = AcsipProtocol_LoraJoinNetworkResponseCB(&RxFrame, TxFrame.NodeAddress);
-		result = AcsipProtocol_LoraJoinNetworkResponseCB(&RxFrame, &TxFrame);
+		result = AcsipProtocol_LoraJoinNetworkResponseCB( & RxFrame, & TxFrame );
 		Console_Output_String( "Node=" );
 		for(count = 2 ; count >= 0 ; count--) {
-			snprintf( (char *)str, sizeof(str), "%02x", Event->RunNodeAddr[count] );
-			Console_Output_String( (const char *)str );
+			snprintf( str, sizeof(str), "%02x", Event->RunNodeAddr[count] );
+			Console_Output_String( str );
 		}
-		if(result == AcsipProtocol_OK) {
-			// NormalMaster_RecordNodeRandomHoppingChannel(&(Event->RunNodeNumber), &(TxFrame.LoraRF_NextChannel));
-			NormalMaster_RecordNodeRandomHoppingChannel(Event->RunNodeAddr, &(TxFrame.LoraRF_NextChannel));
+		if( result == AcsipProtocol_OK ) {
+			NormalMaster_RecordNodeRandomHoppingChannel( (uint8_t *) Event->RunNodeAddr, TxFrame.LoraRF_NextChannel );
 			Console_Output_String( " EVT=JoinOK\r\n" );
 			// Console_Output_String( "Join the AcsipLoraNet SUCCESSED!\r\n" );
 #ifdef STM32F401xx
@@ -97,30 +98,31 @@ uint8_t		NormalMaster(__IO tLoraRunningEvent *Event)
 		} else {
 			Console_Output_String( " EVT=JoinFAILED\r\n" );
 			// Console_Output_String( "Join the AcsipLoraNet FAILED!\r\n" );
+			snprintf( str, sizeof(str), "%d, result = %d \r\n", __LINE__, result );
+			Console_Output_String( str );
 		}
 		//或是存下來或是透過藍芽傳出去
 		break;
 
 	case Master_AcsipProtocol_Poll:
-		if(LoraNodeDevice[Event->RunNodeNumber]->NodeAddress != NULL) {
+		if( ptr->Flag_Valid ) {
 			// result = AcsipProtocol_LoraPollResponseCB(LoraNodeDevice[Event->RunNodeNumber], DeviceNodeSensor[Event->RunNodeNumber], &RxFrame);
-			result = AcsipProtocol_LoraPollResponseCB(LoraNodeDevice[Event->RunNodeNumber], DeviceNodeSensor[Event->RunNodeNumber], &RxFrame, &TxFrame);
+			result = AcsipProtocol_LoraPollResponseCB( & ptr->Node_MAC, & ptr->Node_Sensor, & RxFrame, & TxFrame );
 
-			if( (result == AcsipProtocol_OK) && ( DeviceNodeSensor[Event->RunNodeNumber] ) ) {
-				// NormalMaster_RecordNodeRandomHoppingChannel(&(Event->RunNodeNumber), &(TxFrame.LoraRF_NextChannel));
-				NormalMaster_RecordNodeRandomHoppingChannel(Event->RunNodeAddr, &(TxFrame.LoraRF_NextChannel));
-				if( DeviceNodeSleepAndRandomHop[Event->RunNodeNumber] ) {
-					if((DeviceNodeSensor[Event->RunNodeNumber]->UTC != 0) && (LoraNodeDevice[Event->RunNodeNumber]->Interval != 0)) {
-						DeviceNodeSleepAndRandomHop[Event->RunNodeNumber]->isNowSleeping = true;
-						DeviceNodeSleepAndRandomHop[Event->RunNodeNumber]->WakeUpTimePoint = (uint16_t)ceil(((double)LoRaSettings.TxPacketTimeout) * 0.001);
-						DeviceNodeSleepAndRandomHop[Event->RunNodeNumber]->WakeUpTimePoint += (Running_TimeCount + LoraNodeDevice[Event->RunNodeNumber]->Interval);
-					}
+			if( result == AcsipProtocol_OK ) {
+				NormalMaster_RecordNodeRandomHoppingChannel( (uint8_t *) Event->RunNodeAddr, TxFrame.LoraRF_NextChannel );
+//				ptr->Node_Sleep_Hop.Last_LoraHoppingStartChannel = -1;
+
+				if( ptr->Node_Sensor.UTC && ptr->Node_MAC.Interval ) {
+					ptr->Node_Sleep_Hop.isNowSleeping = true;
+					ptr->Node_Sleep_Hop.WakeUpTimePoint = (uint16_t)ceil(((double) LoRaSettings.TxPacketTimeout) * 0.001 );
+					ptr->Node_Sleep_Hop.WakeUpTimePoint += (Running_TimeCount + ptr->Node_MAC.Interval);
 				}
 
 				Console_Output_String( "Node=" );
 				for(count = 2 ; count >= 0 ; count--) {
-					snprintf( (char *)str, sizeof(str), "%02x", Event->RunNodeAddr[count] );
-					Console_Output_String( (const char *)str );
+					snprintf( str, sizeof(str), "%02x", Event->RunNodeAddr[count] );
+					Console_Output_String( str );
 				}
 
 #ifdef Board__A22_Tracker
@@ -129,32 +131,32 @@ uint8_t		NormalMaster(__IO tLoraRunningEvent *Event)
 				Console_Output_String( " EVT=Poll " );
 #endif
 
-				snprintf( (char *)str, sizeof(str), "%d", DeviceNodeSensor[Event->RunNodeNumber]->GPS_Latitude );
-				Console_Output_String( (const char *)str );
+				snprintf( str, sizeof(str), "%d", ptr->Node_Sensor.GPS_Latitude );
+				Console_Output_String( str );
 				Console_Output_String( " " );
-				snprintf( (char *)str, sizeof(str), "%d", DeviceNodeSensor[Event->RunNodeNumber]->GPS_Longitude );
-				Console_Output_String( (const char *)str );
+				snprintf( str, sizeof(str), "%d", ptr->Node_Sensor.GPS_Longitude );
+				Console_Output_String( str );
 				Console_Output_String( " " );
-				snprintf( (char *)str, sizeof(str), "%u", DeviceNodeSensor[Event->RunNodeNumber]->UTC );
-				Console_Output_String( (const char *)str );
-				Console_Output_String( " " );
-				snprintf( (char *)str, sizeof(str), "%u", DeviceNodeSensor[Event->RunNodeNumber]->Battery );
-				Console_Output_String( (const char *)str );
+//				snprintf( str, sizeof(str), "%u", ptr->Node_Sensor.UTC );
+//				Console_Output_String( str );
+//				Console_Output_String( " " );
+				snprintf( str, sizeof(str), "%u", ptr->Node_Sensor.Battery );
+				Console_Output_String( str );
 				Console_Output_String( " " );
 
 				if( LoRaSettings.FreqHopOn ){
-					snprintf( (char *)str, sizeof(str), ", Freq= %d ", LoRaSettings.Channel_List[Running_HoppingStartChannel] / 1000 );
-					Console_Output_String( (const char *)str );
+					snprintf( str, sizeof(str), ", Freq= %d ", LoRaSettings.Channel_List[Running_HoppingStartChannel] / 1000 );
+					Console_Output_String( str );
 				} else {
-					snprintf( (char *)str, sizeof(str), ", Freq= %d ", LoRaSettings.RFFrequency / 1000 );
-					Console_Output_String( (const char *)str );
+					snprintf( str, sizeof(str), ", Freq= %d ", LoRaSettings.RFFrequency / 1000 );
+					Console_Output_String( str );
 				}
 
-				snprintf( (char *)str, sizeof(str), ", SNR= %d ", DeviceNodeSensor[Event->RunNodeNumber]->Packet_SNR );
-				Console_Output_String( (const char *)str );
+				snprintf( str, sizeof(str), ", SNR= %d ", ptr->Node_Sensor.Packet_SNR );
+				Console_Output_String( str );
 
-				snprintf( (char *)str, sizeof(str), ", RSSI= %3.1f ", DeviceNodeSensor[Event->RunNodeNumber]->RSSI );
-				Console_Output_String( (const char *)str );
+				snprintf( str, sizeof(str), ", RSSI= %3.1f ", ptr->Node_Sensor.RSSI );
+				Console_Output_String( str );
 				Console_Output_String( "\r\n" );
 				// 或是存下來或是透過藍芽傳出去
 			}
@@ -162,23 +164,24 @@ uint8_t		NormalMaster(__IO tLoraRunningEvent *Event)
 		break;
 
 	case Master_AcsipProtocol_Data:
-		if(LoraNodeDevice[Event->RunNodeNumber]->NodeAddress != NULL) {
+		if( ptr->Flag_Valid ) {
 			// result = AcsipProtocol_LoraDataResponseCB(LoraNodeDevice[Event->RunNodeNumber], &RxFrame);
-			result = AcsipProtocol_LoraDataResponseCB(LoraNodeDevice[Event->RunNodeNumber], &RxFrame, &TxFrame);
+			result = AcsipProtocol_LoraDataResponseCB( & ptr->Node_MAC, & RxFrame, & TxFrame );
 			if(result == AcsipProtocol_OK) {
-				// NormalMaster_RecordNodeRandomHoppingChannel(&(Event->RunNodeNumber), &(TxFrame.LoraRF_NextChannel));
-				NormalMaster_RecordNodeRandomHoppingChannel(Event->RunNodeAddr, &(TxFrame.LoraRF_NextChannel));
+				NormalMaster_RecordNodeRandomHoppingChannel( (uint8_t *) Event->RunNodeAddr, TxFrame.LoraRF_NextChannel );
+//				ptr->Node_Sleep_Hop.Last_LoraHoppingStartChannel = -1;
+
 				if(RxFrame.MsgLength > 0) {
 					memset((void *)base64_data, 0, ((MaxMsgDataSize/3)*4));
-					if(Base64_encode( base64_data, ((MaxMsgDataSize/3)*4), &dsize, (const uint8_t	*)RxFrame.MsgData, RxFrame.MsgLength ) == 0) {
+					if(Base64_encode( base64_data, ((MaxMsgDataSize/3)*4), &dsize, (const uint8_t *) RxFrame.MsgData, RxFrame.MsgLength ) == 0 ) {
 						Console_Output_String( "Node=" );
 						for(count = 2 ; count >= 0 ; count--) {
-							snprintf( (char *)str, sizeof(str), "%02x", Event->RunNodeAddr[count] );
-							Console_Output_String( (const char *)str );
+							snprintf( str, sizeof(str), "%02x", Event->RunNodeAddr[count] );
+							Console_Output_String( str );
 						}
 						Console_Output_String( "  DataLength=" );
-						snprintf( (char *)str, sizeof(str), "%u", dsize );
-						Console_Output_String( (const char *)str );
+						snprintf( str, sizeof(str), "%u", dsize );
+						Console_Output_String( str );
 						Console_Output_String( "  Data=" );
 						Console_Write( base64_data, dsize );
 						Console_Output_String( "\r\n" );
@@ -190,12 +193,12 @@ uint8_t		NormalMaster(__IO tLoraRunningEvent *Event)
 		break;
 
 	case Master_AcsipProtocol_Leave:
-		if(LoraNodeDevice[Event->RunNodeNumber]->NodeAddress != NULL) {
-			result = AcsipProtocol_LoraLeaveNetworkResponseCB(LoraNodeDevice[Event->RunNodeNumber], &RxFrame);
+		if( ptr->Flag_Valid ) {
+			result = AcsipProtocol_LoraLeaveNetworkResponseCB( & ptr->Node_MAC, & RxFrame );
 			Console_Output_String( "Node=" );
 			for(count = 2 ; count >= 0 ; count--) {
-				snprintf( (char *)str, sizeof(str), "%02x", Event->RunNodeAddr[count] );
-				Console_Output_String( (const char *)str );
+				snprintf( str, sizeof(str), "%02x", Event->RunNodeAddr[count] );
+				Console_Output_String( str );
 			}
 
 			if(result == AcsipProtocol_OK) {
@@ -220,18 +223,18 @@ uint8_t		NormalMaster(__IO tLoraRunningEvent *Event)
 		break;
 
 	case Master_AcsipProtocol_Interval:
-		if(LoraNodeDevice[Event->RunNodeNumber]->NodeAddress != NULL) {
+		if( ptr->Flag_Valid ) {
 			// result = AcsipProtocol_LoraIntervalResponseCB(LoraNodeDevice[Event->RunNodeNumber], &RxFrame);
-			result = AcsipProtocol_LoraIntervalResponseCB(LoraNodeDevice[Event->RunNodeNumber], &RxFrame, &TxFrame);
+			result = AcsipProtocol_LoraIntervalResponseCB( & ptr->Node_MAC, & RxFrame, & TxFrame );
 			Console_Output_String( "Node=" );
 			for(count = 2 ; count >= 0 ; count--) {
-				snprintf( (char *)str, sizeof(str), "%02x", Event->RunNodeAddr[count] );
-				Console_Output_String( (const char *)str );
+				snprintf( str, sizeof(str), "%02x", Event->RunNodeAddr[count] );
+				Console_Output_String( str );
 			}
 			// Console_Output_String( "NormalMaster_Interval\r\n" );		// test output
 			if(result == AcsipProtocol_OK) {
-				// NormalMaster_RecordNodeRandomHoppingChannel(&(Event->RunNodeNumber), &(TxFrame.LoraRF_NextChannel));
-				NormalMaster_RecordNodeRandomHoppingChannel(Event->RunNodeAddr, &(TxFrame.LoraRF_NextChannel));
+				NormalMaster_RecordNodeRandomHoppingChannel( (uint8_t *) Event->RunNodeAddr, TxFrame.LoraRF_NextChannel );
+//				ptr->Node_Sleep_Hop.Last_LoraHoppingStartChannel = -1;
 				Console_Output_String( " EVT=SetNodeOK\r\n" );
 
 #ifdef STM32F401xx
@@ -269,21 +272,20 @@ uint8_t		NormalMaster(__IO tLoraRunningEvent *Event)
  *  Example :
  *  Readme: for MASTER
  **************************************************************************************************/
-static void	NormalMaster_RecordNodeRandomHoppingChannel(__IO uint8_t *NodeAddr, __IO uint8_t *Channel)
+void		NormalMaster_RecordNodeRandomHoppingChannel( const uint8_t *NodeAddr, uint8_t Channel )
 {
-	uint8_t		count;
+	int16_t				i;
+	tDeviceNodeSleepAndRandomHop *	p;
 
-	for(count = 0 ; count < MAX_LoraNodeNum ; count++) {
-		if(LoraNodeDevice[count] != NULL) {
-			if((LoraNodeDevice[count]->NodeAddress[0] == NodeAddr[0]) && (LoraNodeDevice[count]->NodeAddress[1] == NodeAddr[1]) && (LoraNodeDevice[count]->NodeAddress[2] == NodeAddr[2])) break;
-		}
+	i = AcsipProtocol__Find_Node( (uint8_t *) NodeAddr );
+
+	if( 0 <= i && i < MAX_LoraNodeNum ) {
+		p = & Device_Information[i].Node_Sleep_Hop;
+
+		p->HoppingChannel_Last = p->HoppingChannel;
+		p->HoppingChannel_Next = -1;
+		p->HoppingChannel = Channel;
 	}
-
-	if(count < MAX_LoraNodeNum) {
-		if(DeviceNodeSleepAndRandomHop[count] != NULL) DeviceNodeSleepAndRandomHop[count]->LoraHoppingStartChannel = *Channel;
-	}
-
-	// if(DeviceNodeSleepAndRandomHop[*NodeNumber] != NULL) DeviceNodeSleepAndRandomHop[*NodeNumber]->LoraHoppingStartChannel = *Channel;
 }
 
 /************************ Copyright 2016(C) AcSiP Technology Inc. *****END OF FILE****/

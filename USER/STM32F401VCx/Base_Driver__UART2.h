@@ -25,7 +25,7 @@
 typedef	void	(*Fn_UART2__RX_Callback)( uint8_t data );
 
 /* Exported define -----------------------------------------------------------*/
-#define		UART2__TX_Buffer_Size		256
+#define		UART2__TX_Buffer_Size		4096
 
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
