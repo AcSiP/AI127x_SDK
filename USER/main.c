@@ -1,4 +1,4 @@
-﻿
+
 //---------------------------------------------------------------------------
 /*
 //==========================================
@@ -951,6 +951,8 @@ static void	OnSlaveForNormal( void )
 			}
 		}		// 廣播不設定,訊框為空不設定
 
+    /* Fix by JC in 20170616 */
+    /*
 		if( RxFrame.FrameFlag != FrameFlag_Broadcast && RxFrame.FrameCRC && TxFrame.FrameCRC ) {
 			if( RxFrame.FrameFlag == FrameFlag_Leave && TxFrame.FrameFlag == FrameFlag_LeaveResponse ) {
 				RandomHopStartChannel_SlaveDefaultHoppingChannel();		// SLAVE Node 離開網域後就設定回預設的起始通道 0,等待連線
@@ -959,6 +961,17 @@ static void	OnSlaveForNormal( void )
 				RandomHopStartChannel_SetHoppingStartChannelFreq(SLAVE_LoraHoppingStartChannel);
 			}
 		}
+    */
+    if( RxFrame.FrameFlag != FrameFlag_Broadcast ) {
+			if( RxFrame.FrameFlag == FrameFlag_Leave && TxFrame.FrameFlag == FrameFlag_LeaveResponse ) {
+				RandomHopStartChannel_SlaveDefaultHoppingChannel();		// SLAVE Node 離開網域後就設定回預設的起始通道 0,等待連線
+			} else {
+				SLAVE_LoraHoppingStartChannel = RxFrame.LoraRF_NextChannel;
+				RandomHopStartChannel_SetHoppingStartChannelFreq(SLAVE_LoraHoppingStartChannel);
+			}
+		}
+    /* Fix end */
+    
 		memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
 		memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
 		Clear_LoRa_TX_Buffer();

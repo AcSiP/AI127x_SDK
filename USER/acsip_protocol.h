@@ -1,4 +1,4 @@
-﻿
+
 //---------------------------------------------------------------------------
 /*
 //==========================================
@@ -64,6 +64,8 @@
 
 
 // SX1276 LoRa General parameters definition
+/* Fix by JC in 20170615 */
+/*
 typedef struct sAcsipProtocolFrame {
 	uint8_t		FrameFlag;
 	uint8_t		FrameSN;
@@ -74,6 +76,16 @@ typedef struct sAcsipProtocolFrame {
 	uint8_t		MsgData[MaxMsgDataSize];
 	uint16_t	FrameCRC;
 } tAcsipProtocolFrame;
+*/
+typedef struct sAcsipProtocolFrame {
+	uint8_t		FrameFlag;
+	uint8_t		NodeAddress[3];
+	uint8_t		LoraRF_NextChannel;
+	uint8_t		MyAddress[3];
+	uint8_t		MsgLength;
+	uint8_t		MsgData[MaxMsgDataSize];
+} tAcsipProtocolFrame;
+/* Fix end */
 
 typedef enum {
 	FrameFlag_Broadcast,
@@ -89,6 +101,8 @@ typedef enum {
 	FrameFlag_IntervalResponse,
 } tFrameFlagType;
 
+/* Fix by JC in 20170616 */
+/*
 typedef struct sLoraDeviceNode {
 	uint8_t		NodeAddress[3];
 	uint8_t		PacketSN;
@@ -97,6 +111,15 @@ typedef struct sLoraDeviceNode {
 	int8_t		Packet_SNR;
 	double		RSSI;		// MASTER與SLAVE都會用到
 } tLoraDeviceNode;
+*/
+typedef struct sLoraDeviceNode {
+	uint8_t		NodeAddress[3];
+	uint8_t		Aliases[AliasesSize];
+	uint16_t	Interval;
+	int8_t		Packet_SNR;
+	double		RSSI;		// MASTER與SLAVE都會用到
+} tLoraDeviceNode;
+/* Fix end */
 
 
 #include "LinkListEvent.h"
