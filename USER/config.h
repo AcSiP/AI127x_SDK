@@ -29,9 +29,11 @@
 
 
 /* Exported define -----------------------------------------------------------*/
-#define FirmwareVersion				("2.13.2017.0620")
+#define FirmwareVersion				("2.13.2017.0627")
 #define ComPortBaudRate				(38400)
-#define GPSnoLocated_RunningTime		(60)		// Unit:s
+
+#undef	GPSnoLocated_RunningTime				// Unit:s
+
 #define	DEF_Allowed_LoRa_Rx_Failure_Times_Times	(5)		// Unit: polling round
 #define	CONSOLE_TIMER__CCR1_DelayForCMD		(3)		// second
 
