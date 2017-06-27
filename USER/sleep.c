@@ -477,6 +477,7 @@ void	SLEEP_SlaveSleepAandRandomHopChannelProcedure(uint16_t *SleepTime)
 		return;
 	}
 
+#ifdef Board__A22_Tracker
 	if( Running_TimeCount >= GPSnoLocated_RunningTime && ! Slave_PollEventAccomplish ) {
 		if( SLAVE_LoraPollEventInterval >= GPSnoLocated_RunningTime ) {
 			// Console_Output_String( "Clear&Default\r\n" );
@@ -510,6 +511,17 @@ void	SLEEP_SlaveSleepAandRandomHopChannelProcedure(uint16_t *SleepTime)
 			}
 		}
 	}
+#else
+	if( Slave_PollEventAccomplish ) {
+		if( *SleepTime ) {
+			SLEEP_SlaveSleep_Deep_STOP_Mode( SleepTime );
+			RandomHopStartChannel_SetHoppingStartChannelFreq(SLAVE_LoraHoppingStartChannel);
+		}
+		Running_TimeCount = 0;
+		SLAVE_LoraPollEventInterval = 0;
+		Slave_PollEventAccomplish = false;
+	} 
+#endif
 }
 
 
