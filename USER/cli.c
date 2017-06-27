@@ -141,10 +141,11 @@ shell_cmd		CLI__Shell_Command[] = {
 	{	.cmd	= "LoraNodeData",		.func	= CLI_ShellCmd_LoraNodeData,		.desc	= "Acsip Protocol LORA base TX packet"			},
 	{	.cmd	= "LoraListNodes",		.func	= CLI_ShellCmd_LoraGetAllNodeAddr,	.desc	= "Acsip Protocol LORA base for All Node address"	},
 	{	.cmd	= "LoraGetGateWayAddr",		.func	= CLI_ShellCmd_LoraGetGateWayAddr,	.desc	= "Acsip Protocol LORA base for GateWay address"	},
+
+#ifdef Board__A22_Tracker
 	{	.cmd	= "OutputTraceData",		.func	= CLI_ShellCmd_OutputTraceData,		.desc	= "Output All Trace Data"				},
 	{	.cmd	= "FormatTraceDataSpace",	.func	= CLI_ShellCmd_FormatTraceDataSpace,	.desc	= "Format Trace Data Space"				},
 
-#ifdef Board__A22_Tracker
 	{	.cmd	= "BleEnable",			.func	= CLI_ShellCmd_BleEnable,		.desc	= "Bluetooth Enable"					},
 	{	.cmd	= "BleDisable",			.func	= CLI_ShellCmd_BleDisable,		.desc	= "Bluetooth Disable"					},
 	{	.cmd	= "GpsEnable",			.func	= CLI_ShellCmd_GpsEnable,		.desc	= "GPS Enable"						},
