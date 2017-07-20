@@ -1,4 +1,4 @@
-﻿
+
 //---------------------------------------------------------------------------
 /*
 //==========================================
@@ -41,6 +41,8 @@
 #include "rtc.h"
 #include "RandomHopStartChannel.h"
 #include "sleep.h"
+
+#include "Hybird_Hopping.h"
 
 #include "UART_Console.h"
 #include "Console_Timer.h"

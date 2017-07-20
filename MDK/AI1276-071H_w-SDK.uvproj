@@ -800,6 +800,11 @@
               <FileType>1</FileType>
               <FilePath>..\USER\STM32F072RBx\Base_Driver__ADC1.c</FilePath>
             </File>
+            <File>
+              <FileName>Hybird_Hopping.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\Hybird_Hopping.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
