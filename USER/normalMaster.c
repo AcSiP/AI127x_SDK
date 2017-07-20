@@ -1,4 +1,4 @@
-﻿
+
 //---------------------------------------------------------------------------
 /*
 //==========================================
@@ -107,7 +107,15 @@ uint8_t		NormalMaster(__IO tLoraRunningEvent *Event)
 	case Master_AcsipProtocol_Poll:
 		if( ptr->Flag_Valid ) {
 			// result = AcsipProtocol_LoraPollResponseCB(LoraNodeDevice[Event->RunNodeNumber], DeviceNodeSensor[Event->RunNodeNumber], &RxFrame);
-			result = AcsipProtocol_LoraPollResponseCB( & ptr->Node_MAC, & ptr->Node_Sensor, & RxFrame, & TxFrame );
+			
+      /* Fix by JC in 20170711 */
+			//result = AcsipProtocol_LoraPollResponseCB( & ptr->Node_MAC, & ptr->Node_Sensor, & RxFrame, & TxFrame );
+      if((LoRaSettings.HybirdHoppingGo == true) && (LoRaSettings.FreqHopOn == 0)) {
+        result = AcsipProtocol_LoraPollResponseCB_example( & ptr->Node_MAC, & ptr->Node_Sensor, & RxFrame, & TxFrame );
+      } else {
+        result = AcsipProtocol_LoraPollResponseCB( & ptr->Node_MAC, & ptr->Node_Sensor, & RxFrame, & TxFrame );
+      }
+      /* Fix end */
 
 			if( result == AcsipProtocol_OK ) {
 				NormalMaster_RecordNodeRandomHoppingChannel( (uint8_t *) Event->RunNodeAddr, TxFrame.LoraRF_NextChannel );

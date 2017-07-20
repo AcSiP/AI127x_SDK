@@ -1,4 +1,4 @@
-﻿
+
 //---------------------------------------------------------------------------
 /*
 //==========================================
@@ -59,10 +59,17 @@ typedef struct	sLoRaSettings
 	uint16_t	PreambleLength;
 	bool		LowDataRateOptimize;		// [0: OFF, 1: ON] ON=Enabled; mandated for when the symbol length exceeds 16ms
 	uint8_t		Oscillator;
-
+  
+  /* Add by JC in 20170627 */
+  bool      HybirdHoppingGo;
+  uint8_t   HybirdHoppingMaxPayloadSize;
+  uint8_t   HybirdHoppingDataPayloadSize;
+  uint16_t  HybirdHoppingTxDelay;
+  /* Add end */
+  
 	uint32_t	Channel_List[64];		// Frequency List in KHz
 	uint8_t		Channel_Lists;			// Frequency List used items
-
+  
 	uint16_t	Poll_Timeout_Sec;
 } tLoRaSettings;
 

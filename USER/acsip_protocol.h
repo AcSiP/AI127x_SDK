@@ -203,8 +203,14 @@ uint8_t			AcsipProtocol_LoraJoinNetworkResponse(__IO tAcsipProtocolFrame *, cons
 //void			AcsipProtocol_LoraPollRequest(tLoraDeviceNode *, __IO tAcsipProtocolFrame *, __IO uint8_t *, uint8_t *);
 void			AcsipProtocol_LoraPollRequest( int16_t node_idx, __IO tAcsipProtocolFrame *txFrame, __IO uint8_t *Packet, uint8_t *PacketLength);
 uint8_t			AcsipProtocol_LoraPollResponseCB(tLoraDeviceNode *, tDeviceNodeSensor *, __IO tAcsipProtocolFrame *, __IO tAcsipProtocolFrame *);
-
 uint8_t			AcsipProtocol_LoraPollResponse(__IO tAcsipProtocolFrame *, __IO tAcsipProtocolFrame *, uint8_t *, uint8_t *);
+
+/* Add by JC in 20170615 */
+void			AcsipProtocol_LoraPollRequest_example( int16_t , __IO tAcsipProtocolFrame *, __IO uint8_t *, uint8_t *, __IO uint8_t);
+uint8_t			AcsipProtocol_LoraPollResponseCB_example(tLoraDeviceNode *, tDeviceNodeSensor *, __IO tAcsipProtocolFrame *, __IO tAcsipProtocolFrame *);
+uint8_t			AcsipProtocol_LoraPollResponse_example(__IO tAcsipProtocolFrame *, __IO tAcsipProtocolFrame *, uint8_t *, uint8_t *, __IO uint8_t);
+/* Add end */
+
 //void			AcsipProtocol_LoraDataRequest(tLoraDeviceNode *, __IO uint8_t *, __IO uint8_t *, __IO tAcsipProtocolFrame *, __IO uint8_t *, uint8_t *);
 void			AcsipProtocol_LoraDataRequest( int16_t node_idx, __IO uint8_t *Data, __IO uint8_t *DataLength, __IO tAcsipProtocolFrame *txFrame, __IO uint8_t *Packet, uint8_t *PacketLength );
 uint8_t			AcsipProtocol_LoraDataResponseCB(tLoraDeviceNode *, __IO tAcsipProtocolFrame *, __IO tAcsipProtocolFrame *);

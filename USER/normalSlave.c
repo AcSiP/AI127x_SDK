@@ -1,4 +1,4 @@
-﻿
+
 //---------------------------------------------------------------------------
 /*
 //==========================================
@@ -33,6 +33,9 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 __IO bool			Slave_PollEvent = false;
+/* Add by JC in 20170711 */
+extern tLoRaSettings		LoRaSettings;
+/* Add end */
 extern __IO bool 		LoraNeedTxData;
 extern __IO size_t		LoraTxPayloadSize;
 extern __IO size_t		LoraRxPayloadSize;
@@ -82,7 +85,16 @@ uint8_t		NormalSlave(void)
 	case FrameFlag_Poll:
 		if(LoraGateWay != NULL) {
 			// Console_Output_String( "error6\r\n" );		// test output
-			result = AcsipProtocol_LoraPollResponse(&RxFrame, &TxFrame, LoraTxBuffer, &tx_size);
+      
+			/* Fix by JC in 20170711 */
+			//result = AcsipProtocol_LoraPollResponse(&RxFrame, &TxFrame, LoraTxBuffer, &tx_size);
+      if((LoRaSettings.HybirdHoppingGo == true) && (LoRaSettings.FreqHopOn == 0)) {
+        result = AcsipProtocol_LoraPollResponse_example(&RxFrame, &TxFrame, LoraTxBuffer, &tx_size, LoRaSettings.HybirdHoppingDataPayloadSize);
+      } else {
+        result = AcsipProtocol_LoraPollResponse(&RxFrame, &TxFrame, LoraTxBuffer, &tx_size);
+      }
+      /* Fix end */
+      
 			// snprintf( (char *)str, sizeof(str), "%02x", result);		//test output
 			// Console_Output_String( "result=" );			//test output
 			// Console_Output_String( (const char *)str );		//test output

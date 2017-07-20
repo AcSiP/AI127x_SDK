@@ -443,12 +443,20 @@ void	LoraPara_LoadAndConfiguration(void)
 {
 	Load_Default_FHSS_Channel_List();
 
-	EnableMaster = 0;				// 1=Master or 0=Slave selection
+	EnableMaster = 1;				// 1=Master or 0=Slave selection
+  
+  /* Add by JC in 20170710 */
+  LoRaSettings.HybirdHoppingGo = false;
+  LoRaSettings.HybirdHoppingMaxPayloadSize = 0;
+  LoRaSettings.HybirdHoppingDataPayloadSize = 0;
+  LoRaSettings.HybirdHoppingTxDelay = 0;
+  /* Add end */
+  
 	LoRaSettings.Power = 20;
-	LoRaSettings.SignalBw = 7;			// LORA [0: 7.8 kHz, 1: 10.4 kHz, 2: 15.6 kHz, 3: 20.8 kHz, 4: 31.2 kHz,
+	LoRaSettings.SignalBw = 8;			// LORA [0: 7.8 kHz, 1: 10.4 kHz, 2: 15.6 kHz, 3: 20.8 kHz, 4: 31.2 kHz,
 							// 5: 41.6 kHz, 6: 62.5 kHz, 7: 125 kHz, 8: 250 kHz, 9: 500 kHz, other: Reserved]
 	LoRaSettings.SpreadingFactor = 10;		// LORA [6: 64, 7: 128, 8: 256, 9: 512, 10: 1024, 11: 2048, 12: 4096 chips]
-	LoRaSettings.FreqHopOn = 1;			// [0: OFF, 1: ON]
+	LoRaSettings.FreqHopOn = 0;			// [0: OFF, 1: ON]
 	LoRaSettings.PayloadLength = MaxPacketSize;
 	LoRaSettings.MaxPayloadLength = MaxPacketSize;
 	LoRaSettings.PreambleLength = 12;
@@ -467,6 +475,11 @@ void	LoraPara_LoadAndConfiguration(void)
 	LoRaSettings.Poll_Timeout_Sec = 30;
 
 	SaveRecord_ReadOutMyselfPara();
+  
+  /* Add by JC in 20170711 */
+  HybirdHopping_Initialization(FCC_HybirdHopping_ONorOFF);
+  /* Add end */
+  
 }
 
 
@@ -481,11 +494,24 @@ void	RX_DataCopy( uint8_t *dst, const uint8_t *sou, uint16_t length)
 
 void	Main__Configure_RX( void )
 {
+  /* Fix by JC in 20170710 */
+  /*
 	if( LoRaSettings.FreqHopOn || LBT__Option_Mode == LBT__Option__None ) {
 		Radio->StartRx();
 	} else {
 		LBT__Configure_Receving();
 	}
+  */
+  if((LoRaSettings.HybirdHoppingGo == true) && (LoRaSettings.FreqHopOn == 0)) {
+    Radio->StartRx();
+  } else {
+	  if( LoRaSettings.FreqHopOn || LBT__Option_Mode == LBT__Option__None ) {
+		  Radio->StartRx();
+	  } else {
+		  LBT__Configure_Receving();
+	  }
+  }
+  /* Fix end */
 }
 
 /***************************************************************************************************
@@ -569,7 +595,15 @@ static	bool	MasterLoraEvent_PROCESS( void )
 		break;
 
 	case Master_AcsipProtocol_Poll:
-		AcsipProtocol_LoraPollRequest( LoraRunningEvent.RunNodeNumber, & TxFrame, LoraTxBuffer, & tx_size );
+		/* Fix by JC in 20170711 */
+		//AcsipProtocol_LoraPollRequest( LoraRunningEvent.RunNodeNumber, & TxFrame, LoraTxBuffer, & tx_size );
+    if((LoRaSettings.HybirdHoppingGo == true) && (LoRaSettings.FreqHopOn == 0)) {
+      AcsipProtocol_LoraPollRequest_example( LoraRunningEvent.RunNodeNumber, & TxFrame, LoraTxBuffer, & tx_size, LoRaSettings.HybirdHoppingDataPayloadSize );
+    } else {
+      AcsipProtocol_LoraPollRequest( LoraRunningEvent.RunNodeNumber, & TxFrame, LoraTxBuffer, & tx_size );
+    }
+    /* Fix end */
+    
 		LoraTxPayloadSize = tx_size;
 		// LoraPollEventCount--;
 		break;
@@ -594,8 +628,18 @@ static	bool	MasterLoraEvent_PROCESS( void )
 		LoraTxPayloadSize = 0;
 	}
 	if( ! LoraTxPayloadSize ) return( false );
-
-
+  
+  /* Add by JC in 20170710 */
+  if((LoRaSettings.HybirdHoppingGo == true) && (LoRaSettings.FreqHopOn == 0)) {
+    if(HybirdHopping_TX()) {
+      Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
+      return( true );
+    } else {
+      return( false );
+    }
+  }
+  /* Add end */
+  
 	switch( LoraRunningEvent.RunNodeEvent ) {
 	case Master_AcsipProtocol_Broadcast:
 	case Master_AcsipProtocol_Join:
@@ -824,6 +868,19 @@ static void	OnMasterForNormal( void )
 
 	case RF_TX_DONE:
 		if( flag_debug_radio ) Console_Output_String( "TX_Done\r\n" );
+  
+    /* Add by JC in 20170710 */
+    if((LoRaSettings.HybirdHoppingGo == true) && (LoRaSettings.FreqHopOn == 0)) {
+      if(HybirdHopping_TX()) {
+        Delay(LoRaSettings.HybirdHoppingTxDelay);
+        Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
+        break;
+      } else {
+        HybirdHopping_SetRXChannel();
+      }
+    }
+    /* Add end */
+  
 		if( TxFrame.FrameFlag == FrameFlag_Broadcast ) {
 			memset((void *)LoraTxBuffer, 0, LoraBufferLength);
 			LoraTxPayloadSize = 0;
@@ -905,48 +962,56 @@ static void	OnSlaveForNormal( void )
 // 		for(i = LoraTxPayloadSize ; i < MaxPacketSize ; i++) LoraTxBuffer[i] = i;
 // 		LoraTxPayloadSize = MaxPacketSize;
 
-		if( LoRaSettings.FreqHopOn || LBT__Option_Mode == LBT__Option__None ) {
-			Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
-		} else {
-			switch( LBT__Option_Mode ) {
-			case LBT__Option__Japan:
-				if( LBT__Wait_RF_Channel_Clear( LoRaSettings.TxPacketTimeout ) ){
-					Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
-				} else {
-					Console_Output_String( "Channel is not clear for JP-LBT.\r\n" );
+    /* Fix by JC in 20170710 */
+    if((LoRaSettings.HybirdHoppingGo == true) && (LoRaSettings.FreqHopOn == 0)) {
+      if(HybirdHopping_TX()) {
+        Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
+      }
+    } else {
+		  if( LoRaSettings.FreqHopOn || LBT__Option_Mode == LBT__Option__None ) {
+			  Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
+		  } else {
+			  switch( LBT__Option_Mode ) {
+			    case LBT__Option__Japan:
+				    if( LBT__Wait_RF_Channel_Clear( LoRaSettings.TxPacketTimeout ) ){
+					    Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
+				    } else {
+					    Console_Output_String( "Channel is not clear for JP-LBT.\r\n" );
 
-					Clear_LoRa_TX_Buffer();
-					Clear_LoRa_RX_Buffer();
-					memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
-					memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
-					LBT__Configure_Receving();
-				}
-				break;
+					    Clear_LoRa_TX_Buffer();
+					    Clear_LoRa_RX_Buffer();
+					    memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
+					    memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
+					    LBT__Configure_Receving();
+				    }
+				    break;
 
-			case LBT__Option__Europe_w_AFA:
-				if ( LBTandAFA_TX() ) {
-					Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
-				} else {
-					Console_Output_String( "Channel is not clear for CE-LBT.\r\n" );
+			    case LBT__Option__Europe_w_AFA:
+				    if ( LBTandAFA_TX() ) {
+					    Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
+				    } else {
+					    Console_Output_String( "Channel is not clear for CE-LBT.\r\n" );
 
-					Clear_LoRa_TX_Buffer();
-					Clear_LoRa_RX_Buffer();
-					memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
-					memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
-					LBT__Configure_Receving();
-				}
-				break;
+					    Clear_LoRa_TX_Buffer();
+					    Clear_LoRa_RX_Buffer();
+					    memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
+					    memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
+					    LBT__Configure_Receving();
+				    }
+				    break;
 
-			default:
-				Console_Output_String( "CE-LBT or JP-LBT have problem.\r\n" );		// output
+			    default:
+				    Console_Output_String( "CE-LBT or JP-LBT have problem.\r\n" );		// output
 
-				Clear_LoRa_TX_Buffer();
-				Clear_LoRa_RX_Buffer();
-				memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
-				memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
-				LBT__Configure_Receving();
-			}
-		}
+				    Clear_LoRa_TX_Buffer();
+				    Clear_LoRa_RX_Buffer();
+				    memset((void *)&TxFrame, 0, sizeof(tAcsipProtocolFrame));
+				    memset((void *)&RxFrame, 0, sizeof(tAcsipProtocolFrame));
+				    LBT__Configure_Receving();
+			  }
+		  }
+    }
+    /* Fix end */
 
 		if( ( RxFrame.FrameFlag == FrameFlag_Data ) && ( RxFrame.MsgLength > 0 ) ) {
 			memset((void *)base64_data, 0, ((MaxMsgDataSize/3)*4));
@@ -990,6 +1055,19 @@ static void	OnSlaveForNormal( void )
 
 	case RF_TX_DONE:
 		if( flag_debug_radio ) Console_Output_String( "TX_Done\r\n" );
+  
+    /* Add by JC in 20170710 */
+    if((LoRaSettings.HybirdHoppingGo == true) && (LoRaSettings.FreqHopOn == 0)) {
+      if(HybirdHopping_TX()) {
+        Delay(LoRaSettings.HybirdHoppingTxDelay);
+        Radio->SetTxPacket( (const void *)LoraTxBuffer, LoraTxPayloadSize );
+        break;
+      } else {
+        HybirdHopping_SetRXChannel();
+      }
+    }
+    /* Add end */
+  
 		if( Slave_PollEvent ) {
 			Slave_PollEvent = false;
 			SLAVE_LoraPollEventInterval = 0;
