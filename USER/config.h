@@ -29,7 +29,7 @@
 
 
 /* Exported define -----------------------------------------------------------*/
-#define FirmwareVersion				("2.13.2017.0627")
+#define FirmwareVersion				("2.15.2017.0720")
 #define ComPortBaudRate				(38400)
 
 #undef	GPSnoLocated_RunningTime				// Unit:s
